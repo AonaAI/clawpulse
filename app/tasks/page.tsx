@@ -1,4 +1,8 @@
-import { AGENTS, SAMPLE_TASKS } from '@/lib/data'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { AGENTS } from '@/lib/data'
+import { fetchTasks } from '@/lib/supabase-client'
 import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
 
 const COLUMNS: { status: TaskStatus; label: string; color: string; bg: string; border: string }[] = [
@@ -158,10 +162,20 @@ function KanbanColumn({
 }
 
 export default function TasksPage() {
-  const totalTasks = SAMPLE_TASKS.length
-  const doneTasks = SAMPLE_TASKS.filter(t => t.status === 'done').length
-  const blockedTasks = SAMPLE_TASKS.filter(t => t.status === 'blocked').length
-  const criticalTasks = SAMPLE_TASKS.filter(t => t.priority === 'critical').length
+  const [tasks, setTasks] = useState<Task[]>([])
+
+  useEffect(() => {
+    async function loadTasks() {
+      const data = await fetchTasks()
+      setTasks(data)
+    }
+    loadTasks()
+  }, [])
+
+  const totalTasks = tasks.length
+  const doneTasks = tasks.filter(t => t.status === 'done').length
+  const blockedTasks = tasks.filter(t => t.status === 'blocked').length
+  const criticalTasks = tasks.filter(t => t.priority === 'critical').length
 
   return (
     <div className="p-6 lg:p-8">
@@ -200,7 +214,7 @@ export default function TasksPage() {
           <KanbanColumn
             key={col.status}
             {...col}
-            tasks={SAMPLE_TASKS.filter(t => t.status === col.status)}
+            tasks={tasks.filter(t => t.status === col.status)}
           />
         ))}
       </div>

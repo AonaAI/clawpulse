@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AGENTS, SAMPLE_TASKS, ACTIVITY_LOG } from '@/lib/data'
-import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
+import { AGENTS } from '@/lib/data'
+import { fetchTasks, fetchActivityLog } from '@/lib/supabase-client'
+import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 
 const POLL_INTERVAL = 30_000
 
@@ -141,7 +142,7 @@ function AgentCard({ agent }: { agent: MergedAgent }) {
   )
 }
 
-function ActivityItem({ item, isLast }: { item: typeof ACTIVITY_LOG[0]; isLast: boolean }) {
+function ActivityItem({ item, isLast }: { item: { id: string; agent_id: string; agent_name: string; action: string; details: string; time: string }; isLast: boolean }) {
   return (
     <div
       className="flex items-start gap-3 py-3.5"
@@ -176,6 +177,8 @@ function ActivityItem({ item, isLast }: { item: typeof ACTIVITY_LOG[0]; isLast: 
 
 export default function OverviewPage() {
   const [agents, setAgents] = useState<MergedAgent[]>(UNKNOWN_AGENTS)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [activity, setActivity] = useState<any[]>([])
   const [apiError, setApiError] = useState(false)
 
   useEffect(() => {
@@ -196,8 +199,21 @@ export default function OverviewPage() {
     return () => clearInterval(id)
   }, [])
 
-  const activeTasks = SAMPLE_TASKS.filter(t => t.status === 'in_progress')
-  const doneTasks = SAMPLE_TASKS.filter(t => t.status === 'done')
+  useEffect(() => {
+    async function loadData() {
+      const [tasksData, activityData] = await Promise.all([
+        fetchTasks(),
+        fetchActivityLog(8),
+      ])
+      setTasks(tasksData)
+      setActivity(activityData)
+    }
+    
+    loadData()
+  }, [])
+
+  const activeTasks = tasks.filter(t => t.status === 'in_progress')
+  const doneTasks = tasks.filter(t => t.status === 'done')
   const workingAgents = agents.filter(a => a.status === 'working')
   const idleAgents = agents.filter(a => a.status === 'idle')
 
@@ -448,9 +464,15 @@ export default function OverviewPage() {
               }}
               className="rounded-xl px-4 overflow-hidden"
             >
-              {ACTIVITY_LOG.map((item, i) => (
-                <ActivityItem key={item.id} item={item} isLast={i === ACTIVITY_LOG.length - 1} />
-              ))}
+              {activity.length === 0 ? (
+                <div className="py-8 text-center text-sm" style={{ color: '#4b5563' }}>
+                  No activity yet
+                </div>
+              ) : (
+                activity.map((item, i) => (
+                  <ActivityItem key={item.id} item={item} isLast={i === activity.length - 1} />
+                ))
+              )}
             </div>
           </div>
         </div>
