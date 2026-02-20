@@ -59,3 +59,29 @@ export interface KnowledgeEntry {
   created_at: string
   updated_at: string
 }
+
+export interface TokenUsage {
+  id: string
+  agent_id: string
+  task_id: string | null
+  input_tokens: number
+  output_tokens: number
+  total_tokens: number
+  cost_usd: number
+  model: string
+  recorded_at: string
+}
+
+export interface AgentTokenStats {
+  agent_id: string
+  agent_name: string
+  total_tokens: number
+  total_cost: number
+  model: string
+}
+
+export interface DailyTokenStats {
+  date: string
+  total_tokens: number
+  total_cost: number
+}

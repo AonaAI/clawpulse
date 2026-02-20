@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { AGENTS } from '@/lib/data'
+import { fetchTokenStatsByAgent } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase-client'
 import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
 
 const POLL_INTERVAL = 30_000
@@ -112,7 +114,13 @@ function ModelBadge({ model }: { model: string }) {
   )
 }
 
-function AgentCard({ agent }: { agent: MergedAgent }) {
+function formatTokensShort(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
+  return String(n)
+}
+
+function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenStats?: { total_tokens: number; total_cost: number } | null; mission?: string | null }) {
   const isWorking = agent.status === 'working'
   const initials = agent.name.slice(0, 2).toUpperCase()
 
@@ -252,6 +260,35 @@ function AgentCard({ agent }: { agent: MergedAgent }) {
             </div>
           )}
         </div>
+
+        {tokenStats && tokenStats.total_tokens > 0 && (
+          <div
+            style={{
+              background: 'rgba(124,58,237,0.08)',
+              border: '1px solid rgba(109,40,217,0.18)',
+              borderRadius: '10px',
+            }}
+            className="flex items-center justify-between px-3 py-2"
+          >
+            <div className="flex items-center gap-1.5">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+              </svg>
+              <span style={{ color: '#6b7280' }} className="text-xs font-medium">Tokens (7d)</span>
+            </div>
+            <div className="text-right">
+              <span style={{ color: '#a78bfa' }} className="text-xs font-bold">{formatTokensShort(tokenStats.total_tokens)}</span>
+              <span style={{ color: '#4b5563' }} className="text-xs ml-1">${tokenStats.total_cost.toFixed(3)}</span>
+            </div>
+          </div>
+        )}
+
+        {mission && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
+            <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Mission</span>
+            <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: '1.5' }} className="line-clamp-2">{mission}</p>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -260,9 +297,11 @@ function AgentCard({ agent }: { agent: MergedAgent }) {
 export default function AgentsPage() {
   const [agents, setAgents] = useState<MergedAgent[]>(OFFLINE_AGENTS)
   const [apiError, setApiError] = useState(false)
+  const [tokenMap, setTokenMap] = useState<Record<string, { total_tokens: number; total_cost: number }>>({})
+  const [missionMap, setMissionMap] = useState<Record<string, string | null>>({})
 
   useEffect(() => {
-    async function fetchAgents() {
+    async function fetchAgentsLive() {
       try {
         const res = await fetch('/api/agents')
         if (!res.ok) throw new Error('non-ok response')
@@ -274,8 +313,22 @@ export default function AgentsPage() {
       }
     }
 
-    fetchAgents()
-    const id = setInterval(fetchAgents, POLL_INTERVAL)
+    async function fetchSupabaseData() {
+      const [tokenStats, agentsData] = await Promise.all([
+        fetchTokenStatsByAgent(),
+        supabase.from('agents').select('id, mission'),
+      ])
+      const tMap: Record<string, { total_tokens: number; total_cost: number }> = {}
+      for (const s of tokenStats) tMap[s.agent_id] = { total_tokens: s.total_tokens, total_cost: s.total_cost }
+      setTokenMap(tMap)
+      const mMap: Record<string, string | null> = {}
+      for (const a of agentsData.data || []) mMap[a.id] = a.mission
+      setMissionMap(mMap)
+    }
+
+    fetchAgentsLive()
+    fetchSupabaseData()
+    const id = setInterval(fetchAgentsLive, POLL_INTERVAL)
     return () => clearInterval(id)
   }, [])
 
@@ -358,7 +411,7 @@ export default function AgentsPage() {
       {/* Agent cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {agents.map((agent) => (
-          <AgentCard key={agent.id} agent={agent} />
+          <AgentCard key={agent.id} agent={agent} tokenStats={tokenMap[agent.id] || null} mission={missionMap[agent.id] || null} />
         ))}
       </div>
     </div>

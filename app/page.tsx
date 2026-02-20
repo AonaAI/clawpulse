@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { AGENTS } from '@/lib/data'
-import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB } from '@/lib/supabase-client'
+import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 
@@ -182,6 +182,7 @@ export default function OverviewPage() {
   const [activity, setActivity] = useState<any[]>([])
   const [newActivityIds, setNewActivityIds] = useState<Set<string>>(new Set())
   const [apiError, setApiError] = useState(false)
+  const [companyMission, setCompanyMission] = useState('')
 
   useEffect(() => {
     async function fetchAgentsData() {
@@ -203,14 +204,16 @@ export default function OverviewPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [tasksData, activityData] = await Promise.all([
+      const [tasksData, activityData, missionValue] = await Promise.all([
         fetchTasks(),
         fetchActivityLog(8),
+        fetchSetting('company_mission'),
       ])
       setTasks(tasksData)
       setActivity(activityData)
+      if (missionValue) setCompanyMission(missionValue)
     }
-    
+
     loadData()
   }, [])
 
@@ -341,6 +344,24 @@ export default function OverviewPage() {
       <div className="mb-8">
         <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Overview</h1>
         <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
+        {companyMission && (
+          <div
+            style={{
+              background: 'rgba(124,58,237,0.06)',
+              border: '1px solid rgba(109,40,217,0.2)',
+              backdropFilter: 'blur(12px)',
+            }}
+            className="mt-4 rounded-xl px-5 py-3.5 flex items-start gap-3"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+            </svg>
+            <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.6' }}>
+              <span style={{ color: '#7c3aed', fontWeight: 700, marginRight: '6px' }}>Mission</span>
+              {companyMission}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Static mode banner */}

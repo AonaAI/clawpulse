@@ -212,6 +212,145 @@ export async function fetchHandoffs() {
   return data || []
 }
 
+// ── Settings ────────────────────────────────────────────────────────────────
+
+export async function fetchSetting(key: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', key)
+    .single()
+  if (error) return null
+  return data?.value ?? null
+}
+
+export async function fetchSettings(keys: string[]): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('key, value')
+    .in('key', keys)
+  if (error) return {}
+  return Object.fromEntries((data || []).map(r => [r.key, r.value]))
+}
+
+export async function upsertSetting(key: string, value: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+  if (error) { console.error('Error upserting setting:', error); return false }
+  return true
+}
+
+// ── Token Usage ─────────────────────────────────────────────────────────────
+
+export async function fetchTokenUsage(limit = 100) {
+  const { data, error } = await supabase
+    .from('token_usage')
+    .select('*, agent:agents(name)')
+    .order('recorded_at', { ascending: false })
+    .limit(limit)
+  if (error) { console.error('Error fetching token usage:', error); return [] }
+  return (data || []).map(r => ({
+    ...r,
+    agent_name: r.agent?.name || r.agent_id,
+  }))
+}
+
+export async function fetchTokenStatsByAgent() {
+  const { data, error } = await supabase
+    .from('token_usage')
+    .select('agent_id, total_tokens, cost_usd, model, agent:agents!agent_id(name)')
+  if (error) { console.error('Error fetching token stats by agent:', error); return [] }
+
+  const map = new Map<string, { agent_id: string; agent_name: string; total_tokens: number; total_cost: number; model: string }>()
+  for (const r of data || []) {
+    const agentRow = r.agent as unknown as { name: string } | null
+    const key = r.agent_id
+    if (!map.has(key)) {
+      map.set(key, { agent_id: r.agent_id, agent_name: agentRow?.name || r.agent_id, total_tokens: 0, total_cost: 0, model: r.model })
+    }
+    const entry = map.get(key)!
+    entry.total_tokens += r.total_tokens
+    entry.total_cost += Number(r.cost_usd)
+  }
+  return Array.from(map.values()).sort((a, b) => b.total_tokens - a.total_tokens)
+}
+
+export async function fetchDailyTokenStats() {
+  const { data, error } = await supabase
+    .from('token_usage')
+    .select('total_tokens, cost_usd, recorded_at')
+    .gte('recorded_at', new Date(Date.now() - 7 * 86400000).toISOString())
+    .order('recorded_at', { ascending: true })
+  if (error) { console.error('Error fetching daily token stats:', error); return [] }
+
+  const map = new Map<string, { date: string; total_tokens: number; total_cost: number }>()
+  for (const r of data || []) {
+    const d = r.recorded_at.slice(0, 10)
+    if (!map.has(d)) map.set(d, { date: d, total_tokens: 0, total_cost: 0 })
+    const entry = map.get(d)!
+    entry.total_tokens += r.total_tokens
+    entry.total_cost += Number(r.cost_usd)
+  }
+  return Array.from(map.values())
+}
+
+export async function fetchTokenSummary() {
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+  const weekStart = new Date(Date.now() - 7 * 86400000).toISOString()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  const { data, error } = await supabase
+    .from('token_usage')
+    .select('total_tokens, cost_usd, recorded_at')
+    .gte('recorded_at', monthStart)
+  if (error) return { today: { tokens: 0, cost: 0 }, week: { tokens: 0, cost: 0 }, month: { tokens: 0, cost: 0 } }
+
+  const summary = { today: { tokens: 0, cost: 0 }, week: { tokens: 0, cost: 0 }, month: { tokens: 0, cost: 0 } }
+  for (const r of data || []) {
+    const t = r.total_tokens
+    const c = Number(r.cost_usd)
+    summary.month.tokens += t
+    summary.month.cost += c
+    if (r.recorded_at >= weekStart) { summary.week.tokens += t; summary.week.cost += c }
+    if (r.recorded_at >= todayStart) { summary.today.tokens += t; summary.today.cost += c }
+  }
+  return summary
+}
+
+// ── Activity Log (enhanced) ─────────────────────────────────────────────────
+
+export async function fetchFullActivityLog(limit = 50) {
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('*, agent:agents(name)')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) { console.error('Error fetching activity log:', error); return [] }
+  return (data || []).map(item => ({
+    id: item.id,
+    agent_id: item.agent_id,
+    agent_name: item.agent?.name || item.agent_id,
+    action: item.action,
+    details: item.details || '',
+    metadata: item.metadata || {},
+    created_at: item.created_at,
+    time: formatTimeAgo(new Date(item.created_at)),
+  }))
+}
+
+// ── Agent missions ──────────────────────────────────────────────────────────
+
+export async function updateAgentMission(agentId: string, mission: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('agents')
+    .update({ mission })
+    .eq('id', agentId)
+  if (error) { console.error('Error updating agent mission:', error); return false }
+  return true
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(date: Date): string {
