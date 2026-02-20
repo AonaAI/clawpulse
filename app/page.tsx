@@ -30,9 +30,9 @@ function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
   })
 }
 
-const OFFLINE_AGENTS: MergedAgent[] = AGENTS.map(a => ({
+const UNKNOWN_AGENTS: MergedAgent[] = AGENTS.map(a => ({
   ...a,
-  status: 'offline' as AgentStatus,
+  status: 'unknown' as AgentStatus,
   sessionCount: 0,
   lastActive: null,
   totalTokens: 0,
@@ -62,6 +62,14 @@ function StatusBadge({ status }: { status: AgentStatus }) {
       bg: 'rgba(55, 65, 81, 0.04)',
       color: '#4b5563',
       border: 'rgba(55, 65, 81, 0.15)',
+      pulse: false,
+    },
+    unknown: {
+      dot: '#6b7280',
+      text: 'Unknown',
+      bg: 'rgba(107, 114, 128, 0.04)',
+      color: '#6b7280',
+      border: 'rgba(107, 114, 128, 0.15)',
       pulse: false,
     },
   }[status]
@@ -167,7 +175,7 @@ function ActivityItem({ item, isLast }: { item: typeof ACTIVITY_LOG[0]; isLast: 
 }
 
 export default function OverviewPage() {
-  const [agents, setAgents] = useState<MergedAgent[]>(OFFLINE_AGENTS)
+  const [agents, setAgents] = useState<MergedAgent[]>(UNKNOWN_AGENTS)
   const [apiError, setApiError] = useState(false)
 
   useEffect(() => {
@@ -267,40 +275,65 @@ export default function OverviewPage() {
         <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            style={{
-              background: stat.gradient,
-              border: `1px solid ${stat.border}`,
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
-            }}
-            className="rounded-xl p-5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span style={{ color: '#6b7280' }} className="text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
-              <span style={{ color: stat.iconColor }}>{stat.icon}</span>
-            </div>
-            <div style={{ color: stat.color }} className="text-4xl font-bold tracking-tight">{stat.value}</div>
-          </div>
-        ))}
-      </div>
-
+      {/* Static mode banner */}
       {apiError && (
         <div
           style={{
-            background: 'rgba(239, 68, 68, 0.06)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#f87171',
+            background: 'rgba(251, 191, 36, 0.06)',
+            border: '1px solid rgba(251, 191, 36, 0.25)',
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 4px 16px rgba(251, 191, 36, 0.08)',
           }}
-          className="rounded-xl px-4 py-3 text-xs font-medium mb-6"
+          className="rounded-xl px-5 py-4 mb-8 flex items-start gap-3"
         >
-          Could not reach /api/agents — run <code className="font-mono">next dev</code> for live data. Showing offline state.
+          <span style={{ color: '#fbbf24', fontSize: '18px' }}>⚠️</span>
+          <div className="flex-1">
+            <div style={{ color: '#fbbf24' }} className="font-semibold text-sm mb-1">
+              Static mode — agent status unavailable
+            </div>
+            <div style={{ color: '#d97706' }} className="text-xs">
+              Run locally (<code className="font-mono bg-black/20 px-1.5 py-0.5 rounded">next dev</code>) for live data from ~/.openclaw/agents
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {apiError ? (
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(107, 114, 128, 0.2)',
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
+            }}
+            className="rounded-xl p-5 col-span-2 lg:col-span-4 text-center"
+          >
+            <div style={{ color: '#6b7280' }} className="text-sm font-medium">
+              No live data — connect local server
+            </div>
+          </div>
+        ) : (
+          stats.map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                background: stat.gradient,
+                border: `1px solid ${stat.border}`,
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
+              }}
+              className="rounded-xl p-5"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span style={{ color: '#6b7280' }} className="text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
+                <span style={{ color: stat.iconColor }}>{stat.icon}</span>
+              </div>
+              <div style={{ color: stat.color }} className="text-4xl font-bold tracking-tight">{stat.value}</div>
+            </div>
+          ))
+        )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Agent grid */}
