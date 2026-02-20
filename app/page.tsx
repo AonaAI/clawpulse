@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { AGENTS } from '@/lib/data'
-import { fetchTasks, fetchActivityLog } from '@/lib/supabase-client'
+import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB } from '@/lib/supabase-client'
+import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 
 const POLL_INTERVAL = 30_000
@@ -142,10 +143,10 @@ function AgentCard({ agent }: { agent: MergedAgent }) {
   )
 }
 
-function ActivityItem({ item, isLast }: { item: { id: string; agent_id: string; agent_name: string; action: string; details: string; time: string }; isLast: boolean }) {
+function ActivityItem({ item, isLast, isNew }: { item: { id: string; agent_id: string; agent_name: string; action: string; details: string; time: string }; isLast: boolean; isNew?: boolean }) {
   return (
     <div
-      className="flex items-start gap-3 py-3.5"
+      className={`flex items-start gap-3 py-3.5 ${isNew ? 'realtime-fade-in' : ''}`}
       style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)' }}
     >
       <div
@@ -179,10 +180,11 @@ export default function OverviewPage() {
   const [agents, setAgents] = useState<MergedAgent[]>(UNKNOWN_AGENTS)
   const [tasks, setTasks] = useState<Task[]>([])
   const [activity, setActivity] = useState<any[]>([])
+  const [newActivityIds, setNewActivityIds] = useState<Set<string>>(new Set())
   const [apiError, setApiError] = useState(false)
 
   useEffect(() => {
-    async function fetchAgents() {
+    async function fetchAgentsData() {
       try {
         const res = await fetch('/api/agents')
         if (!res.ok) throw new Error('non-ok response')
@@ -194,8 +196,8 @@ export default function OverviewPage() {
       }
     }
 
-    fetchAgents()
-    const id = setInterval(fetchAgents, POLL_INTERVAL)
+    fetchAgentsData()
+    const id = setInterval(fetchAgentsData, POLL_INTERVAL)
     return () => clearInterval(id)
   }, [])
 
@@ -211,6 +213,56 @@ export default function OverviewPage() {
     
     loadData()
   }, [])
+
+  // Realtime: activity_log inserts
+  const handleActivityInsert = useCallback((record: any) => {
+    const newItem = {
+      id: record.id,
+      agent_id: record.agent_id,
+      agent_name: record.agent_id, // will be resolved
+      action: record.action,
+      details: record.details || '',
+      time: 'Just now',
+    }
+    setActivity(prev => [newItem, ...prev].slice(0, 8))
+    setNewActivityIds(prev => new Set(prev).add(record.id))
+    setTimeout(() => setNewActivityIds(prev => {
+      const next = new Set(prev)
+      next.delete(record.id)
+      return next
+    }), 2000)
+  }, [])
+
+  // Realtime: agents updates  
+  const handleAgentUpdate = useCallback((record: any) => {
+    setAgents(prev => prev.map(a => {
+      if (a.id === record.id || a.dir === record.id) {
+        return { ...a, status: record.status || a.status }
+      }
+      return a
+    }))
+  }, [])
+
+  // Realtime: tasks changes
+  const handleTaskInsert = useCallback((record: any) => {
+    setTasks(prev => [record, ...prev])
+  }, [])
+
+  const handleTaskUpdate = useCallback((record: any) => {
+    setTasks(prev => prev.map(t => t.id === record.id ? { ...t, ...record } : t))
+  }, [])
+
+  const handleTaskDelete = useCallback((old: any) => {
+    if (old.id) setTasks(prev => prev.filter(t => t.id !== old.id))
+  }, [])
+
+  const { isConnected } = useRealtimeSubscription([
+    { table: 'activity_log', event: 'INSERT', onInsert: handleActivityInsert },
+    { table: 'agents', event: 'UPDATE', onUpdate: handleAgentUpdate },
+    { table: 'tasks', event: 'INSERT', onInsert: handleTaskInsert },
+    { table: 'tasks', event: 'UPDATE', onUpdate: handleTaskUpdate },
+    { table: 'tasks', event: 'DELETE', onDelete: handleTaskDelete },
+  ])
 
   const activeTasks = tasks.filter(t => t.status === 'in_progress')
   const doneTasks = tasks.filter(t => t.status === 'done')
@@ -448,12 +500,12 @@ export default function OverviewPage() {
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Activity Feed</h2>
-              <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full ${isConnected ? 'realtime-live-badge' : ''}`} style={{ background: isConnected ? 'rgba(52, 211, 153, 0.08)' : 'rgba(107, 114, 128, 0.08)', border: `1px solid ${isConnected ? 'rgba(52, 211, 153, 0.25)' : 'rgba(107, 114, 128, 0.2)'}` }}>
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                  {isConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isConnected ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
                 </span>
-                <span style={{ color: '#4b5563' }} className="text-xs font-semibold">Live</span>
+                <span style={{ color: isConnected ? '#34d399' : '#6b7280' }} className="text-xs font-semibold">{isConnected ? 'Live' : 'Connecting…'}</span>
               </div>
             </div>
             <div
@@ -470,7 +522,7 @@ export default function OverviewPage() {
                 </div>
               ) : (
                 activity.map((item, i) => (
-                  <ActivityItem key={item.id} item={item} isLast={i === activity.length - 1} />
+                  <ActivityItem key={item.id} item={item} isLast={i === activity.length - 1} isNew={newActivityIds.has(item.id)} />
                 ))
               )}
             </div>

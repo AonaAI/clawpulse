@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
 import { AGENTS } from '@/lib/data'
 import { fetchTasks, createTask, updateTask, deleteTask } from '@/lib/supabase-client'
+import { useTableSubscription } from '@/lib/useRealtimeSubscription'
 import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
 
 const COLUMNS: { status: TaskStatus; label: string; color: string; bg: string; border: string }[] = [
@@ -263,6 +264,25 @@ export default function TasksPage() {
   }, [])
 
   useEffect(() => { loadTasks() }, [loadTasks])
+
+  // Realtime subscriptions for tasks
+  useTableSubscription<Record<string, unknown>>(
+    'tasks',
+    {
+      onInsert: useCallback((record: any) => {
+        setTasks(prev => {
+          if (prev.some(t => t.id === record.id)) return prev
+          return [record, ...prev]
+        })
+      }, []),
+      onUpdate: useCallback((record: any) => {
+        setTasks(prev => prev.map(t => t.id === record.id ? { ...t, ...record } : t))
+      }, []),
+      onDelete: useCallback((old: any) => {
+        if (old.id) setTasks(prev => prev.filter(t => t.id !== old.id))
+      }, []),
+    },
+  )
 
   // ── Drag end ─────────────────────────────────────────────────────────────
   const onDragEnd = useCallback(async (result: DropResult) => {
