@@ -1,5 +1,42 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { AGENTS } from '@/lib/data'
-import type { Agent, AgentStatus } from '@/lib/types'
+import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
+
+const POLL_INTERVAL = 30_000
+
+function formatLastActive(ms: number | null): string {
+  if (ms === null) return 'Never'
+  const ago = Date.now() - ms
+  if (ago < 60_000) return 'Just now'
+  if (ago < 3_600_000) return `${Math.floor(ago / 60_000)} min ago`
+  if (ago < 86_400_000) return `${Math.floor(ago / 3_600_000)} hr ago`
+  return `${Math.floor(ago / 86_400_000)}d ago`
+}
+
+function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
+  const liveMap = new Map(live.map(d => [d.dir, d]))
+  return AGENTS.map(agent => {
+    const lookup = agent.dir ?? agent.id
+    const data = liveMap.get(lookup)
+    return {
+      ...agent,
+      status: (data?.status ?? 'offline') as AgentStatus,
+      sessionCount: data?.sessionCount ?? 0,
+      lastActive: data?.lastActive ?? null,
+      totalTokens: data?.totalTokens ?? 0,
+    }
+  })
+}
+
+const OFFLINE_AGENTS: MergedAgent[] = AGENTS.map(a => ({
+  ...a,
+  status: 'offline' as AgentStatus,
+  sessionCount: 0,
+  lastActive: null,
+  totalTokens: 0,
+}))
 
 function StatusBadge({ status }: { status: AgentStatus }) {
   const config = {
@@ -11,20 +48,20 @@ function StatusBadge({ status }: { status: AgentStatus }) {
       border: 'rgba(52, 211, 153, 0.25)',
       pulse: true,
     },
-    waiting: {
-      dot: '#fbbf24',
-      text: 'Waiting',
-      color: '#fbbf24',
-      bg: 'rgba(251, 191, 36, 0.08)',
-      border: 'rgba(251, 191, 36, 0.25)',
-      pulse: false,
-    },
     idle: {
       dot: '#4b5563',
       text: 'Idle',
       color: '#6b7280',
       bg: 'rgba(75, 85, 99, 0.06)',
       border: 'rgba(75, 85, 99, 0.2)',
+      pulse: false,
+    },
+    offline: {
+      dot: '#374151',
+      text: 'Offline',
+      color: '#4b5563',
+      bg: 'rgba(55, 65, 81, 0.04)',
+      border: 'rgba(55, 65, 81, 0.15)',
       pulse: false,
     },
   }[status]
@@ -67,7 +104,7 @@ function ModelBadge({ model }: { model: string }) {
   )
 }
 
-function AgentCard({ agent }: { agent: Agent }) {
+function AgentCard({ agent }: { agent: MergedAgent }) {
   const isWorking = agent.status === 'working'
   const initials = agent.name.slice(0, 2).toUpperCase()
 
@@ -142,27 +179,29 @@ function AgentCard({ agent }: { agent: Agent }) {
           </code>
         </div>
 
-        <div>
-          <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">
-            Slack channels ({agent.slack_channels.length})
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {agent.slack_channels.map((ch) => (
-              <span
-                key={ch}
-                style={{
-                  color: '#6b7280',
-                  background: 'rgba(0, 0, 0, 0.25)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  fontSize: '11px',
-                }}
-                className="px-2 py-0.5 rounded-md font-mono"
-              >
-                {ch}
-              </span>
-            ))}
+        {agent.slack_channels.length > 0 && (
+          <div>
+            <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">
+              Slack channels ({agent.slack_channels.length})
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {agent.slack_channels.map((ch) => (
+                <span
+                  key={ch}
+                  style={{
+                    color: '#6b7280',
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    fontSize: '11px',
+                  }}
+                  className="px-2 py-0.5 rounded-md font-mono"
+                >
+                  {ch}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {agent.spawn_permissions.length > 0 && (
           <div>
@@ -189,33 +228,52 @@ function AgentCard({ agent }: { agent: Agent }) {
           </div>
         )}
 
-        {agent.current_task && (
-          <div
-            style={{
-              background: 'rgba(52, 211, 153, 0.05)',
-              border: '1px solid rgba(52, 211, 153, 0.15)',
-            }}
-            className="rounded-lg p-3"
-          >
-            <span style={{ color: '#34d399' }} className="text-xs font-bold uppercase tracking-wider block mb-1">Current task</span>
-            <p style={{ color: '#9ca3af' }} className="text-xs leading-relaxed">{agent.current_task}</p>
+        <div className="flex items-center justify-between pt-1">
+          <div>
+            {agent.sessionCount > 0 ? (
+              <span style={{ color: '#6b7280' }} className="text-xs font-medium">
+                {agent.sessionCount} sessions
+              </span>
+            ) : (
+              <span style={{ color: '#374151' }} className="text-xs">No sessions</span>
+            )}
           </div>
-        )}
-
-        {agent.last_activity && (
-          <div style={{ color: '#374151' }} className="text-xs text-right font-medium">
-            Last seen {agent.last_activity}
-          </div>
-        )}
+          {agent.lastActive !== null && (
+            <div style={{ color: '#374151' }} className="text-xs font-medium">
+              Last seen {formatLastActive(agent.lastActive)}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
 export default function AgentsPage() {
-  const working = AGENTS.filter(a => a.status === 'working').length
-  const waiting = AGENTS.filter(a => a.status === 'waiting').length
-  const idle = AGENTS.filter(a => a.status === 'idle').length
+  const [agents, setAgents] = useState<MergedAgent[]>(OFFLINE_AGENTS)
+  const [apiError, setApiError] = useState(false)
+
+  useEffect(() => {
+    async function fetchAgents() {
+      try {
+        const res = await fetch('/api/agents')
+        if (!res.ok) throw new Error('non-ok response')
+        const live = await res.json()
+        setAgents(mergeLiveData(live))
+        setApiError(false)
+      } catch {
+        setApiError(true)
+      }
+    }
+
+    fetchAgents()
+    const id = setInterval(fetchAgents, POLL_INTERVAL)
+    return () => clearInterval(id)
+  }, [])
+
+  const working = agents.filter(a => a.status === 'working').length
+  const idle = agents.filter(a => a.status === 'idle').length
+  const offline = agents.filter(a => a.status === 'offline').length
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
@@ -236,7 +294,7 @@ export default function AgentsPage() {
           className="rounded-xl px-4 py-2 flex items-center gap-2.5"
         >
           <span style={{ color: '#6b7280' }} className="text-sm font-medium">Total</span>
-          <span style={{ color: '#f8f4ff' }} className="text-sm font-bold">{AGENTS.length}</span>
+          <span style={{ color: '#f8f4ff' }} className="text-sm font-bold">{agents.length}</span>
         </div>
         <div
           style={{
@@ -252,18 +310,6 @@ export default function AgentsPage() {
         </div>
         <div
           style={{
-            background: 'rgba(251, 191, 36, 0.06)',
-            border: '1px solid rgba(251, 191, 36, 0.2)',
-            backdropFilter: 'blur(12px)',
-          }}
-          className="rounded-xl px-4 py-2 flex items-center gap-2.5"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 inline-block" />
-          <span style={{ color: '#fbbf24' }} className="text-sm font-semibold">Waiting</span>
-          <span style={{ color: '#fbbf24' }} className="text-sm font-bold">{waiting}</span>
-        </div>
-        <div
-          style={{
             background: 'rgba(75, 85, 99, 0.06)',
             border: '1px solid rgba(75, 85, 99, 0.2)',
             backdropFilter: 'blur(12px)',
@@ -274,11 +320,36 @@ export default function AgentsPage() {
           <span style={{ color: '#9ca3af' }} className="text-sm font-semibold">Idle</span>
           <span style={{ color: '#9ca3af' }} className="text-sm font-bold">{idle}</span>
         </div>
+        <div
+          style={{
+            background: 'rgba(55, 65, 81, 0.04)',
+            border: '1px solid rgba(55, 65, 81, 0.2)',
+            backdropFilter: 'blur(12px)',
+          }}
+          className="rounded-xl px-4 py-2 flex items-center gap-2.5"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-gray-700 inline-block" />
+          <span style={{ color: '#4b5563' }} className="text-sm font-semibold">Offline</span>
+          <span style={{ color: '#4b5563' }} className="text-sm font-bold">{offline}</span>
+        </div>
       </div>
+
+      {apiError && (
+        <div
+          style={{
+            background: 'rgba(239, 68, 68, 0.06)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#f87171',
+          }}
+          className="rounded-xl px-4 py-3 text-xs font-medium mb-6"
+        >
+          Could not reach /api/agents — run <code className="font-mono">next dev</code> for live data. Showing offline state.
+        </div>
+      )}
 
       {/* Agent cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {AGENTS.map((agent) => (
+        {agents.map((agent) => (
           <AgentCard key={agent.id} agent={agent} />
         ))}
       </div>

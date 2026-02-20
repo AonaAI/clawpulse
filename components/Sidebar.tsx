@@ -42,9 +42,6 @@ const navItems = [
   },
 ]
 
-const workingCount = AGENTS.filter(a => a.status === 'working').length
-const waitingCount = AGENTS.filter(a => a.status === 'waiting').length
-
 export default function Sidebar() {
   const pathname = usePathname()
 
@@ -152,14 +149,6 @@ export default function Sidebar() {
           <div className="flex justify-between items-center">
             <span style={{ color: '#6b7280' }} className="text-xs">Total agents</span>
             <span style={{ color: '#f8f4ff' }} className="text-xs font-semibold">{AGENTS.length}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span style={{ color: '#6b7280' }} className="text-xs">Working</span>
-            <span style={{ color: '#34d399' }} className="text-xs font-semibold">{workingCount}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span style={{ color: '#6b7280' }} className="text-xs">Waiting</span>
-            <span style={{ color: '#fbbf24' }} className="text-xs font-semibold">{waitingCount}</span>
           </div>
         </div>
       </div>

@@ -1,5 +1,42 @@
-import { AGENTS, ACTIVITY_LOG, SAMPLE_TASKS } from '@/lib/data'
-import type { Agent, AgentStatus } from '@/lib/types'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { AGENTS, SAMPLE_TASKS, ACTIVITY_LOG } from '@/lib/data'
+import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
+
+const POLL_INTERVAL = 30_000
+
+function formatLastActive(ms: number | null): string {
+  if (ms === null) return 'Never'
+  const ago = Date.now() - ms
+  if (ago < 60_000) return 'Just now'
+  if (ago < 3_600_000) return `${Math.floor(ago / 60_000)} min ago`
+  if (ago < 86_400_000) return `${Math.floor(ago / 3_600_000)} hr ago`
+  return `${Math.floor(ago / 86_400_000)}d ago`
+}
+
+function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
+  const liveMap = new Map(live.map(d => [d.dir, d]))
+  return AGENTS.map(agent => {
+    const lookup = agent.dir ?? agent.id
+    const data = liveMap.get(lookup)
+    return {
+      ...agent,
+      status: (data?.status ?? 'offline') as AgentStatus,
+      sessionCount: data?.sessionCount ?? 0,
+      lastActive: data?.lastActive ?? null,
+      totalTokens: data?.totalTokens ?? 0,
+    }
+  })
+}
+
+const OFFLINE_AGENTS: MergedAgent[] = AGENTS.map(a => ({
+  ...a,
+  status: 'offline' as AgentStatus,
+  sessionCount: 0,
+  lastActive: null,
+  totalTokens: 0,
+}))
 
 function StatusBadge({ status }: { status: AgentStatus }) {
   const config = {
@@ -11,20 +48,20 @@ function StatusBadge({ status }: { status: AgentStatus }) {
       border: 'rgba(52, 211, 153, 0.25)',
       pulse: true,
     },
-    waiting: {
-      dot: '#fbbf24',
-      text: 'Waiting',
-      bg: 'rgba(251, 191, 36, 0.08)',
-      color: '#fbbf24',
-      border: 'rgba(251, 191, 36, 0.25)',
-      pulse: false,
-    },
     idle: {
       dot: '#4b5563',
       text: 'Idle',
       bg: 'rgba(75, 85, 99, 0.06)',
       color: '#6b7280',
       border: 'rgba(75, 85, 99, 0.2)',
+      pulse: false,
+    },
+    offline: {
+      dot: '#374151',
+      text: 'Offline',
+      bg: 'rgba(55, 65, 81, 0.04)',
+      color: '#4b5563',
+      border: 'rgba(55, 65, 81, 0.15)',
       pulse: false,
     },
   }[status]
@@ -43,7 +80,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
   )
 }
 
-function AgentCard({ agent }: { agent: Agent }) {
+function AgentCard({ agent }: { agent: MergedAgent }) {
   const initials = agent.name.slice(0, 2).toUpperCase()
   const isWorking = agent.status === 'working'
 
@@ -87,25 +124,11 @@ function AgentCard({ agent }: { agent: Agent }) {
         </div>
       </div>
 
-      {agent.current_task ? (
-        <div
-          style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            borderRadius: '8px',
-            padding: '8px 10px',
-          }}
-        >
-          <div style={{ color: '#4b5563' }} className="text-xs mb-0.5 font-semibold uppercase tracking-wide">Current task</div>
-          <div style={{ color: '#9ca3af' }} className="text-xs leading-relaxed line-clamp-2">{agent.current_task}</div>
-        </div>
-      ) : (
-        agent.last_activity && (
-          <div style={{ color: '#374151' }} className="text-xs">
-            Last active {agent.last_activity}
-          </div>
-        )
-      )}
+      <div style={{ color: '#374151' }} className="text-xs">
+        {agent.sessionCount > 0
+          ? `${agent.sessionCount} sessions · last ${formatLastActive(agent.lastActive)}`
+          : 'No sessions'}
+      </div>
     </div>
   )
 }
@@ -144,15 +167,36 @@ function ActivityItem({ item, isLast }: { item: typeof ACTIVITY_LOG[0]; isLast: 
 }
 
 export default function OverviewPage() {
-  const workingAgents = AGENTS.filter(a => a.status === 'working')
-  const waitingAgents = AGENTS.filter(a => a.status === 'waiting')
+  const [agents, setAgents] = useState<MergedAgent[]>(OFFLINE_AGENTS)
+  const [apiError, setApiError] = useState(false)
+
+  useEffect(() => {
+    async function fetchAgents() {
+      try {
+        const res = await fetch('/api/agents')
+        if (!res.ok) throw new Error('non-ok response')
+        const live = await res.json()
+        setAgents(mergeLiveData(live))
+        setApiError(false)
+      } catch {
+        setApiError(true)
+      }
+    }
+
+    fetchAgents()
+    const id = setInterval(fetchAgents, POLL_INTERVAL)
+    return () => clearInterval(id)
+  }, [])
+
   const activeTasks = SAMPLE_TASKS.filter(t => t.status === 'in_progress')
   const doneTasks = SAMPLE_TASKS.filter(t => t.status === 'done')
+  const workingAgents = agents.filter(a => a.status === 'working')
+  const idleAgents = agents.filter(a => a.status === 'idle')
 
   const stats = [
     {
       label: 'Total Agents',
-      value: AGENTS.length,
+      value: agents.length,
       color: '#a78bfa',
       iconColor: 'rgba(167, 139, 250, 0.7)',
       gradient: 'linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(109, 40, 217, 0.04) 100%)',
@@ -180,12 +224,12 @@ export default function OverviewPage() {
       ),
     },
     {
-      label: 'Waiting',
-      value: waitingAgents.length,
-      color: '#fbbf24',
-      iconColor: 'rgba(251, 191, 36, 0.7)',
-      gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.04) 100%)',
-      border: 'rgba(251, 191, 36, 0.2)',
+      label: 'Idle',
+      value: idleAgents.length,
+      color: '#9ca3af',
+      iconColor: 'rgba(156, 163, 175, 0.7)',
+      gradient: 'linear-gradient(135deg, rgba(75, 85, 99, 0.1) 0%, rgba(55, 65, 81, 0.04) 100%)',
+      border: 'rgba(75, 85, 99, 0.2)',
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
@@ -245,6 +289,19 @@ export default function OverviewPage() {
         ))}
       </div>
 
+      {apiError && (
+        <div
+          style={{
+            background: 'rgba(239, 68, 68, 0.06)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            color: '#f87171',
+          }}
+          className="rounded-xl px-4 py-3 text-xs font-medium mb-6"
+        >
+          Could not reach /api/agents — run <code className="font-mono">next dev</code> for live data. Showing offline state.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Agent grid */}
         <div className="xl:col-span-2">
@@ -258,11 +315,11 @@ export default function OverviewPage() {
               }}
               className="text-xs px-2.5 py-0.5 rounded-full font-medium"
             >
-              {AGENTS.length} agents
+              {agents.length} agents
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {AGENTS.map((agent) => (
+            {agents.map((agent) => (
               <AgentCard key={agent.id} agent={agent} />
             ))}
           </div>
@@ -294,7 +351,7 @@ export default function OverviewPage() {
               className="rounded-xl overflow-hidden"
             >
               {activeTasks.map((task, i) => {
-                const agent = AGENTS.find(a => a.id === task.assigned_agent)
+                const agent = agents.find(a => a.id === task.assigned_agent)
                 const pColor = priorityConfig[task.priority].color
                 return (
                   <div
