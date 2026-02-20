@@ -3,18 +3,41 @@ import type { Agent, AgentStatus } from '@/lib/types'
 
 function StatusBadge({ status }: { status: AgentStatus }) {
   const config = {
-    working: { dot: '#4ade80', text: 'Working', bg: 'rgba(74, 222, 128, 0.1)', color: '#4ade80' },
-    waiting: { dot: '#facc15', text: 'Waiting', bg: 'rgba(250, 204, 21, 0.1)', color: '#facc15' },
-    idle: { dot: '#6b7280', text: 'Idle', bg: 'rgba(107, 114, 128, 0.1)', color: '#9ca3af' },
+    working: {
+      dot: '#34d399',
+      text: 'Working',
+      bg: 'rgba(52, 211, 153, 0.08)',
+      color: '#34d399',
+      border: 'rgba(52, 211, 153, 0.25)',
+      pulse: true,
+    },
+    waiting: {
+      dot: '#fbbf24',
+      text: 'Waiting',
+      bg: 'rgba(251, 191, 36, 0.08)',
+      color: '#fbbf24',
+      border: 'rgba(251, 191, 36, 0.25)',
+      pulse: false,
+    },
+    idle: {
+      dot: '#4b5563',
+      text: 'Idle',
+      bg: 'rgba(75, 85, 99, 0.06)',
+      color: '#6b7280',
+      border: 'rgba(75, 85, 99, 0.2)',
+      pulse: false,
+    },
   }[status]
 
   return (
     <span
-      style={{ background: config.bg, color: config.color }}
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium"
+      style={{ background: config.bg, color: config.color, border: `1px solid ${config.border}` }}
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold"
     >
-      <span style={{ background: config.dot, boxShadow: status === 'working' ? `0 0 6px ${config.dot}` : 'none' }}
-        className="w-1.5 h-1.5 rounded-full inline-block" />
+      <span
+        style={{ background: config.dot }}
+        className={`w-1.5 h-1.5 rounded-full inline-block flex-shrink-0 ${config.pulse ? 'status-glow-working' : ''}`}
+      />
       {config.text}
     </span>
   )
@@ -22,73 +45,99 @@ function StatusBadge({ status }: { status: AgentStatus }) {
 
 function AgentCard({ agent }: { agent: Agent }) {
   const initials = agent.name.slice(0, 2).toUpperCase()
+  const isWorking = agent.status === 'working'
 
   return (
     <div
       style={{
-        background: '#1a0533',
-        border: '1px solid #2d1054',
+        background: isWorking
+          ? 'rgba(124, 58, 237, 0.04)'
+          : 'rgba(255, 255, 255, 0.02)',
+        border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'rgba(109, 40, 217, 0.14)'}`,
+        backdropFilter: 'blur(12px)',
+        boxShadow: isWorking
+          ? '0 0 0 1px rgba(139, 92, 246, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4)'
+          : '0 4px 24px rgba(0, 0, 0, 0.3)',
         transition: 'border-color 0.2s, box-shadow 0.2s',
       }}
-      className="rounded-xl p-4 flex flex-col gap-3 hover:border-[#6412A6] hover:shadow-lg group cursor-default"
+      className="rounded-xl p-4 flex flex-col gap-3 cursor-default hover:border-[rgba(139,92,246,0.4)]"
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            style={{ background: agent.avatar_color, boxShadow: `0 0 12px ${agent.avatar_color}40` }}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+            style={{
+              background: isWorking
+                ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(79, 46, 220, 0.15) 100%)'
+                : 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.45)' : 'rgba(255, 255, 255, 0.07)'}`,
+              boxShadow: isWorking ? '0 0 18px rgba(124, 58, 237, 0.22)' : 'none',
+              color: isWorking ? '#c4b5fd' : '#6b7280',
+            }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
           >
             {initials}
           </div>
-          <div>
-            <div style={{ color: '#f0e6ff' }} className="font-semibold text-sm">{agent.name}</div>
-            <div style={{ color: '#7c5fa0' }} className="text-xs">{agent.role}</div>
+          <div className="min-w-0">
+            <div style={{ color: '#f8f4ff' }} className="font-semibold text-sm leading-tight">{agent.name}</div>
+            <div style={{ color: '#6b7280' }} className="text-xs mt-0.5 truncate">{agent.role}</div>
           </div>
         </div>
-        <StatusBadge status={agent.status} />
+        <div className="flex-shrink-0">
+          <StatusBadge status={agent.status} />
+        </div>
       </div>
 
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span style={{ color: '#5c3d7a', fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Model</span>
-          <span style={{ color: '#9d7bbd', background: '#2d1054', padding: '1px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 500 }}>
-            {agent.model}
-          </span>
+      {agent.current_task ? (
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            borderRadius: '8px',
+            padding: '8px 10px',
+          }}
+        >
+          <div style={{ color: '#4b5563' }} className="text-xs mb-0.5 font-semibold uppercase tracking-wide">Current task</div>
+          <div style={{ color: '#9ca3af' }} className="text-xs leading-relaxed line-clamp-2">{agent.current_task}</div>
         </div>
-        {agent.current_task && (
-          <div style={{ color: '#9d7bbd' }} className="text-xs truncate" title={agent.current_task}>
-            ↳ {agent.current_task}
+      ) : (
+        agent.last_activity && (
+          <div style={{ color: '#374151' }} className="text-xs">
+            Last active {agent.last_activity}
           </div>
-        )}
-        {agent.last_activity && (
-          <div style={{ color: '#5c3d7a' }} className="text-xs">
-            Last seen {agent.last_activity}
-          </div>
-        )}
-      </div>
+        )
+      )}
     </div>
   )
 }
 
-function ActivityItem({ item }: { item: typeof ACTIVITY_LOG[0] }) {
-  const agent = AGENTS.find(a => a.id === item.agent_id)
-  const color = agent?.avatar_color ?? '#6412A6'
-
+function ActivityItem({ item, isLast }: { item: typeof ACTIVITY_LOG[0]; isLast: boolean }) {
   return (
-    <div className="flex items-start gap-3 py-3" style={{ borderBottom: '1px solid #1a0533' }}>
+    <div
+      className="flex items-start gap-3 py-3.5"
+      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)' }}
+    >
       <div
-        style={{ background: color, width: '28px', height: '28px', minWidth: '28px' }}
-        className="rounded-lg flex items-center justify-center text-white text-xs font-bold"
+        style={{
+          background: 'rgba(109, 40, 217, 0.15)',
+          border: '1px solid rgba(139, 92, 246, 0.18)',
+          width: '26px',
+          height: '26px',
+          minWidth: '26px',
+          color: '#8b5cf6',
+        }}
+        className="rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
       >
         {item.agent_name.slice(0, 2).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline justify-between gap-2">
-          <span style={{ color: '#e0c8ff' }} className="text-sm font-medium">{item.agent_name}</span>
-          <span style={{ color: '#5c3d7a' }} className="text-xs flex-shrink-0">{item.time}</span>
+        <div className="flex items-baseline justify-between gap-2 mb-0.5">
+          <span style={{ color: '#e9e2ff' }} className="text-xs font-semibold">{item.agent_name}</span>
+          <span style={{ color: '#374151', fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em' }} className="flex-shrink-0">
+            {item.time}
+          </span>
         </div>
-        <div style={{ color: '#c084fc' }} className="text-xs font-medium">{item.action}</div>
-        <div style={{ color: '#7c5fa0' }} className="text-xs truncate">{item.details}</div>
+        <div style={{ color: '#7c3aed' }} className="text-xs font-semibold">{item.action}</div>
+        <div style={{ color: '#4b5563' }} className="text-xs mt-0.5 truncate">{item.details}</div>
       </div>
     </div>
   )
@@ -100,32 +149,98 @@ export default function OverviewPage() {
   const activeTasks = SAMPLE_TASKS.filter(t => t.status === 'in_progress')
   const doneTasks = SAMPLE_TASKS.filter(t => t.status === 'done')
 
+  const stats = [
+    {
+      label: 'Total Agents',
+      value: AGENTS.length,
+      color: '#a78bfa',
+      iconColor: 'rgba(167, 139, 250, 0.7)',
+      gradient: 'linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(109, 40, 217, 0.04) 100%)',
+      border: 'rgba(139, 92, 246, 0.2)',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="9" cy="7" r="4" />
+          <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          <path d="M21 21v-2a4 4 0 0 0-3-3.85" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Active Now',
+      value: workingAgents.length,
+      color: '#34d399',
+      iconColor: 'rgba(52, 211, 153, 0.7)',
+      gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%)',
+      border: 'rgba(52, 211, 153, 0.2)',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Waiting',
+      value: waitingAgents.length,
+      color: '#fbbf24',
+      iconColor: 'rgba(251, 191, 36, 0.7)',
+      gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.04) 100%)',
+      border: 'rgba(251, 191, 36, 0.2)',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Tasks Done',
+      value: doneTasks.length,
+      color: '#22d3ee',
+      iconColor: 'rgba(34, 211, 238, 0.7)',
+      gradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(8, 145, 178, 0.04) 100%)',
+      border: 'rgba(34, 211, 238, 0.2)',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ),
+    },
+  ]
+
+  const priorityConfig = {
+    low: { color: '#6b7280' },
+    medium: { color: '#3b82f6' },
+    high: { color: '#f59e0b' },
+    critical: { color: '#ef4444' },
+  }
+
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ color: '#f0e6ff' }} className="text-2xl font-bold tracking-tight">Overview</h1>
-        <p style={{ color: '#7c5fa0' }} className="text-sm mt-1">Real-time status of your agent network</p>
+        <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Overview</h1>
+        <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
       </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Total Agents', value: AGENTS.length, color: '#c084fc', icon: '◎' },
-          { label: 'Active Now', value: workingAgents.length, color: '#4ade80', icon: '⚡' },
-          { label: 'Waiting', value: waitingAgents.length, color: '#facc15', icon: '⏳' },
-          { label: 'Tasks Done', value: doneTasks.length, color: '#a78bfa', icon: '✓' },
-        ].map((stat) => (
+        {stats.map((stat) => (
           <div
             key={stat.label}
-            style={{ background: '#1a0533', border: '1px solid #2d1054' }}
-            className="rounded-xl p-4"
+            style={{
+              background: stat.gradient,
+              border: `1px solid ${stat.border}`,
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
+            }}
+            className="rounded-xl p-5"
           >
-            <div className="flex items-center justify-between mb-2">
-              <span style={{ color: '#7c5fa0' }} className="text-xs font-medium uppercase tracking-wide">{stat.label}</span>
-              <span style={{ color: stat.color, opacity: 0.8 }} className="text-sm">{stat.icon}</span>
+            <div className="flex items-center justify-between mb-3">
+              <span style={{ color: '#6b7280' }} className="text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
+              <span style={{ color: stat.iconColor }}>{stat.icon}</span>
             </div>
-            <div style={{ color: stat.color }} className="text-3xl font-bold">{stat.value}</div>
+            <div style={{ color: stat.color }} className="text-4xl font-bold tracking-tight">{stat.value}</div>
           </div>
         ))}
       </div>
@@ -133,10 +248,16 @@ export default function OverviewPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Agent grid */}
         <div className="xl:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 style={{ color: '#e0c8ff' }} className="font-semibold text-base">Agent Status</h2>
-            <span style={{ color: '#7c5fa0', background: '#1a0533', border: '1px solid #2d1054' }}
-              className="text-xs px-2 py-0.5 rounded-full">
+          <div className="flex items-center justify-between mb-5">
+            <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Agent Status</h2>
+            <span
+              style={{
+                color: '#6b7280',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+              }}
+              className="text-xs px-2.5 py-0.5 rounded-full font-medium"
+            >
               {AGENTS.length} agents
             </span>
           </div>
@@ -151,27 +272,63 @@ export default function OverviewPage() {
         <div className="space-y-6">
           {/* Active tasks */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 style={{ color: '#e0c8ff' }} className="font-semibold text-base">Active Tasks</h2>
-              <span style={{ color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)' }}
-                className="text-xs px-2 py-0.5 rounded-full font-medium">
+            <div className="flex items-center justify-between mb-5">
+              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Active Tasks</h2>
+              <span
+                style={{
+                  color: '#34d399',
+                  background: 'rgba(52, 211, 153, 0.08)',
+                  border: '1px solid rgba(52, 211, 153, 0.2)',
+                }}
+                className="text-xs px-2.5 py-0.5 rounded-full font-semibold"
+              >
                 {activeTasks.length} in progress
               </span>
             </div>
-            <div style={{ background: '#1a0533', border: '1px solid #2d1054' }} className="rounded-xl divide-y">
-              {activeTasks.map((task) => {
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(109, 40, 217, 0.14)',
+                backdropFilter: 'blur(12px)',
+              }}
+              className="rounded-xl overflow-hidden"
+            >
+              {activeTasks.map((task, i) => {
                 const agent = AGENTS.find(a => a.id === task.assigned_agent)
-                const priorityColor = { low: '#6b7280', medium: '#3b82f6', high: '#f59e0b', critical: '#ef4444' }[task.priority]
+                const pColor = priorityConfig[task.priority].color
                 return (
-                  <div key={task.id} className="p-3 flex items-start gap-3">
-                    <div style={{ background: priorityColor, width: '3px', minWidth: '3px', borderRadius: '2px' }} className="mt-1 h-4" />
+                  <div
+                    key={task.id}
+                    className="px-4 py-3.5 flex items-start gap-3"
+                    style={{ borderBottom: i < activeTasks.length - 1 ? '1px solid rgba(255, 255, 255, 0.04)' : 'none' }}
+                  >
+                    <div
+                      style={{
+                        background: pColor,
+                        width: '2px',
+                        minWidth: '2px',
+                        borderRadius: '2px',
+                        opacity: 0.75,
+                        alignSelf: 'stretch',
+                      }}
+                    />
                     <div className="flex-1 min-w-0">
-                      <div style={{ color: '#e0c8ff' }} className="text-sm font-medium truncate">{task.title}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span style={{ color: '#9d7bbd', background: '#2d1054', padding: '1px 6px', borderRadius: '999px', fontSize: '10px' }}>
+                      <div style={{ color: '#e9e2ff' }} className="text-sm font-medium truncate mb-1.5">{task.title}</div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          style={{
+                            color: '#8b5cf6',
+                            background: 'rgba(139, 92, 246, 0.1)',
+                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                            padding: '1px 7px',
+                            borderRadius: '5px',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                          }}
+                        >
                           {agent?.name ?? task.assigned_agent}
                         </span>
-                        <span style={{ color: '#5c3d7a', fontSize: '11px' }}>{task.project}</span>
+                        <span style={{ color: '#4b5563', fontSize: '11px' }}>{task.project}</span>
                       </div>
                     </div>
                   </div>
@@ -182,16 +339,26 @@ export default function OverviewPage() {
 
           {/* Activity feed */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 style={{ color: '#e0c8ff' }} className="font-semibold text-base">Activity Feed</h2>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
-              </span>
+            <div className="flex items-center justify-between mb-5">
+              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Activity Feed</h2>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                <span style={{ color: '#4b5563' }} className="text-xs font-semibold">Live</span>
+              </div>
             </div>
-            <div style={{ background: '#1a0533', border: '1px solid #2d1054' }} className="rounded-xl px-4 overflow-hidden">
-              {ACTIVITY_LOG.map((item) => (
-                <ActivityItem key={item.id} item={item} />
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(109, 40, 217, 0.14)',
+                backdropFilter: 'blur(12px)',
+              }}
+              className="rounded-xl px-4 overflow-hidden"
+            >
+              {ACTIVITY_LOG.map((item, i) => (
+                <ActivityItem key={item.id} item={item} isLast={i === ACTIVITY_LOG.length - 1} />
               ))}
             </div>
           </div>

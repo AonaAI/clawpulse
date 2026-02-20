@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #11021d;
-  --foreground: #f0e6ff;
+  --background: #0a0118;
+  --foreground: #f8f4ff;
 }
 
 @theme inline {
@@ -27,7 +27,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #11021d;
+  background: #0a0118;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -36,5 +36,18 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6412A6;
+  background: #7c3aed;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 4px 1px rgba(52, 211, 153, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 8px 3px rgba(52, 211, 153, 0.15);
+  }
+}
+
+.status-glow-working {
+  animation: glow-pulse 2s ease-in-out infinite;
 }

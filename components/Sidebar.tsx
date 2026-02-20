@@ -9,7 +9,7 @@ const navItems = [
     href: '/',
     label: 'Overview',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" rx="1" />
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
@@ -21,7 +21,7 @@ const navItems = [
     href: '/agents',
     label: 'Agents',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="9" cy="7" r="4" />
         <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -33,7 +33,7 @@ const navItems = [
     href: '/tasks',
     label: 'Tasks',
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="4" height="18" rx="1" />
         <rect x="10" y="3" width="4" height="13" rx="1" />
         <rect x="17" y="3" width="4" height="16" rx="1" />
@@ -50,25 +50,34 @@ export default function Sidebar() {
 
   return (
     <aside
-      style={{ background: '#0d011a', borderRight: '1px solid #2d1054', width: '240px', minWidth: '240px' }}
+      style={{
+        background: 'linear-gradient(180deg, #0e0120 0%, #080112 100%)',
+        borderRight: '1px solid rgba(109, 40, 217, 0.18)',
+        width: '240px',
+        minWidth: '240px',
+      }}
       className="flex flex-col h-screen sticky top-0"
     >
       {/* Logo */}
-      <div style={{ borderBottom: '1px solid #2d1054' }} className="px-5 py-5">
+      <div style={{ borderBottom: '1px solid rgba(109, 40, 217, 0.12)' }} className="px-5 py-5">
         <div className="flex items-center gap-3">
           <div
-            style={{ background: 'linear-gradient(135deg, #6412A6, #2d1054)', border: '1px solid #6412A6' }}
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
+              border: '1px solid rgba(139, 92, 246, 0.5)',
+              boxShadow: '0 0 20px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(255,255,255,0.12)',
+            }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
             </svg>
           </div>
           <div>
-            <div style={{ color: '#f0e6ff' }} className="font-bold text-sm tracking-wide leading-none">
+            <div style={{ color: '#f8f4ff' }} className="font-bold text-sm tracking-wide leading-none">
               ClawPulse
             </div>
-            <div style={{ color: '#7c5fa0' }} className="text-xs mt-0.5 leading-none">
+            <div style={{ color: '#6d28d9' }} className="text-xs mt-0.5 leading-none font-medium">
               Agent Ops
             </div>
           </div>
@@ -76,8 +85,8 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        <div style={{ color: '#5c3d7a' }} className="px-2 mb-3 text-xs font-semibold uppercase tracking-widest">
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
+        <div style={{ color: '#3b1d6e' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
           Navigation
         </div>
         {navItems.map((item) => {
@@ -88,18 +97,31 @@ export default function Sidebar() {
               href={item.href}
               style={
                 isActive
-                  ? { background: 'rgba(100, 18, 166, 0.25)', color: '#c084fc', borderLeft: '2px solid #6412A6' }
-                  : { color: '#9d7bbd', borderLeft: '2px solid transparent' }
+                  ? {
+                      background: 'rgba(109, 40, 217, 0.18)',
+                      color: '#c4b5fd',
+                      borderLeft: '2px solid #7c3aed',
+                      boxShadow: 'inset 0 0 24px rgba(109, 40, 217, 0.06)',
+                    }
+                  : { color: '#7c5fa0', borderLeft: '2px solid transparent' }
               }
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 hover:text-[#e0c8ff]"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
               onMouseEnter={e => {
-                if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(100, 18, 166, 0.1)'
+                if (!isActive) {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.background = 'rgba(109, 40, 217, 0.08)'
+                  el.style.color = '#ddd6fe'
+                }
               }}
               onMouseLeave={e => {
-                if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'
+                if (!isActive) {
+                  const el = e.currentTarget as HTMLElement
+                  el.style.background = 'transparent'
+                  el.style.color = '#7c5fa0'
+                }
               }}
             >
-              <span style={{ opacity: isActive ? 1 : 0.7 }}>{item.icon}</span>
+              <span style={{ opacity: isActive ? 1 : 0.55 }}>{item.icon}</span>
               {item.label}
             </Link>
           )
@@ -107,33 +129,37 @@ export default function Sidebar() {
       </nav>
 
       {/* System status */}
-      <div style={{ borderTop: '1px solid #2d1054' }} className="px-4 py-4 space-y-3">
-        <div style={{ color: '#5c3d7a' }} className="text-xs font-semibold uppercase tracking-widest mb-2">
+      <div style={{ borderTop: '1px solid rgba(109, 40, 217, 0.12)' }} className="px-4 py-4 space-y-3">
+        <div style={{ color: '#3b1d6e' }} className="text-xs font-bold uppercase tracking-widest mb-2">
           System
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
-            </span>
-            <span style={{ color: '#9d7bbd' }} className="text-xs">System Active</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+          </span>
+          <span style={{ color: '#6b7280' }} className="text-xs font-medium">System Active</span>
         </div>
 
-        <div style={{ background: '#1a0533', border: '1px solid #2d1054' }} className="rounded-lg p-3 space-y-2">
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.025)',
+            border: '1px solid rgba(109, 40, 217, 0.18)',
+          }}
+          className="rounded-xl p-3 space-y-2.5"
+        >
           <div className="flex justify-between items-center">
-            <span style={{ color: '#7c5fa0' }} className="text-xs">Total agents</span>
-            <span style={{ color: '#f0e6ff' }} className="text-xs font-semibold">{AGENTS.length}</span>
+            <span style={{ color: '#6b7280' }} className="text-xs">Total agents</span>
+            <span style={{ color: '#f8f4ff' }} className="text-xs font-semibold">{AGENTS.length}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span style={{ color: '#7c5fa0' }} className="text-xs">Working</span>
-            <span style={{ color: '#4ade80' }} className="text-xs font-semibold">{workingCount}</span>
+            <span style={{ color: '#6b7280' }} className="text-xs">Working</span>
+            <span style={{ color: '#34d399' }} className="text-xs font-semibold">{workingCount}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span style={{ color: '#7c5fa0' }} className="text-xs">Waiting</span>
-            <span style={{ color: '#facc15' }} className="text-xs font-semibold">{waitingCount}</span>
+            <span style={{ color: '#6b7280' }} className="text-xs">Waiting</span>
+            <span style={{ color: '#fbbf24' }} className="text-xs font-semibold">{waitingCount}</span>
           </div>
         </div>
       </div>

@@ -21,10 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={manrope.variable}>
-      <body className="antialiased" style={{ background: '#11021d', color: '#f0e6ff' }}>
-        <div className="flex min-h-screen">
+      <body className="antialiased" style={{ background: '#0a0118', color: '#f8f4ff' }}>
+        <div className="flex min-h-screen" style={{ background: '#0a0118' }}>
           <Sidebar />
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto" style={{ background: '#0a0118' }}>
             {children}
           </main>
         </div>
