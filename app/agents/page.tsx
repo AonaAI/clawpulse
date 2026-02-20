@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
 import { fetchTokenStatsByAgent } from '@/lib/supabase-client'
 import { supabase } from '@/lib/supabase-client'
@@ -135,7 +136,7 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
           : '0 4px 24px rgba(0, 0, 0, 0.3)',
         transition: 'border-color 0.2s, box-shadow 0.2s',
       }}
-      className="rounded-xl overflow-hidden hover:border-[rgba(139,92,246,0.4)]"
+      className="rounded-xl overflow-hidden hover:border-[rgba(139,92,246,0.4)] cursor-pointer group-hover:border-[rgba(139,92,246,0.45)]"
     >
       {/* Card header */}
       <div
@@ -411,7 +412,9 @@ export default function AgentsPage() {
       {/* Agent cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {agents.map((agent) => (
-          <AgentCard key={agent.id} agent={agent} tokenStats={tokenMap[agent.id] || null} mission={missionMap[agent.id] || null} />
+          <Link key={agent.id} href={`/agents/${agent.id}`} className="block group">
+            <AgentCard agent={agent} tokenStats={tokenMap[agent.id] || null} mission={missionMap[agent.id] || null} />
+          </Link>
         ))}
       </div>
     </div>
