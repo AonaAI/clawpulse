@@ -1,0 +1,142 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { AGENTS } from '@/lib/data'
+
+const navItems = [
+  {
+    href: '/',
+    label: 'Overview',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    href: '/agents',
+    label: 'Agents',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="9" cy="7" r="4" />
+        <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        <path d="M21 21v-2a4 4 0 0 0-3-3.85" />
+      </svg>
+    ),
+  },
+  {
+    href: '/tasks',
+    label: 'Tasks',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="4" height="18" rx="1" />
+        <rect x="10" y="3" width="4" height="13" rx="1" />
+        <rect x="17" y="3" width="4" height="16" rx="1" />
+      </svg>
+    ),
+  },
+]
+
+const workingCount = AGENTS.filter(a => a.status === 'working').length
+const waitingCount = AGENTS.filter(a => a.status === 'waiting').length
+
+export default function Sidebar() {
+  const pathname = usePathname()
+
+  return (
+    <aside
+      style={{ background: '#0d011a', borderRight: '1px solid #2d1054', width: '240px', minWidth: '240px' }}
+      className="flex flex-col h-screen sticky top-0"
+    >
+      {/* Logo */}
+      <div style={{ borderBottom: '1px solid #2d1054' }} className="px-5 py-5">
+        <div className="flex items-center gap-3">
+          <div
+            style={{ background: 'linear-gradient(135deg, #6412A6, #2d1054)', border: '1px solid #6412A6' }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ color: '#f0e6ff' }} className="font-bold text-sm tracking-wide leading-none">
+              ClawPulse
+            </div>
+            <div style={{ color: '#7c5fa0' }} className="text-xs mt-0.5 leading-none">
+              Agent Ops
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        <div style={{ color: '#5c3d7a' }} className="px-2 mb-3 text-xs font-semibold uppercase tracking-widest">
+          Navigation
+        </div>
+        {navItems.map((item) => {
+          const isActive = pathname === item.href
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={
+                isActive
+                  ? { background: 'rgba(100, 18, 166, 0.25)', color: '#c084fc', borderLeft: '2px solid #6412A6' }
+                  : { color: '#9d7bbd', borderLeft: '2px solid transparent' }
+              }
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 hover:text-[#e0c8ff]"
+              onMouseEnter={e => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(100, 18, 166, 0.1)'
+              }}
+              onMouseLeave={e => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'
+              }}
+            >
+              <span style={{ opacity: isActive ? 1 : 0.7 }}>{item.icon}</span>
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* System status */}
+      <div style={{ borderTop: '1px solid #2d1054' }} className="px-4 py-4 space-y-3">
+        <div style={{ color: '#5c3d7a' }} className="text-xs font-semibold uppercase tracking-widest mb-2">
+          System
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
+            </span>
+            <span style={{ color: '#9d7bbd' }} className="text-xs">System Active</span>
+          </div>
+        </div>
+
+        <div style={{ background: '#1a0533', border: '1px solid #2d1054' }} className="rounded-lg p-3 space-y-2">
+          <div className="flex justify-between items-center">
+            <span style={{ color: '#7c5fa0' }} className="text-xs">Total agents</span>
+            <span style={{ color: '#f0e6ff' }} className="text-xs font-semibold">{AGENTS.length}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span style={{ color: '#7c5fa0' }} className="text-xs">Working</span>
+            <span style={{ color: '#4ade80' }} className="text-xs font-semibold">{workingCount}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span style={{ color: '#7c5fa0' }} className="text-xs">Waiting</span>
+            <span style={{ color: '#facc15' }} className="text-xs font-semibold">{waitingCount}</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  )
+}
