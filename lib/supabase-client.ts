@@ -57,6 +57,79 @@ export async function fetchActivityLog(limit = 10) {
   }))
 }
 
+// ── Task CRUD ──────────────────────────────────────────────────────────────
+
+export async function createTask(task: {
+  title: string
+  description?: string | null
+  status: string
+  priority: string
+  project: string
+  assigned_agent?: string | null
+  created_by: string
+}) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert([{
+      ...task,
+      assigned_agent: task.assigned_agent || null,
+      description: task.description || null,
+    }])
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating task:', error)
+    return null
+  }
+  return data
+}
+
+export async function updateTask(id: string, updates: Partial<{
+  title: string
+  description: string | null
+  status: string
+  priority: string
+  project: string
+  assigned_agent: string | null
+}>) {
+  const payload: Record<string, unknown> = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  }
+  if ('assigned_agent' in updates) {
+    payload.assigned_agent = updates.assigned_agent || null
+  }
+
+  const { data, error } = await supabase
+    .from('tasks')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating task:', error)
+    return null
+  }
+  return data
+}
+
+export async function deleteTask(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting task:', error)
+    return false
+  }
+  return true
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
 function formatTimeAgo(date: Date): string {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
