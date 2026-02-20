@@ -1,0 +1,24 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  'https://naxbzqsecohogbkbhgti.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5heGJ6cXNlY29ob2dia2JoZ3RpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTU2MDkzMCwiZXhwIjoyMDg3MTM2OTMwfQ.aK4oaPn_lFBMnreoGDX-5Kp5CAB4wCJVvkb3kl4CXCE'
+)
+
+const knowledge = [
+  { id: 'b1111111-1111-1111-1111-111111111111', title: 'Agent Spawn Protocol', content: 'When spawning a sub-agent, always pass three things: (1) context — what has happened so far, (2) expected output format — exact structure of the deliverable, (3) success criteria — how the orchestrator will verify the result. Without these, sub-agents produce inconsistent outputs.', category: 'protocol', tags: ['spawning', 'coordination', 'best-practice'], source_agent: 'main', created_at: '2025-02-01T10:00:00Z', updated_at: '2025-02-01T10:00:00Z' },
+  { id: 'b2222222-2222-2222-2222-222222222222', title: 'Slack Message Formatting', content: 'Structure Slack updates with: bold header, 2-3 bullet points max, clear @mention for action owners, and an emoji status indicator. Avoid walls of text — agents and humans scan, not read.', category: 'skill', tags: ['slack', 'communication', 'formatting'], source_agent: 'pm', created_at: '2025-02-05T14:00:00Z', updated_at: '2025-02-05T14:00:00Z' },
+  { id: 'b3333333-3333-3333-3333-333333333333', title: 'E-E-A-T SEO Framework', content: "Google's E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) is the core quality signal for ranking. Lead with first-person experience where possible, cite primary sources, include author credentials, and build topical authority by covering a subject cluster fully before branching out.", category: 'lesson', tags: ['seo', 'content', 'google', 'e-e-a-t'], source_agent: 'seo', created_at: '2025-02-10T09:00:00Z', updated_at: '2025-02-10T09:00:00Z' },
+  { id: 'b4444444-4444-4444-4444-444444444444', title: 'Supabase RLS Patterns', content: 'Row Level Security policies must be enabled before any anon key can read/write. For ClawPulse, we use permissive SELECT for all tables and scoped INSERT/UPDATE via service role in scripts. Never expose the service role key client-side. Use NEXT_PUBLIC_ only for the anon key.', category: 'document', tags: ['supabase', 'rls', 'security', 'database'], source_agent: 'dev', created_at: '2025-02-12T11:00:00Z', updated_at: '2025-02-12T11:00:00Z' },
+  { id: 'b5555555-5555-5555-5555-555555555555', title: 'Cold Outreach Sequencing', content: 'Proven SDR sequence: Day 1 — personalised LinkedIn connect (no pitch). Day 3 — connect message with one-line value prop. Day 7 — email with case study. Day 12 — follow-up with open question. Day 18 — breakup email. Response rates drop sharply after 5 touches.', category: 'skill', tags: ['sales', 'outreach', 'sequencing', 'sdr'], source_agent: 'sales', created_at: '2025-02-14T09:00:00Z', updated_at: '2025-02-14T09:00:00Z' },
+  { id: 'b6666666-6666-6666-6666-666666666666', title: 'AI Security Benchmark Standards', content: 'Key frameworks for Aona compliance: OWASP LLM Top 10 (prompt injection, insecure output handling, training data poisoning), NIST AI RMF (govern, map, measure, manage), and the EU AI Act risk tiers. ClawPulse falls under limited-risk due to its internal-only nature.', category: 'document', tags: ['security', 'compliance', 'ai', 'owasp', 'nist'], source_agent: 'research', created_at: '2025-02-16T10:00:00Z', updated_at: '2025-02-16T10:00:00Z' },
+  { id: 'b7777777-7777-7777-7777-777777777777', title: 'Task Handoff Protocol', content: 'Before marking a task blocked: (1) document exactly what you tried, (2) specify the missing input or decision needed, (3) name the agent or human who can unblock it, (4) set a follow-up reminder. Vague blocked states create dead tasks. Always write the handoff note in the task description.', category: 'protocol', tags: ['handoff', 'blocked', 'workflow', 'coordination'], source_agent: 'main', created_at: '2025-02-18T08:00:00Z', updated_at: '2025-02-18T08:00:00Z' },
+  { id: 'b8888888-8888-8888-8888-888888888888', title: 'Brand Voice Guidelines', content: 'Aona brand voice: confident but not arrogant, technical but accessible. Avoid: buzzwords like "revolutionary" or "disruptive", passive voice, hedging language. Use: active verbs, concrete metrics, second-person address. Tone varies by channel — formal for LinkedIn, casual for Twitter/X.', category: 'document', tags: ['brand', 'voice', 'copywriting', 'aona'], source_agent: 'design', created_at: '2025-02-19T13:00:00Z', updated_at: '2025-02-19T13:00:00Z' },
+]
+
+const { error } = await supabase.from('knowledge').upsert(knowledge, { onConflict: 'id' })
+if (error) {
+  console.error('❌ Failed:', error.message)
+  process.exit(1)
+}
+console.log('✅ Seeded 8 knowledge entries')

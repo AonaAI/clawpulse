@@ -128,6 +128,90 @@ export async function deleteTask(id: string): Promise<boolean> {
   return true
 }
 
+// ── Knowledge CRUD ─────────────────────────────────────────────────────────
+
+export async function fetchKnowledge() {
+  const { data, error } = await supabase
+    .from('knowledge')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching knowledge:', error)
+    return []
+  }
+  return data || []
+}
+
+export async function createKnowledge(entry: {
+  title: string
+  content: string
+  category: string
+  tags: string[]
+  source_agent: string
+}) {
+  const { data, error } = await supabase
+    .from('knowledge')
+    .insert([entry])
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating knowledge entry:', error)
+    return null
+  }
+  return data
+}
+
+export async function updateKnowledge(id: string, updates: Partial<{
+  title: string
+  content: string
+  category: string
+  tags: string[]
+}>) {
+  const { data, error } = await supabase
+    .from('knowledge')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating knowledge entry:', error)
+    return null
+  }
+  return data
+}
+
+export async function deleteKnowledge(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('knowledge')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting knowledge entry:', error)
+    return false
+  }
+  return true
+}
+
+// ── Handoffs (blocked tasks) ────────────────────────────────────────────────
+
+export async function fetchHandoffs() {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('status', 'blocked')
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching handoffs:', error)
+    return []
+  }
+  return data || []
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(date: Date): string {

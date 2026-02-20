@@ -46,3 +46,16 @@ export interface ActivityLog {
   metadata: Record<string, unknown>
   created_at: string
 }
+
+export type KnowledgeCategory = 'lesson' | 'skill' | 'document' | 'protocol'
+
+export interface KnowledgeEntry {
+  id: string
+  title: string
+  content: string
+  category: KnowledgeCategory
+  tags: string[]
+  source_agent: string
+  created_at: string
+  updated_at: string
+}
