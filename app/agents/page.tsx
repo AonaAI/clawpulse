@@ -64,6 +64,14 @@ function StatusBadge({ status }: { status: AgentStatus }) {
       border: 'rgba(55, 65, 81, 0.15)',
       pulse: false,
     },
+    unknown: {
+      dot: '#4b5563',
+      text: 'Unknown',
+      color: '#6b7280',
+      bg: 'rgba(75, 85, 99, 0.04)',
+      border: 'rgba(75, 85, 99, 0.15)',
+      pulse: false,
+    },
   }[status]
 
   return (
