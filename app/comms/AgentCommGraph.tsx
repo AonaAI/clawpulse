@@ -114,18 +114,27 @@ export default function AgentCommGraph() {
   const [hoveredEdge, setHoveredEdge] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
+  const [dimensions, setDimensions] = useState({ width: 900, height: 500 })
 
-  // Resize observer
+  // Resize observer — guard against zero-width measurements during layout
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const obs = new ResizeObserver(entries => {
-      const { width } = entries[0].contentRect
-      setDimensions({ width, height: Math.max(350, Math.min(500, width * 0.55)) })
-    })
+
+    const measure = () => {
+      const { width } = el.getBoundingClientRect()
+      if (width > 0) {
+        setDimensions({ width, height: Math.max(400, Math.min(550, width * 0.55)) })
+      }
+    }
+
+    // Measure immediately + after a short delay (static export may not have layout yet)
+    measure()
+    const timer = setTimeout(measure, 100)
+
+    const obs = new ResizeObserver(() => measure())
     obs.observe(el)
-    return () => obs.disconnect()
+    return () => { obs.disconnect(); clearTimeout(timer) }
   }, [])
 
   // Fetch data and compute graph
@@ -260,7 +269,7 @@ export default function AgentCommGraph() {
   }, [edges])
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative w-full" style={{ minHeight: 500 }}>
       <style>{`
         @keyframes pulse-working {
           0%, 100% { r: ${nodeRadius}; opacity: 1; }
@@ -269,10 +278,10 @@ export default function AgentCommGraph() {
         .node-working { animation: pulse-working 2s ease-in-out infinite; }
       `}</style>
       <svg
-        width={dimensions.width}
+        width="100%"
         height={dimensions.height}
         viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-        style={{ background: 'rgba(255,255,255,0.015)', borderRadius: 12, border: '1px solid rgba(109,40,217,0.14)' }}
+        style={{ display: 'block', background: 'rgba(255,255,255,0.015)', borderRadius: 12, border: '1px solid rgba(109,40,217,0.14)' }}
       >
         <defs>
           <marker id="arrow-spawn" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="8" markerHeight="6" orient="auto-start-reverse">

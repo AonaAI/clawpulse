@@ -196,6 +196,26 @@ export async function deleteKnowledge(id: string): Promise<boolean> {
   return true
 }
 
+export async function upsertKnowledge(entries: Array<{
+  id?: string
+  title: string
+  content: string
+  category: string
+  tags: string[]
+  source_agent: string
+}>): Promise<number> {
+  const { data, error } = await supabase
+    .from('knowledge')
+    .upsert(entries.map(e => ({ ...e, updated_at: new Date().toISOString() })), { onConflict: 'id' })
+    .select()
+
+  if (error) {
+    console.error('Error upserting knowledge entries:', error)
+    return 0
+  }
+  return data?.length ?? 0
+}
+
 // ── Handoffs (blocked tasks) ────────────────────────────────────────────────
 
 export async function fetchHandoffs() {

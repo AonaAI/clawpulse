@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { fetchKnowledge, createKnowledge, updateKnowledge, deleteKnowledge } from '@/lib/supabase-client'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { fetchKnowledge, createKnowledge, updateKnowledge, deleteKnowledge, upsertKnowledge } from '@/lib/supabase-client'
 import { AGENTS } from '@/lib/data'
 import type { KnowledgeEntry, KnowledgeCategory } from '@/lib/types'
 
@@ -290,6 +290,9 @@ export default function KnowledgePage() {
   const [deletingEntry, setDeletingEntry] = useState<KnowledgeEntry | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [importToast, setImportToast] = useState<{ ok: boolean; msg: string } | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     const data = await fetchKnowledge()
@@ -321,6 +324,39 @@ export default function KnowledgePage() {
     setDeletingEntry(null)
   }, [deletingEntry])
 
+  const handleExport = useCallback(() => {
+    const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `knowledge-export-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [entries])
+
+  const handleImport = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setImporting(true)
+    try {
+      const text = await file.text()
+      const parsed: KnowledgeEntry[] = JSON.parse(text)
+      if (!Array.isArray(parsed)) throw new Error('Expected a JSON array')
+      const toUpsert = parsed.map(({ id, title, content, category, tags, source_agent }) => ({
+        id, title, content, category, tags: tags ?? [], source_agent,
+      }))
+      const count = await upsertKnowledge(toUpsert)
+      await load()
+      setImportToast({ ok: true, msg: `Imported ${count} entr${count === 1 ? 'y' : 'ies'}` })
+    } catch {
+      setImportToast({ ok: false, msg: 'Import failed — invalid JSON format' })
+    } finally {
+      setImporting(false)
+      setTimeout(() => setImportToast(null), 4000)
+    }
+  }, [load])
+
   const filtered = entries.filter(e => {
     const matchCat = filter === 'all' || e.category === filter
     const q = search.toLowerCase()
@@ -338,20 +374,63 @@ export default function KnowledgePage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      {/* Hidden file input for import */}
+      <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
+
+      {/* Import toast */}
+      {importToast && (
+        <div
+          style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 60,
+            background: importToast.ok ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)',
+            border: `1px solid ${importToast.ok ? 'rgba(52,211,153,0.3)' : 'rgba(248,113,113,0.3)'}`,
+            color: importToast.ok ? '#34d399' : '#f87171',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 12, padding: '10px 16px',
+            fontSize: 13, fontWeight: 600,
+          }}
+        >
+          {importToast.msg}
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Knowledge Base</h1>
           <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Shared lessons, skills, and documents across all agents</p>
         </div>
-        <button
-          onClick={() => { setEditingEntry(null); setModalOpen(true) }}
-          style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', boxShadow: '0 4px 16px rgba(124,58,237,0.35)' }}
-          className="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          New Entry
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Import */}
+          <button
+            onClick={() => importRef.current?.click()}
+            disabled={importing}
+            style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+            className="px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity disabled:opacity-50"
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            {importing ? 'Importing…' : 'Import'}
+          </button>
+          {/* Export */}
+          <button
+            onClick={handleExport}
+            disabled={entries.length === 0}
+            style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+            className="px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity disabled:opacity-40"
+          >
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
+          {/* New Entry */}
+          <button
+            onClick={() => { setEditingEntry(null); setModalOpen(true) }}
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', boxShadow: '0 4px 16px rgba(124,58,237,0.35)' }}
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            New Entry
+          </button>
+        </div>
       </div>
 
       {/* Filter tabs + search */}
