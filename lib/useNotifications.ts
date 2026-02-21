@@ -2,20 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRealtimeSubscription } from './useRealtimeSubscription'
+import type { Notification } from './NotificationContext'
 
-export interface Notification {
-  id: string
-  type: 'agent_status' | 'task_complete' | 'error' | 'slack_message'
-  title: string
-  message: string
-  timestamp: string
-  read: boolean
-}
+export type { Notification }
 
-const STORAGE_KEY = 'clawpulse_notifications'
-const READ_KEY = 'clawpulse_notifications_read'
+const STORAGE_KEY = 'clawpulse_notifications_v2'
+const READ_KEY = 'clawpulse_notifications_read_v2'
 const SOUND_KEY = 'clawpulse_notifications_sound'
-const MAX_NOTIFICATIONS = 50
+const MAX_NOTIFICATIONS = 60
 
 function loadReadIds(): Set<string> {
   try {
@@ -24,21 +18,21 @@ function loadReadIds(): Set<string> {
 }
 
 function saveReadIds(ids: Set<string>) {
-  localStorage.setItem(READ_KEY, JSON.stringify([...ids].slice(0, 200)))
+  localStorage.setItem(READ_KEY, JSON.stringify([...ids].slice(0, 300)))
 }
 
-function loadNotifications(): Notification[] {
+function loadNotifications(): Omit<Notification, 'read'>[] {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
   } catch { return [] }
 }
 
-function saveNotifications(notifs: Notification[]) {
+function saveNotifications(notifs: Omit<Notification, 'read'>[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notifs.slice(0, MAX_NOTIFICATIONS)))
 }
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [rawNotifications, setRawNotifications] = useState<Omit<Notification, 'read'>[]>([])
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
   const [soundEnabled, setSoundEnabled] = useState(false)
   const [toasts, setToasts] = useState<Notification[]>([])
@@ -46,34 +40,34 @@ export function useNotifications() {
 
   // Load from localStorage on mount
   useEffect(() => {
-    setNotifications(loadNotifications())
+    setRawNotifications(loadNotifications())
     setReadIds(loadReadIds())
     setSoundEnabled(localStorage.getItem(SOUND_KEY) === 'true')
   }, [])
 
   const addNotification = useCallback((notif: Omit<Notification, 'id' | 'read' | 'timestamp'>) => {
-    const newNotif: Notification = {
+    const newNotif: Omit<Notification, 'read'> = {
       ...notif,
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       timestamp: new Date().toISOString(),
-      read: false,
     }
-    setNotifications(prev => {
+    setRawNotifications(prev => {
       const updated = [newNotif, ...prev].slice(0, MAX_NOTIFICATIONS)
       saveNotifications(updated)
       return updated
     })
-    // Show toast
-    setToasts(prev => [...prev, newNotif])
+    // Show toast (with read: false for the toast type)
+    const toastNotif: Notification = { ...newNotif, read: false }
+    setToasts(prev => [...prev, toastNotif])
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== newNotif.id))
-    }, 5000)
+    }, 5500)
     // Play sound
     if (localStorage.getItem(SOUND_KEY) === 'true') {
       try {
         if (!audioRef.current) {
           audioRef.current = new Audio('data:audio/wav;base64,UklGRlQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAFAACAgICAgICAgICHj5eTkIuIhoiLj5OVlZKNiISBgIKGi4+Sk5GPioWBf4CDh4uOkJCOioaCgIGEiIuNjo2LiIWDgoOFh4mLi4qIhoSDg4SFh4iJiYiHhYSEhIWGh4iIh4aFhISEhYaHh4eGhYSEhIWFhoaGhoWEhISEhYWGhoaFhISEhIWFhYWFhYSEhISFhYWFhYWEhISEhYWFhYWFhISEhIWFhYWFhYSEhISEhYWFhYSEhISEhISFhYWFhISEhISEhIWFhYSEhISEhISEhYSEhISEhISEhISEhISEhISEhISEhISEhISEhA==')
-          audioRef.current.volume = 0.3
+          audioRef.current.volume = 0.25
         }
         audioRef.current.currentTime = 0
         audioRef.current.play().catch(() => {})
@@ -93,11 +87,18 @@ export function useNotifications() {
   const markAllRead = useCallback(() => {
     setReadIds(prev => {
       const next = new Set(prev)
-      notifications.forEach(n => next.add(n.id))
+      rawNotifications.forEach(n => next.add(n.id))
       saveReadIds(next)
       return next
     })
-  }, [notifications])
+  }, [rawNotifications])
+
+  const dismissAll = useCallback(() => {
+    setRawNotifications([])
+    saveNotifications([])
+    setReadIds(new Set())
+    saveReadIds(new Set())
+  }, [])
 
   const toggleSound = useCallback(() => {
     setSoundEnabled(prev => {
@@ -111,7 +112,7 @@ export function useNotifications() {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  // Subscribe to realtime
+  // Subscribe to realtime changes
   useRealtimeSubscription([
     {
       table: 'activity_log',
@@ -121,8 +122,8 @@ export function useNotifications() {
         const details = record.details as string || ''
         const isError = action?.toLowerCase().includes('error') || details?.toLowerCase().includes('error')
         addNotification({
-          type: isError ? 'error' : 'task_complete',
-          title: isError ? '⚠️ Error' : '📋 Activity',
+          type: isError ? 'error' : 'success',
+          title: isError ? 'Error Detected' : 'Activity',
           message: `${action}${details ? ': ' + details : ''}`.slice(0, 120),
         })
       },
@@ -135,10 +136,38 @@ export function useNotifications() {
         const newStatus = record.status as string
         const name = (record.name as string) || (record.id as string) || 'Agent'
         if (oldStatus && newStatus && oldStatus !== newStatus) {
+          const isError = newStatus === 'error' || newStatus === 'crashed'
+          const isIdle = newStatus === 'idle' || newStatus === 'done'
           addNotification({
-            type: 'agent_status',
-            title: '🤖 Agent Status',
+            type: isError ? 'error' : isIdle ? 'info' : 'success',
+            title: 'Agent Status Changed',
             message: `${name}: ${oldStatus} → ${newStatus}`,
+          })
+        }
+      },
+    },
+    {
+      table: 'tasks',
+      event: '*',
+      onInsert: (record: Record<string, unknown>) => {
+        const title = (record.title as string) || (record.name as string) || 'New task'
+        addNotification({
+          type: 'info',
+          title: 'Task Created',
+          message: title.slice(0, 120),
+        })
+      },
+      onUpdate: (record: Record<string, unknown>, old: Partial<Record<string, unknown>>) => {
+        const oldStatus = old.status as string
+        const newStatus = record.status as string
+        const title = (record.title as string) || (record.name as string) || 'Task'
+        if (oldStatus && newStatus && oldStatus !== newStatus) {
+          const isDone = newStatus === 'done' || newStatus === 'completed'
+          const isFailed = newStatus === 'failed' || newStatus === 'error'
+          addNotification({
+            type: isDone ? 'success' : isFailed ? 'error' : 'info',
+            title: isDone ? 'Task Completed' : isFailed ? 'Task Failed' : 'Task Updated',
+            message: `${title}: ${oldStatus} → ${newStatus}`.slice(0, 120),
           })
         }
       },
@@ -147,26 +176,33 @@ export function useNotifications() {
       table: 'slack_messages',
       event: 'INSERT',
       onInsert: (record: Record<string, unknown>) => {
-        const channel = record.channel as string || ''
+        const channel = record.channel as string || 'Slack'
         const message = record.message as string || ''
         addNotification({
-          type: 'slack_message',
-          title: `💬 ${channel}`,
+          type: 'info',
+          title: `#${channel}`,
           message: message.slice(0, 120),
         })
       },
     },
   ])
 
-  const unreadCount = notifications.filter(n => !readIds.has(n.id)).length
+  const notifications: Notification[] = rawNotifications.map(n => ({
+    ...n,
+    read: readIds.has(n.id),
+  }))
+
+  const unreadCount = notifications.filter(n => !n.read).length
 
   return {
-    notifications: notifications.map(n => ({ ...n, read: readIds.has(n.id) })),
+    notifications,
     unreadCount,
     toasts,
     soundEnabled,
+    addNotification,
     markAsRead,
     markAllRead,
+    dismissAll,
     toggleSound,
     dismissToast,
   }
