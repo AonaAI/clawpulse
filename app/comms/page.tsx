@@ -1,10 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Component, type ReactNode } from 'react'
 import { AGENTS } from '@/lib/data'
 import { fetchHandoffs } from '@/lib/supabase-client'
 import type { Task } from '@/lib/types'
 import AgentCommGraph from './AgentCommGraph'
+
+class GraphErrorBoundary extends Component<{children: ReactNode}, {error: string | null}> {
+  constructor(props: {children: ReactNode}) {
+    super(props)
+    this.state = { error: null }
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { error: error.message }
+  }
+  componentDidCatch(error: Error) {
+    console.error('AgentCommGraph error:', error)
+  }
+  render() {
+    if (this.state.error) {
+      return <div style={{ color: '#f87171', padding: 20, border: '1px solid #f87171', borderRadius: 8, margin: '10px 0' }}>Graph error: {this.state.error}</div>
+    }
+    return this.props.children
+  }
+}
 
 // ── Static cron job data ──────────────────────────────────────────────────
 
@@ -138,7 +157,9 @@ export default function CommsPage() {
             title="Agent Communication Graph"
             subtitle="Spawn permissions and shared Slack channels between agents"
           />
-          <AgentCommGraph />
+          <GraphErrorBoundary>
+            <AgentCommGraph />
+          </GraphErrorBoundary>
         </section>
 
         {/* ── 1. Slack Channel Map ─────────────────────────────────── */}
