@@ -10,7 +10,7 @@ import type { Task } from '@/lib/types'
 function HBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
-    <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 4, height: 8, overflow: 'hidden', flex: 1 }}>
+    <div style={{ background: 'var(--cp-input-bg)', borderRadius: 4, height: 8, overflow: 'hidden', flex: 1 }}>
       <div
         style={{
           width: `${pct}%`,
@@ -34,13 +34,13 @@ interface BarRow {
 
 function BarTable({ rows, max }: { rows: BarRow[]; max: number }) {
   if (rows.length === 0) return (
-    <div style={{ color: '#374151' }} className="text-sm text-center py-8">No data yet</div>
+    <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-sm text-center py-8">No data yet</div>
   )
   return (
     <div className="space-y-3">
       {rows.map(row => (
         <div key={row.label} className="flex items-center gap-3">
-          <div style={{ color: '#9ca3af', fontSize: 12, fontWeight: 600, minWidth: 80, textAlign: 'right' }} className="truncate">
+          <div style={{ color: 'var(--cp-text-secondary)', fontSize: 12, fontWeight: 600, minWidth: 80, textAlign: 'right' }} className="truncate">
             {row.label}
           </div>
           <HBar value={row.value} max={max} color={row.color} />
@@ -68,9 +68,9 @@ function StatCard({ label, value, sub, color, bg, border }: {
       style={{ background: bg, border: `1px solid ${border}`, backdropFilter: 'blur(12px)' }}
       className="rounded-xl p-5"
     >
-      <div style={{ color: '#6b7280' }} className="text-xs font-bold uppercase tracking-wider mb-2">{label}</div>
+      <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-bold uppercase tracking-wider mb-2">{label}</div>
       <div style={{ color }} className="text-3xl font-bold leading-none">{value}</div>
-      {sub && <div style={{ color: '#6b7280' }} className="text-xs mt-1.5 font-medium">{sub}</div>}
+      {sub && <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-1.5 font-medium">{sub}</div>}
     </div>
   )
 }
@@ -80,12 +80,12 @@ function StatCard({ label, value, sub, color, bg, border }: {
 function Section({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <div
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+      style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
       className="rounded-xl p-6"
     >
       <div className="mb-5">
-        <h2 style={{ color: '#f8f4ff' }} className="text-base font-bold">{title}</h2>
-        <p style={{ color: '#6b7280' }} className="text-xs mt-0.5">{subtitle}</p>
+        <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-base font-bold">{title}</h2>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -105,7 +105,7 @@ interface ActivityItem {
 
 function ActivityFeed({ items }: { items: ActivityItem[] }) {
   if (items.length === 0) return (
-    <div style={{ color: '#374151' }} className="text-sm text-center py-8">No activity yet</div>
+    <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-sm text-center py-8">No activity yet</div>
   )
   return (
     <div className="space-y-3">
@@ -126,12 +126,12 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
             </div>
             <div className="flex-1 min-w-0 pb-0.5">
               <div className="flex items-baseline gap-2 flex-wrap">
-                <span style={{ color: '#c4b5fd' }} className="text-sm font-semibold">{item.agent_name}</span>
-                <span style={{ color: '#e9e2ff' }} className="text-sm">{item.action}</span>
+                <span style={{ color: 'var(--cp-text-accent-light)' }} className="text-sm font-semibold">{item.agent_name}</span>
+                <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm">{item.action}</span>
               </div>
-              {item.details && <p style={{ color: '#6b7280' }} className="text-xs mt-0.5">{item.details}</p>}
+              {item.details && <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">{item.details}</p>}
             </div>
-            <span style={{ color: '#374151' }} className="text-xs flex-shrink-0 pt-0.5">{item.time}</span>
+            <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs flex-shrink-0 pt-0.5">{item.time}</span>
           </div>
         )
       })}
@@ -216,14 +216,14 @@ export default function MetricsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
-        <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity</p>
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity</p>
       </div>
 
       {loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[...Array(4)].map((_, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.1)', height: 96 }} className="rounded-xl animate-pulse" />
+            <div key={i} style={{ background: 'var(--cp-card-bg)', border: '1px solid rgba(109,40,217,0.1)', height: 96 }} className="rounded-xl animate-pulse" />
           ))}
         </div>
       ) : (
@@ -276,7 +276,7 @@ export default function MetricsPage() {
 
             <Section title="Tasks per Agent" subtitle="Workload distribution — all statuses">
               {agentRows.length === 0 ? (
-                <div style={{ color: '#374151' }} className="text-sm text-center py-8">No assignments yet</div>
+                <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-sm text-center py-8">No assignments yet</div>
               ) : (
                 <BarTable rows={agentRows} max={agentMax} />
               )}
@@ -289,13 +289,13 @@ export default function MetricsPage() {
 
           {/* Activity feed */}
           <div
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl p-6"
           >
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <h2 style={{ color: '#f8f4ff' }} className="text-base font-bold">Recent Activity</h2>
-                <p style={{ color: '#6b7280' }} className="text-xs mt-0.5">Latest actions logged across all agents</p>
+                <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-base font-bold">Recent Activity</h2>
+                <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">Latest actions logged across all agents</p>
               </div>
               <span
                 style={{ color: '#a78bfa', background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}
@@ -306,7 +306,7 @@ export default function MetricsPage() {
             </div>
             <ActivityFeed items={activity} />
             {activity.length === 0 && (
-              <div style={{ color: '#374151' }} className="text-sm text-center py-4">
+              <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-sm text-center py-4">
                 No activity log data — make sure the <code className="font-mono">activity_log</code> table has rows.
               </div>
             )}

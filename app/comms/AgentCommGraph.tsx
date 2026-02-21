@@ -281,7 +281,7 @@ export default function AgentCommGraph() {
         width="100%"
         height={dimensions.height}
         viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-        style={{ display: 'block', background: 'rgba(255,255,255,0.015)', borderRadius: 12, border: '1px solid rgba(109,40,217,0.14)' }}
+        style={{ display: 'block', background: 'var(--cp-card-bg)', borderRadius: 12, border: '1px solid var(--cp-border)' }}
       >
         <defs>
           <marker id="arrow-spawn" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
@@ -395,11 +395,11 @@ export default function AgentCommGraph() {
             left: tooltip.x,
             top: tooltip.y,
             transform: 'translate(-50%, -100%)',
-            background: 'rgba(17,7,30,0.95)',
+            background: 'var(--cp-tooltip-bg)',
             border: '1px solid rgba(139,92,246,0.3)',
             borderRadius: 8,
             padding: '6px 10px',
-            color: '#e9e2ff',
+            color: 'var(--cp-text-card-title)',
             fontSize: 12,
             whiteSpace: 'pre-line',
             pointerEvents: 'none',
@@ -413,7 +413,7 @@ export default function AgentCommGraph() {
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-3 flex-wrap" style={{ fontSize: 11, color: '#6b7280' }}>
+      <div className="flex items-center gap-4 mt-3 flex-wrap" style={{ fontSize: 11, color: 'var(--cp-text-muted)' }}>
         <span className="flex items-center gap-1.5">
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#34d399', display: 'inline-block' }} /> Working
         </span>

@@ -116,7 +116,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div style={{ borderBottom: '1px solid rgba(109, 40, 217, 0.12)' }} className="px-5 py-5">
+      <div style={{ borderBottom: '1px solid var(--cp-divider-accent)' }} className="px-5 py-5">
         <div className="flex items-center gap-3">
           <div
             style={{
@@ -131,7 +131,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
             </svg>
           </div>
           <div>
-            <div style={{ color: '#f8f4ff' }} className="font-bold text-sm tracking-wide leading-none">
+            <div style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-sm tracking-wide leading-none">
               ClawPulse
             </div>
             <div style={{ color: '#6d28d9' }} className="text-xs mt-0.5 leading-none font-medium">
@@ -146,8 +146,8 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
         <button
           onClick={() => { onNavClick?.(); onSearchClick?.() }}
           style={{
-            color: '#7c5fa0',
-            background: 'rgba(255,255,255,0.025)',
+            color: 'var(--cp-text-nav)',
+            background: 'var(--cp-card-bg)',
             border: '1px solid rgba(109,40,217,0.15)',
           }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
@@ -156,13 +156,13 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <span className="flex-1 text-left">Search...</span>
-          <kbd style={{ color: '#4b5563', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)' }} className="text-xs px-1.5 py-0.5 rounded font-mono hidden sm:inline">⌘K</kbd>
+          <kbd style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-separator-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-1.5 py-0.5 rounded font-mono hidden sm:inline">⌘K</kbd>
         </button>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        <div style={{ color: '#3b1d6e' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
+        <div style={{ color: 'var(--cp-text-nav-label)' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
           Navigation
         </div>
         {navItems.map((item) => {
@@ -176,25 +176,25 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
                 isActive
                   ? {
                       background: 'rgba(109, 40, 217, 0.18)',
-                      color: '#c4b5fd',
+                      color: 'var(--cp-text-accent-light)',
                       borderLeft: '2px solid #7c3aed',
                       boxShadow: 'inset 0 0 24px rgba(109, 40, 217, 0.06)',
                     }
-                  : { color: '#7c5fa0', borderLeft: '2px solid transparent' }
+                  : { color: 'var(--cp-text-nav)', borderLeft: '2px solid transparent' }
               }
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 min-h-[44px]"
               onMouseEnter={e => {
                 if (!isActive) {
                   const el = e.currentTarget as HTMLElement
-                  el.style.background = 'rgba(109, 40, 217, 0.08)'
-                  el.style.color = '#ddd6fe'
+                  el.style.background = 'var(--cp-sidebar-hover)'
+                  el.style.color = 'var(--cp-text-notification-unread)'
                 }
               }}
               onMouseLeave={e => {
                 if (!isActive) {
                   const el = e.currentTarget as HTMLElement
                   el.style.background = 'transparent'
-                  el.style.color = '#7c5fa0'
+                  el.style.color = 'var(--cp-text-nav)'
                 }
               }}
             >
@@ -207,7 +207,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
 
       {/* System status */}
       <div style={{ borderTop: '1px solid rgba(109, 40, 217, 0.12)' }} className="px-4 py-4 space-y-3">
-        <div style={{ color: '#3b1d6e' }} className="text-xs font-bold uppercase tracking-widest mb-2">
+        <div style={{ color: 'var(--cp-text-nav-label)' }} className="text-xs font-bold uppercase tracking-widest mb-2">
           System
         </div>
 
@@ -216,19 +216,19 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
           </span>
-          <span style={{ color: '#6b7280' }} className="text-xs font-medium">System Active</span>
+          <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">System Active</span>
         </div>
 
         <div
           style={{
-            background: 'rgba(255, 255, 255, 0.025)',
-            border: '1px solid rgba(109, 40, 217, 0.18)',
+            background: 'var(--cp-card-bg)',
+            border: '1px solid var(--cp-border-strong)',
           }}
           className="rounded-xl p-3 space-y-2.5"
         >
           <div className="flex justify-between items-center">
-            <span style={{ color: '#6b7280' }} className="text-xs">Total agents</span>
-            <span style={{ color: '#f8f4ff' }} className="text-xs font-semibold">{AGENTS.length}</span>
+            <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs">Total agents</span>
+            <span style={{ color: 'var(--cp-text-primary)' }} className="text-xs font-semibold">{AGENTS.length}</span>
           </div>
         </div>
       </div>
@@ -273,7 +273,7 @@ export default function Sidebar() {
       {/* Desktop sidebar */}
       <aside
         style={{
-          background: 'linear-gradient(180deg, #0e0120 0%, #080112 100%)',
+          background: 'linear-gradient(180deg, var(--cp-sidebar-bg) 0%, var(--cp-sidebar-bg-bottom) 100%)',
           borderRight: '1px solid rgba(109, 40, 217, 0.18)',
           width: '240px',
           minWidth: '240px',
@@ -305,7 +305,7 @@ export default function Sidebar() {
       {mobileOpen && (
         <div
           className="md:hidden fixed inset-0 z-40"
-          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)' }}
+          style={{ background: 'var(--cp-overlay)', backdropFilter: 'blur(2px)' }}
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -314,7 +314,7 @@ export default function Sidebar() {
       {/* Mobile: drawer */}
       <aside
         style={{
-          background: 'linear-gradient(180deg, #0e0120 0%, #080112 100%)',
+          background: 'linear-gradient(180deg, var(--cp-sidebar-bg) 0%, var(--cp-sidebar-bg-bottom) 100%)',
           borderRight: '1px solid rgba(109, 40, 217, 0.25)',
           width: '280px',
           transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -327,7 +327,7 @@ export default function Sidebar() {
         <button
           onClick={() => setMobileOpen(false)}
           aria-label="Close navigation"
-          style={{ color: '#6b7280' }}
+          style={{ color: 'var(--cp-text-muted)' }}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

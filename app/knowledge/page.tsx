@@ -34,7 +34,7 @@ function CategoryBadge({ category }: { category: KnowledgeCategory }) {
 function TagChip({ tag }: { tag: string }) {
   return (
     <span
-      style={{ color: '#6b7280', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.06)', fontSize: 11 }}
+      style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-tag-bg)', border: '1px solid var(--cp-border-subtle)', fontSize: 11 }}
       className="px-2 py-0.5 rounded-md font-mono"
     >
       #{tag}
@@ -66,8 +66,8 @@ function KnowledgeCard({ entry, onEdit, onDelete }: { entry: KnowledgeEntry; onE
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.025)',
-        border: '1px solid rgba(109,40,217,0.14)',
+        background: 'var(--cp-card-bg)',
+        border: '1px solid var(--cp-border)',
         borderTop: `2px solid ${cfg.color}`,
         backdropFilter: 'blur(12px)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
@@ -80,7 +80,7 @@ function KnowledgeCard({ entry, onEdit, onDelete }: { entry: KnowledgeEntry; onE
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <CategoryBadge category={entry.category} />
-            <h3 style={{ color: '#f8f4ff' }} className="font-bold text-base mt-2 leading-snug">{entry.title}</h3>
+            <h3 style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-base mt-2 leading-snug">{entry.title}</h3>
           </div>
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 pt-0.5">
             <IconButton onClick={() => onEdit(entry)} title="Edit">
@@ -93,7 +93,7 @@ function KnowledgeCard({ entry, onEdit, onDelete }: { entry: KnowledgeEntry; onE
         </div>
 
         {/* Content preview */}
-        <p style={{ color: '#9ca3af' }} className="text-sm leading-relaxed line-clamp-3">{entry.content}</p>
+        <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm leading-relaxed line-clamp-3">{entry.content}</p>
 
         {/* Tags */}
         {entry.tags.length > 0 && (
@@ -104,7 +104,7 @@ function KnowledgeCard({ entry, onEdit, onDelete }: { entry: KnowledgeEntry; onE
 
         {/* Footer */}
         <div
-          style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+          style={{ borderTop: '1px solid var(--cp-divider)' }}
           className="flex items-center justify-between pt-3"
         >
           {agent ? (
@@ -113,12 +113,12 @@ function KnowledgeCard({ entry, onEdit, onDelete }: { entry: KnowledgeEntry; onE
                 style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.2)', width: 20, height: 20, minWidth: 20, fontSize: 9, color: '#8b5cf6' }}
                 className="rounded-md flex items-center justify-center font-bold"
               >{agent.name.slice(0, 2).toUpperCase()}</div>
-              <span style={{ color: '#6b7280' }} className="text-xs">{agent.name}</span>
+              <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs">{agent.name}</span>
             </div>
           ) : (
-            <span style={{ color: '#374151' }} className="text-xs">Unknown author</span>
+            <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">Unknown author</span>
           )}
-          <span style={{ color: '#374151' }} className="text-xs">
+          <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">
             {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
@@ -181,33 +181,33 @@ function KnowledgeModal({
   }
 
   const inputStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.04)',
+    background: 'var(--cp-input-bg)',
     border: '1px solid rgba(139,92,246,0.2)',
-    color: '#e9e2ff',
+    color: 'var(--cp-text-card-title)',
     borderRadius: 8,
     padding: '8px 12px',
     fontSize: 14,
     outline: 'none',
     width: '100%',
   }
-  const labelStyle: React.CSSProperties = { color: '#9ca3af', fontSize: 12, fontWeight: 600, marginBottom: 4, display: 'block' }
+  const labelStyle: React.CSSProperties = { color: 'var(--cp-text-secondary)', fontSize: 12, fontWeight: 600, marginBottom: 4, display: 'block' }
 
   return (
     <div
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'var(--cp-overlay)', backdropFilter: 'blur(4px)' }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: 'linear-gradient(135deg, #0f0320 0%, #1a0533 100%)',
+          background: 'var(--cp-panel-bg)',
           border: '1px solid rgba(139,92,246,0.2)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
         }}
         className="rounded-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto"
       >
-        <h2 style={{ color: '#f8f4ff' }} className="text-xl font-bold mb-5">
+        <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-xl font-bold mb-5">
           {entry ? 'Edit Entry' : 'New Knowledge Entry'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -251,7 +251,7 @@ function KnowledgeModal({
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
+            <button type="button" onClick={onClose} style={{ color: 'var(--cp-text-secondary)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
             <button type="submit" disabled={saving || !form.title.trim() || !form.content.trim()} style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', opacity: saving ? 0.6 : 1 }} className="px-5 py-2 rounded-lg text-sm font-semibold shadow-lg hover:opacity-90 transition-opacity">
               {saving ? 'Saving…' : entry ? 'Save Changes' : 'Create Entry'}
             </button>
@@ -266,12 +266,12 @@ function DeleteConfirm({ entry, onClose, onConfirm }: { entry: KnowledgeEntry | 
   const [deleting, setDeleting] = useState(false)
   if (!entry) return null
   return (
-    <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(135deg, #0f0320 0%, #1a0533 100%)', border: '1px solid rgba(248,113,113,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }} className="rounded-2xl w-full max-w-sm p-6">
-        <h2 style={{ color: '#f8f4ff' }} className="text-lg font-bold mb-2">Delete Entry</h2>
-        <p style={{ color: '#9ca3af' }} className="text-sm mb-5">Delete <strong style={{ color: '#e9e2ff' }}>&quot;{entry.title}&quot;</strong>? This cannot be undone.</p>
+    <div style={{ background: 'var(--cp-overlay)', backdropFilter: 'blur(4px)' }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--cp-panel-bg)', border: '1px solid rgba(248,113,113,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }} className="rounded-2xl w-full max-w-sm p-6">
+        <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-bold mb-2">Delete Entry</h2>
+        <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm mb-5">Delete <strong style={{ color: 'var(--cp-text-card-title)' }}>&quot;{entry.title}&quot;</strong>? This cannot be undone.</p>
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
+          <button onClick={onClose} style={{ color: 'var(--cp-text-secondary)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
           <button disabled={deleting} onClick={async () => { setDeleting(true); await onConfirm(); setDeleting(false) }} style={{ background: '#dc2626', color: '#fff', opacity: deleting ? 0.6 : 1 }} className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">{deleting ? 'Deleting…' : 'Delete'}</button>
         </div>
       </div>
@@ -397,15 +397,15 @@ export default function KnowledgePage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Knowledge Base</h1>
-          <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Shared lessons, skills, and documents across all agents</p>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Knowledge Base</h1>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Shared lessons, skills, and documents across all agents</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Import */}
           <button
             onClick={() => importRef.current?.click()}
             disabled={importing}
-            style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ color: 'var(--cp-text-secondary)', background: 'var(--cp-input-bg)', border: '1px solid rgba(255,255,255,0.1)' }}
             className="px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity disabled:opacity-50"
           >
             <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -415,7 +415,7 @@ export default function KnowledgePage() {
           <button
             onClick={handleExport}
             disabled={entries.length === 0}
-            style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ color: 'var(--cp-text-secondary)', background: 'var(--cp-input-bg)', border: '1px solid rgba(255,255,255,0.1)' }}
             className="px-3.5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity disabled:opacity-40"
           >
             <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -474,9 +474,9 @@ export default function KnowledgePage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(109,40,217,0.18)',
-              color: '#e9e2ff',
+              background: 'var(--cp-card-bg-hover)',
+              border: '1px solid var(--cp-border-strong)',
+              color: 'var(--cp-text-card-title)',
               borderRadius: 10,
               padding: '7px 12px',
               fontSize: 14,
@@ -498,7 +498,7 @@ export default function KnowledgePage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.1)', height: 200 }} className="rounded-xl animate-pulse" />
+            <div key={i} style={{ background: 'var(--cp-card-bg)', border: '1px solid rgba(109,40,217,0.1)', height: 200 }} className="rounded-xl animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -506,7 +506,7 @@ export default function KnowledgePage() {
           <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(139,92,246,0.15)' }} className="w-16 h-16 rounded-2xl flex items-center justify-center">
             <svg width="28" height="28" fill="none" stroke="#6b7280" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           </div>
-          <div style={{ color: '#6b7280' }} className="text-sm font-medium">
+          <div style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">
             {search ? `No results for "${search}"` : 'No knowledge entries yet'}
           </div>
           {!search && (

@@ -8,14 +8,14 @@ import { useTableSubscription } from '@/lib/useRealtimeSubscription'
 import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
 
 const COLUMNS: { status: TaskStatus; label: string; color: string; bg: string; border: string }[] = [
-  { status: 'todo',        label: 'To Do',        color: '#9ca3af', bg: 'rgba(107, 114, 128, 0.06)', border: 'rgba(107, 114, 128, 0.18)' },
+  { status: 'todo',        label: 'To Do',        color: 'var(--cp-text-secondary)', bg: 'rgba(107, 114, 128, 0.06)', border: 'rgba(107, 114, 128, 0.18)' },
   { status: 'in_progress', label: 'In Progress',  color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.06)',  border: 'rgba(96, 165, 250, 0.18)'  },
   { status: 'done',        label: 'Done',          color: '#34d399', bg: 'rgba(52, 211, 153, 0.06)',  border: 'rgba(52, 211, 153, 0.18)'  },
   { status: 'blocked',     label: 'Blocked',       color: '#f87171', bg: 'rgba(248, 113, 113, 0.06)', border: 'rgba(248, 113, 113, 0.18)' },
 ]
 
 const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string }> = {
-  low:      { label: 'Low',      color: '#6b7280' },
+  low:      { label: 'Low',      color: 'var(--cp-text-muted)' },
   medium:   { label: 'Medium',   color: '#3b82f6' },
   high:     { label: 'High',     color: '#f59e0b' },
   critical: { label: 'Critical', color: '#ef4444' },
@@ -67,8 +67,8 @@ function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdit: (t: Task) =>
   return (
     <div
       style={{
-        background: 'rgba(255, 255, 255, 0.025)',
-        border: '1px solid rgba(109, 40, 217, 0.14)',
+        background: 'var(--cp-card-bg)',
+        border: '1px solid var(--cp-border)',
         borderLeft: `2px solid ${priorityColor}`,
         backdropFilter: 'blur(12px)',
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
@@ -78,7 +78,7 @@ function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdit: (t: Task) =>
     >
       {/* Title + actions */}
       <div className="flex items-start justify-between gap-2">
-        <p style={{ color: '#e9e2ff' }} className="text-sm font-medium leading-snug flex-1">{task.title}</p>
+        <p style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-medium leading-snug flex-1">{task.title}</p>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
           <IconButton onClick={() => onEdit(task)} title="Edit">
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -90,25 +90,25 @@ function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdit: (t: Task) =>
       </div>
 
       {task.description && (
-        <p style={{ color: '#6b7280' }} className="text-xs leading-relaxed line-clamp-2">{task.description}</p>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs leading-relaxed line-clamp-2">{task.description}</p>
       )}
 
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <PriorityBadge priority={task.priority} />
         <span
-          style={{ color: '#6b7280', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.06)', fontSize: '10px', fontWeight: 600 }}
+          style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-tag-bg)', border: '1px solid var(--cp-border-subtle)', fontSize: '10px', fontWeight: 600 }}
           className="px-2 py-0.5 rounded-md"
         >{task.project}</span>
       </div>
 
       {agent && (
-        <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--cp-divider)' }}>
           <div
             style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.2)', width: 20, height: 20, minWidth: 20, fontSize: 9, color: '#8b5cf6' }}
             className="rounded-md flex items-center justify-center font-bold"
           >{agent.name.slice(0, 2).toUpperCase()}</div>
-          <span style={{ color: '#6b7280' }} className="text-xs font-medium">{agent.name}</span>
-          <span style={{ color: '#374151', fontSize: 11 }} className="ml-auto">{agent.role}</span>
+          <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">{agent.name}</span>
+          <span style={{ color: 'var(--cp-text-dimmer)', fontSize: 11 }} className="ml-auto">{agent.role}</span>
         </div>
       )}
     </div>
@@ -155,9 +155,9 @@ function TaskModal({
   }
 
   const inputStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.04)',
+    background: 'var(--cp-input-bg)',
     border: '1px solid rgba(139,92,246,0.2)',
-    color: '#e9e2ff',
+    color: 'var(--cp-text-card-title)',
     borderRadius: 8,
     padding: '8px 12px',
     fontSize: 14,
@@ -165,24 +165,24 @@ function TaskModal({
     width: '100%',
   }
 
-  const labelStyle: React.CSSProperties = { color: '#9ca3af', fontSize: 12, fontWeight: 600, marginBottom: 4, display: 'block' }
+  const labelStyle: React.CSSProperties = { color: 'var(--cp-text-secondary)', fontSize: 12, fontWeight: 600, marginBottom: 4, display: 'block' }
 
   return (
     <div
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'var(--cp-overlay)', backdropFilter: 'blur(4px)' }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: 'linear-gradient(135deg, #0f0320 0%, #1a0533 100%)',
+          background: 'var(--cp-panel-bg)',
           border: '1px solid rgba(139,92,246,0.2)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
         }}
         className="rounded-2xl w-full max-w-lg p-6"
       >
-        <h2 style={{ color: '#f8f4ff' }} className="text-xl font-bold mb-5">{task ? 'Edit Task' : 'New Task'}</h2>
+        <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-xl font-bold mb-5">{task ? 'Edit Task' : 'New Task'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label style={labelStyle}>Title *</label>
@@ -222,7 +222,7 @@ function TaskModal({
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
+            <button type="button" onClick={onClose} style={{ color: 'var(--cp-text-secondary)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
             <button type="submit" disabled={saving || !form.title.trim()} style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', opacity: saving ? 0.6 : 1 }} className="px-5 py-2 rounded-lg text-sm font-semibold shadow-lg hover:opacity-90 transition-opacity">{saving ? 'Saving…' : task ? 'Save Changes' : 'Create Task'}</button>
           </div>
         </form>
@@ -237,12 +237,12 @@ function DeleteConfirm({ task, onClose, onConfirm }: { task: Task | null; onClos
   const [deleting, setDeleting] = useState(false)
   if (!task) return null
   return (
-    <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'linear-gradient(135deg, #0f0320 0%, #1a0533 100%)', border: '1px solid rgba(248,113,113,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }} className="rounded-2xl w-full max-w-sm p-6">
-        <h2 style={{ color: '#f8f4ff' }} className="text-lg font-bold mb-2">Delete Task</h2>
-        <p style={{ color: '#9ca3af' }} className="text-sm mb-5">Are you sure you want to delete <strong style={{ color: '#e9e2ff' }}>&quot;{task.title}&quot;</strong>? This cannot be undone.</p>
+    <div style={{ background: 'var(--cp-overlay)', backdropFilter: 'blur(4px)' }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--cp-panel-bg)', border: '1px solid rgba(248,113,113,0.2)', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }} className="rounded-2xl w-full max-w-sm p-6">
+        <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-bold mb-2">Delete Task</h2>
+        <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm mb-5">Are you sure you want to delete <strong style={{ color: 'var(--cp-text-card-title)' }}>&quot;{task.title}&quot;</strong>? This cannot be undone.</p>
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
+          <button onClick={onClose} style={{ color: 'var(--cp-text-secondary)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity">Cancel</button>
           <button disabled={deleting} onClick={async () => { setDeleting(true); await onConfirm(); setDeleting(false) }} style={{ background: '#dc2626', color: '#fff', opacity: deleting ? 0.6 : 1 }} className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">{deleting ? 'Deleting…' : 'Delete'}</button>
         </div>
       </div>
@@ -331,8 +331,8 @@ export default function TasksPage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Work Board</h1>
-          <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Kanban board across all agents and projects</p>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Work Board</h1>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Kanban board across all agents and projects</p>
         </div>
         <button
           onClick={() => { setEditingTask(null); setModalOpen(true) }}
@@ -353,7 +353,7 @@ export default function TasksPage() {
           { label: 'Critical',  value: criticalTasks, color: '#fbbf24', bg: 'rgba(251,191,36,0.06)',  border: 'rgba(251,191,36,0.18)'  },
         ].map(stat => (
           <div key={stat.label} style={{ background: stat.bg, border: `1px solid ${stat.border}`, backdropFilter: 'blur(12px)' }} className="rounded-xl px-4 py-2 flex items-center gap-2.5">
-            <span style={{ color: '#6b7280' }} className="text-sm font-medium">{stat.label}</span>
+            <span style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">{stat.label}</span>
             <span style={{ color: stat.color }} className="text-sm font-bold">{stat.value}</span>
           </div>
         ))}
@@ -396,7 +396,7 @@ export default function TasksPage() {
                     >
                       {colTasks.length === 0 && !snapshot.isDraggingOver ? (
                         <div className="flex items-center justify-center h-24">
-                          <span style={{ color: '#1f2937' }} className="text-xs font-medium">No tasks</span>
+                          <span style={{ color: 'var(--cp-text-faint)' }} className="text-xs font-medium">No tasks</span>
                         </div>
                       ) : (
                         colTasks.map((task, index) => (

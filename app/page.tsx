@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
       dot: '#4b5563',
       text: 'Idle',
       bg: 'rgba(75, 85, 99, 0.06)',
-      color: '#6b7280',
+      color: 'var(--cp-text-muted)',
       border: 'rgba(75, 85, 99, 0.2)',
       pulse: false,
     },
@@ -62,7 +62,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
       dot: '#374151',
       text: 'Offline',
       bg: 'rgba(55, 65, 81, 0.04)',
-      color: '#4b5563',
+      color: 'var(--cp-text-dim)',
       border: 'rgba(55, 65, 81, 0.15)',
       pulse: false,
     },
@@ -70,7 +70,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
       dot: '#6b7280',
       text: 'Unknown',
       bg: 'rgba(107, 114, 128, 0.04)',
-      color: '#6b7280',
+      color: 'var(--cp-text-muted)',
       border: 'rgba(107, 114, 128, 0.15)',
       pulse: false,
     },
@@ -125,8 +125,8 @@ function AgentCard({ agent }: { agent: MergedAgent }) {
             {initials}
           </div>
           <div className="min-w-0">
-            <div style={{ color: '#f8f4ff' }} className="font-semibold text-sm leading-tight">{agent.name}</div>
-            <div style={{ color: '#6b7280' }} className="text-xs mt-0.5 truncate">{agent.role}</div>
+            <div style={{ color: 'var(--cp-text-primary)' }} className="font-semibold text-sm leading-tight">{agent.name}</div>
+            <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5 truncate">{agent.role}</div>
           </div>
         </div>
         <div className="flex-shrink-0">
@@ -134,7 +134,7 @@ function AgentCard({ agent }: { agent: MergedAgent }) {
         </div>
       </div>
 
-      <div style={{ color: '#374151' }} className="text-xs">
+      <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">
         {agent.sessionCount > 0
           ? `${agent.sessionCount} sessions · last ${formatLastActive(agent.lastActive)}`
           : 'No sessions'}
@@ -164,13 +164,13 @@ function ActivityItem({ item, isLast, isNew }: { item: { id: string; agent_id: s
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2 mb-0.5">
-          <span style={{ color: '#e9e2ff' }} className="text-xs font-semibold">{item.agent_name}</span>
-          <span style={{ color: '#374151', fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em' }} className="flex-shrink-0">
+          <span style={{ color: 'var(--cp-text-card-title)' }} className="text-xs font-semibold">{item.agent_name}</span>
+          <span style={{ color: 'var(--cp-text-dimmer)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em' }} className="flex-shrink-0">
             {item.time}
           </span>
         </div>
         <div style={{ color: '#7c3aed' }} className="text-xs font-semibold">{item.action}</div>
-        <div style={{ color: '#4b5563' }} className="text-xs mt-0.5 truncate">{item.details}</div>
+        <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5 truncate">{item.details}</div>
       </div>
     </div>
   )
@@ -303,7 +303,7 @@ export default function OverviewPage() {
     {
       label: 'Idle',
       value: idleAgents.length,
-      color: '#9ca3af',
+      color: 'var(--cp-text-secondary)',
       iconColor: 'rgba(156, 163, 175, 0.7)',
       gradient: 'linear-gradient(135deg, rgba(75, 85, 99, 0.1) 0%, rgba(55, 65, 81, 0.04) 100%)',
       border: 'rgba(75, 85, 99, 0.2)',
@@ -330,7 +330,7 @@ export default function OverviewPage() {
   ]
 
   const priorityConfig = {
-    low: { color: '#6b7280' },
+    low: { color: 'var(--cp-text-muted)' },
     medium: { color: '#3b82f6' },
     high: { color: '#f59e0b' },
     critical: { color: '#ef4444' },
@@ -340,8 +340,8 @@ export default function OverviewPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Overview</h1>
-        <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Overview</h1>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
         {companyMission && (
           <div
             style={{
@@ -354,7 +354,7 @@ export default function OverviewPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
               <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
             </svg>
-            <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.6' }}>
+            <p style={{ color: 'var(--cp-text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
               <span style={{ color: '#7c3aed', fontWeight: 700, marginRight: '6px' }}>Mission</span>
               {companyMission}
             </p>
@@ -390,14 +390,14 @@ export default function OverviewPage() {
         {apiError ? (
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.02)',
+              background: 'var(--cp-card-bg)',
               border: '1px solid rgba(107, 114, 128, 0.2)',
               backdropFilter: 'blur(12px)',
               boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
             }}
             className="rounded-xl p-5 col-span-2 lg:col-span-4 text-center"
           >
-            <div style={{ color: '#6b7280' }} className="text-sm font-medium">
+            <div style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">
               No live data — connect local server
             </div>
           </div>
@@ -414,7 +414,7 @@ export default function OverviewPage() {
               className="rounded-xl p-5"
             >
               <div className="flex items-center justify-between mb-3">
-                <span style={{ color: '#6b7280' }} className="text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
+                <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-semibold uppercase tracking-wider">{stat.label}</span>
                 <span style={{ color: stat.iconColor }}>{stat.icon}</span>
               </div>
               <div style={{ color: stat.color }} className="text-4xl font-bold tracking-tight">{stat.value}</div>
@@ -427,12 +427,12 @@ export default function OverviewPage() {
         {/* Agent grid */}
         <div className="xl:col-span-2">
           <div className="flex items-center justify-between mb-5">
-            <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Agent Status</h2>
+            <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Agent Status</h2>
             <span
               style={{
-                color: '#6b7280',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
+                color: 'var(--cp-text-muted)',
+                background: 'var(--cp-input-bg)',
+                border: '1px solid var(--cp-border-subtle)',
               }}
               className="text-xs px-2.5 py-0.5 rounded-full font-medium"
             >
@@ -451,7 +451,7 @@ export default function OverviewPage() {
           {/* Active tasks */}
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Active Tasks</h2>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Active Tasks</h2>
               <span
                 style={{
                   color: '#34d399',
@@ -465,8 +465,8 @@ export default function OverviewPage() {
             </div>
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(109, 40, 217, 0.14)',
+                background: 'var(--cp-card-bg)',
+                border: '1px solid var(--cp-border)',
                 backdropFilter: 'blur(12px)',
               }}
               className="rounded-xl overflow-hidden"
@@ -491,7 +491,7 @@ export default function OverviewPage() {
                       }}
                     />
                     <div className="flex-1 min-w-0">
-                      <div style={{ color: '#e9e2ff' }} className="text-sm font-medium truncate mb-1.5">{task.title}</div>
+                      <div style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-medium truncate mb-1.5">{task.title}</div>
                       <div className="flex items-center gap-2">
                         <span
                           style={{
@@ -506,7 +506,7 @@ export default function OverviewPage() {
                         >
                           {agent?.name ?? task.assigned_agent}
                         </span>
-                        <span style={{ color: '#4b5563', fontSize: '11px' }}>{task.project}</span>
+                        <span style={{ color: 'var(--cp-text-dim)', fontSize: '11px' }}>{task.project}</span>
                       </div>
                     </div>
                   </div>
@@ -518,7 +518,7 @@ export default function OverviewPage() {
           {/* Activity feed */}
           <div>
             <div className="flex items-center justify-between mb-5">
-              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Activity Feed</h2>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Activity Feed</h2>
               <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full ${isConnected ? 'realtime-live-badge' : ''}`} style={{ background: isConnected ? 'rgba(52, 211, 153, 0.08)' : 'rgba(107, 114, 128, 0.08)', border: `1px solid ${isConnected ? 'rgba(52, 211, 153, 0.25)' : 'rgba(107, 114, 128, 0.2)'}` }}>
                 <span className="relative flex h-2 w-2">
                   {isConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
@@ -529,14 +529,14 @@ export default function OverviewPage() {
             </div>
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(109, 40, 217, 0.14)',
+                background: 'var(--cp-card-bg)',
+                border: '1px solid var(--cp-border)',
                 backdropFilter: 'blur(12px)',
               }}
               className="rounded-xl px-4 overflow-hidden"
             >
               {activity.length === 0 ? (
-                <div className="py-8 text-center text-sm" style={{ color: '#4b5563' }}>
+                <div className="py-8 text-center text-sm" style={{ color: 'var(--cp-text-dim)' }}>
                   No activity yet
                 </div>
               ) : (

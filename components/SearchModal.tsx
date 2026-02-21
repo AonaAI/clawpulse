@@ -178,20 +178,20 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
   return (
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'var(--cp-overlay)', backdropFilter: 'blur(4px)' }}
       onClick={onClose}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: 'linear-gradient(180deg, #110225 0%, #0a0118 100%)',
-          border: '1px solid rgba(109, 40, 217, 0.3)',
+          background: 'var(--cp-panel-bg)',
+          border: '1px solid var(--cp-border-stronger)',
           boxShadow: '0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(109,40,217,0.1)',
         }}
         className="w-full max-w-lg rounded-2xl overflow-hidden"
       >
         {/* Input */}
-        <div style={{ borderBottom: '1px solid rgba(109,40,217,0.15)' }} className="flex items-center gap-3 px-4 py-3">
+        <div style={{ borderBottom: '1px solid var(--cp-divider-accent)' }} className="flex items-center gap-3 px-4 py-3">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -201,11 +201,11 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search agents, tasks, knowledge, activity..."
-            style={{ color: '#f8f4ff', background: 'transparent' }}
+            style={{ color: 'var(--cp-text-primary)', background: 'transparent' }}
             className="flex-1 text-sm outline-none placeholder:text-gray-500"
           />
           <kbd
-            style={{ color: '#6b7280', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-separator-bg)', border: '1px solid var(--cp-border-subtle)' }}
             className="text-xs px-1.5 py-0.5 rounded font-mono"
           >
             ESC
@@ -215,12 +215,12 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
         {/* Results */}
         <div ref={resultsRef} className="max-h-[50vh] overflow-y-auto py-2">
           {query.trim() && results.length === 0 && (
-            <div style={{ color: '#6b7280' }} className="text-sm text-center py-8">
+            <div style={{ color: 'var(--cp-text-muted)' }} className="text-sm text-center py-8">
               No results found
             </div>
           )}
           {!query.trim() && (
-            <div style={{ color: '#6b7280' }} className="text-sm text-center py-8">
+            <div style={{ color: 'var(--cp-text-muted)' }} className="text-sm text-center py-8">
               Start typing to search...
             </div>
           )}
@@ -251,10 +251,10 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
                       <span style={{ color: cfg.color, opacity: 0.5 }}>{cfg.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">{item.title}</div>
-                        <div style={{ color: '#6b7280' }} className="text-xs truncate">{item.subtitle}</div>
+                        <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs truncate">{item.subtitle}</div>
                       </div>
                       {isSelected && (
-                        <span style={{ color: '#6b7280' }} className="text-xs">↵</span>
+                        <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs">↵</span>
                       )}
                     </button>
                   )
@@ -266,7 +266,7 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
 
         {/* Footer */}
         <div
-          style={{ borderTop: '1px solid rgba(109,40,217,0.1)', color: '#4b5563' }}
+          style={{ borderTop: '1px solid var(--cp-divider-accent)', color: 'var(--cp-text-dim)' }}
           className="px-4 py-2 flex items-center gap-4 text-xs"
         >
           <span>↑↓ navigate</span>

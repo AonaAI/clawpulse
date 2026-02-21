@@ -76,8 +76,8 @@ const CHANNEL_MAP = buildChannelMap()
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="mb-5">
-      <h2 style={{ color: '#f8f4ff' }} className="text-lg font-bold">{title}</h2>
-      <p style={{ color: '#6b7280' }} className="text-sm mt-0.5">{subtitle}</p>
+      <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-bold">{title}</h2>
+      <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-0.5">{subtitle}</p>
     </div>
   )
 }
@@ -104,7 +104,7 @@ function AgentAvatar({ agentId, size = 24 }: { agentId: string; size?: number })
 }
 
 const PRIORITY_CONFIG = {
-  low:      { color: '#6b7280', label: 'Low' },
+  low:      { color: 'var(--cp-text-muted)', label: 'Low' },
   medium:   { color: '#3b82f6', label: 'Medium' },
   high:     { color: '#f59e0b', label: 'High' },
   critical: { color: '#ef4444', label: 'Critical' },
@@ -131,8 +131,8 @@ export default function CommsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Comms & Coordination</h1>
-        <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Slack channels, scheduled jobs, and pending handoffs</p>
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Comms & Coordination</h1>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Slack channels, scheduled jobs, and pending handoffs</p>
       </div>
 
       {/* Summary pills */}
@@ -144,7 +144,7 @@ export default function CommsPage() {
           { label: 'Pending Handoffs', value: handoffs.length, color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.18)' },
         ].map(stat => (
           <div key={stat.label} style={{ background: stat.bg, border: `1px solid ${stat.border}`, backdropFilter: 'blur(12px)' }} className="rounded-xl px-4 py-2 flex items-center gap-2.5">
-            <span style={{ color: '#6b7280' }} className="text-sm font-medium">{stat.label}</span>
+            <span style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">{stat.label}</span>
             <span style={{ color: stat.color }} className="text-sm font-bold">{stat.value}</span>
           </div>
         ))}
@@ -173,8 +173,8 @@ export default function CommsPage() {
               <div
                 key={channel}
                 style={{
-                  background: 'rgba(255,255,255,0.025)',
-                  border: '1px solid rgba(109,40,217,0.14)',
+                  background: 'var(--cp-card-bg)',
+                  border: '1px solid var(--cp-border)',
                   backdropFilter: 'blur(12px)',
                 }}
                 className="rounded-xl p-4 flex items-center gap-3"
@@ -187,10 +187,10 @@ export default function CommsPage() {
                   #
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div style={{ color: '#e9e2ff' }} className="text-sm font-semibold truncate">{channel}</div>
+                  <div style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold truncate">{channel}</div>
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                     {agentIds.map(id => <AgentAvatar key={id} agentId={id} size={20} />)}
-                    <span style={{ color: '#374151', fontSize: 11 }} className="font-medium">{agentIds.length} agent{agentIds.length !== 1 ? 's' : ''}</span>
+                    <span style={{ color: 'var(--cp-text-dimmer)', fontSize: 11 }} className="font-medium">{agentIds.length} agent{agentIds.length !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
               </div>
@@ -206,8 +206,8 @@ export default function CommsPage() {
           />
           <div
             style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(109,40,217,0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
               backdropFilter: 'blur(12px)',
             }}
             className="rounded-xl overflow-hidden"
@@ -232,7 +232,7 @@ export default function CommsPage() {
                   {/* Job info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{job.name}</span>
+                      <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold">{job.name}</span>
                       <span
                         style={{ color: status.color, background: status.bg, border: `1px solid ${status.border}` }}
                         className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -240,7 +240,7 @@ export default function CommsPage() {
                         {status.label}
                       </span>
                     </div>
-                    <p style={{ color: '#6b7280' }} className="text-xs mt-0.5 truncate">{job.description}</p>
+                    <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5 truncate">{job.description}</p>
                   </div>
 
                   {/* Schedule */}
@@ -254,7 +254,7 @@ export default function CommsPage() {
                   {/* Agent + last run */}
                   <div className="hidden md:flex items-center gap-2 flex-shrink-0">
                     {agent && <AgentAvatar agentId={job.agent_id} size={22} />}
-                    <span style={{ color: '#374151' }} className="text-xs font-medium">{job.last_run}</span>
+                    <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs font-medium">{job.last_run}</span>
                   </div>
                 </div>
               )
@@ -271,7 +271,7 @@ export default function CommsPage() {
           {handoffsLoading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.1)', height: 72 }} className="rounded-xl animate-pulse" />
+                <div key={i} style={{ background: 'var(--cp-card-bg)', border: '1px solid rgba(109,40,217,0.1)', height: 72 }} className="rounded-xl animate-pulse" />
               ))}
             </div>
           ) : handoffs.length === 0 ? (
@@ -285,13 +285,13 @@ export default function CommsPage() {
             >
               <svg width="24" height="24" fill="none" stroke="#34d399" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               <span style={{ color: '#34d399' }} className="text-sm font-semibold">No pending handoffs</span>
-              <span style={{ color: '#6b7280' }} className="text-xs">All blocked tasks are clear</span>
+              <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs">All blocked tasks are clear</span>
             </div>
           ) : (
             <div
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(109,40,217,0.14)',
+                background: 'var(--cp-card-bg)',
+                border: '1px solid var(--cp-border)',
                 backdropFilter: 'blur(12px)',
               }}
               className="rounded-xl overflow-hidden"
@@ -316,7 +316,7 @@ export default function CommsPage() {
                     {/* Task info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold truncate">{task.title}</span>
+                        <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold truncate">{task.title}</span>
                         <span
                           style={{ color: priority.color, background: `${priority.color}12`, border: `1px solid ${priority.color}30` }}
                           className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
@@ -325,13 +325,13 @@ export default function CommsPage() {
                         </span>
                       </div>
                       {task.description && (
-                        <p style={{ color: '#6b7280' }} className="text-xs mt-0.5 truncate">{task.description}</p>
+                        <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5 truncate">{task.description}</p>
                       )}
                     </div>
 
                     {/* Project */}
                     <span
-                      style={{ color: '#6b7280', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.06)', fontSize: 11 }}
+                      style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-tag-bg)', border: '1px solid var(--cp-border-subtle)', fontSize: 11 }}
                       className="hidden sm:block px-2 py-0.5 rounded-md font-semibold flex-shrink-0"
                     >
                       {task.project}
@@ -341,7 +341,7 @@ export default function CommsPage() {
                     {agent && (
                       <div className="hidden md:flex items-center gap-2 flex-shrink-0">
                         <AgentAvatar agentId={agent.id} size={22} />
-                        <span style={{ color: '#6b7280' }} className="text-xs">{agent.name}</span>
+                        <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs">{agent.name}</span>
                       </div>
                     )}
                   </div>

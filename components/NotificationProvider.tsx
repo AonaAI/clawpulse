@@ -3,6 +3,7 @@
 import { useNotifications } from '@/lib/useNotifications'
 import NotificationBell from './NotificationBell'
 import ToastContainer from './ToastContainer'
+import ThemeToggle from './ThemeToggle'
 
 export default function NotificationProvider() {
   const {
@@ -19,7 +20,8 @@ export default function NotificationProvider() {
   return (
     <>
       {/* Fixed bell in top-right */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-1">
+        <ThemeToggle />
         <NotificationBell
           notifications={notifications}
           unreadCount={unreadCount}

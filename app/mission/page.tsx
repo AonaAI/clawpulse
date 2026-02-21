@@ -77,9 +77,9 @@ function EditableStatement({
           <button
             onClick={() => setEditing(true)}
             style={{
-              color: '#6b7280',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'var(--cp-text-muted)',
+              background: 'var(--cp-input-bg)',
+              border: '1px solid var(--cp-border-subtle)',
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold hover:text-white transition-colors"
           >
@@ -90,7 +90,7 @@ function EditableStatement({
           <div className="flex gap-2">
             <button
               onClick={() => { setEditing(false); setDraft(value) }}
-              style={{ color: '#6b7280', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold"
             >
               Cancel
@@ -119,9 +119,9 @@ function EditableStatement({
           autoFocus
           rows={4}
           style={{
-            background: 'rgba(0,0,0,0.3)',
+            background: 'var(--cp-code-bg)',
             border: `1px solid ${accent.border}`,
-            color: '#f8f4ff',
+            color: 'var(--cp-text-primary)',
             fontSize: large ? '18px' : '15px',
             lineHeight: '1.6',
             resize: 'vertical',
@@ -131,14 +131,14 @@ function EditableStatement({
       ) : (
         <p
           style={{
-            color: '#f0ebff',
+            color: 'var(--cp-text-heading)',
             fontSize: large ? '22px' : '16px',
             lineHeight: '1.65',
             fontWeight: large ? 600 : 400,
             letterSpacing: large ? '-0.01em' : '0',
           }}
         >
-          {value || <span style={{ color: '#4b5563', fontStyle: 'italic' }}>No statement yet — click Edit to add one.</span>}
+          {value || <span style={{ color: 'var(--cp-text-dim)', fontStyle: 'italic' }}>No statement yet — click Edit to add one.</span>}
         </p>
       )}
     </div>
@@ -166,8 +166,8 @@ function AgentMissionCard({ agent, onSave }: { agent: AgentMission; onSave: (id:
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(109,40,217,0.14)',
+        background: 'var(--cp-card-bg)',
+        border: '1px solid var(--cp-border)',
         backdropFilter: 'blur(12px)',
       }}
       className="rounded-xl overflow-hidden"
@@ -176,7 +176,7 @@ function AgentMissionCard({ agent, onSave }: { agent: AgentMission; onSave: (id:
       <div
         style={{
           background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          borderBottom: '1px solid var(--cp-divider)',
         }}
         className="px-5 py-4 flex items-center justify-between"
       >
@@ -192,8 +192,8 @@ function AgentMissionCard({ agent, onSave }: { agent: AgentMission; onSave: (id:
             {agent.name.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <div style={{ color: '#f8f4ff' }} className="font-bold text-sm">{agent.name}</div>
-            <div style={{ color: '#6b7280' }} className="text-xs">{agent.role}</div>
+            <div style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-sm">{agent.name}</div>
+            <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs">{agent.role}</div>
           </div>
         </div>
         <span style={{ color: modelColor, background: `${modelColor}15`, border: `1px solid ${modelColor}30` }} className="text-xs px-2 py-0.5 rounded-full font-semibold">
@@ -212,9 +212,9 @@ function AgentMissionCard({ agent, onSave }: { agent: AgentMission; onSave: (id:
               rows={3}
               placeholder="Enter agent mission statement..."
               style={{
-                background: 'rgba(0,0,0,0.3)',
-                border: '1px solid rgba(109,40,217,0.3)',
-                color: '#f8f4ff',
+                background: 'var(--cp-code-bg)',
+                border: '1px solid var(--cp-border-stronger)',
+                color: 'var(--cp-text-primary)',
                 fontSize: '13px',
                 resize: 'vertical',
               }}
@@ -223,7 +223,7 @@ function AgentMissionCard({ agent, onSave }: { agent: AgentMission; onSave: (id:
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => { setEditing(false); setDraft(agent.mission || '') }}
-                style={{ color: '#6b7280', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold"
               >
                 Cancel
@@ -242,13 +242,13 @@ function AgentMissionCard({ agent, onSave }: { agent: AgentMission; onSave: (id:
         ) : (
           <div>
             {agent.mission ? (
-              <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.6' }}>{agent.mission}</p>
+              <p style={{ color: 'var(--cp-text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>{agent.mission}</p>
             ) : (
-              <p style={{ color: '#374151', fontSize: '13px', fontStyle: 'italic' }}>No mission statement yet</p>
+              <p style={{ color: 'var(--cp-text-dimmer)', fontSize: '13px', fontStyle: 'italic' }}>No mission statement yet</p>
             )}
             <button
               onClick={() => setEditing(true)}
-              style={{ color: '#6b7280' }}
+              style={{ color: 'var(--cp-text-muted)' }}
               className="flex items-center gap-1 mt-3 text-xs font-semibold hover:text-white transition-colors"
             >
               <EditIcon />
@@ -316,12 +316,12 @@ export default function MissionPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-10">
-        <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Mission & Vision</h1>
-        <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">The purpose and direction of our agent network</p>
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Mission & Vision</h1>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">The purpose and direction of our agent network</p>
       </div>
 
       {loading ? (
-        <div style={{ color: '#4b5563' }} className="text-sm text-center py-16">Loading…</div>
+        <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-16">Loading…</div>
       ) : (
         <>
           {/* Company mission + vision */}
@@ -345,11 +345,11 @@ export default function MissionPage() {
           {/* Divider */}
           <div className="flex items-center gap-4 mb-8">
             <div style={{ flex: 1, height: '1px', background: 'rgba(109,40,217,0.14)' }} />
-            <span style={{ color: '#3b1d6e' }} className="text-xs font-bold uppercase tracking-widest">Agent Missions</span>
+            <span style={{ color: 'var(--cp-text-nav-label)' }} className="text-xs font-bold uppercase tracking-widest">Agent Missions</span>
             <div style={{ flex: 1, height: '1px', background: 'rgba(109,40,217,0.14)' }} />
           </div>
 
-          <p style={{ color: '#6b7280' }} className="text-sm mb-6">
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mb-6">
             Each agent operates with a focused mission aligned to the company&apos;s broader purpose. Click any card to edit.
           </p>
 

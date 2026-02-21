@@ -44,7 +44,7 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
       <button
         onClick={() => setOpen(!open)}
         style={{
-          color: '#7c5fa0',
+          color: 'var(--cp-text-nav)',
           background: open ? 'rgba(109,40,217,0.15)' : 'transparent',
           border: '1px solid transparent',
         }}
@@ -74,8 +74,8 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
       {open && (
         <div
           style={{
-            background: 'linear-gradient(180deg, #150228 0%, #0e0120 100%)',
-            border: '1px solid rgba(109,40,217,0.25)',
+            background: 'var(--cp-panel-bg)',
+            border: '1px solid var(--cp-border-stronger)',
             boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
             width: '360px',
             maxHeight: '480px',
@@ -84,10 +84,10 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
         >
           {/* Header */}
           <div
-            style={{ borderBottom: '1px solid rgba(109,40,217,0.15)' }}
+            style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}
             className="px-4 py-3 flex items-center justify-between"
           >
-            <span style={{ color: '#f8f4ff' }} className="font-semibold text-sm">Notifications</span>
+            <span style={{ color: 'var(--cp-text-primary)' }} className="font-semibold text-sm">Notifications</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={onToggleSound}
@@ -124,7 +124,7 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
           {/* List */}
           <div className="overflow-y-auto" style={{ maxHeight: '420px' }}>
             {notifications.length === 0 ? (
-              <div style={{ color: '#4a3660' }} className="py-12 text-center text-sm">
+              <div style={{ color: 'var(--cp-text-notification-dim)' }} className="py-12 text-center text-sm">
                 No notifications yet
               </div>
             ) : (
@@ -134,7 +134,7 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
                   onClick={() => onMarkRead(notif.id)}
                   style={{
                     background: notif.read ? 'transparent' : 'rgba(109,40,217,0.06)',
-                    borderBottom: '1px solid rgba(109,40,217,0.08)',
+                    borderBottom: '1px solid var(--cp-divider-accent)',
                   }}
                   className="w-full text-left px-4 py-3 hover:bg-white/[0.03] transition-colors flex gap-3"
                 >
@@ -150,7 +150,7 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
                       >
                         {notif.title}
                       </span>
-                      <span style={{ color: '#4a3660' }} className="text-[10px] flex-shrink-0">
+                      <span style={{ color: 'var(--cp-text-notification-dim)' }} className="text-[10px] flex-shrink-0">
                         {timeAgo(notif.timestamp)}
                       </span>
                     </div>

@@ -1,8 +1,111 @@
 @import "tailwindcss";
 
+/* ── Dark theme (default) ────────────────────────────────────────── */
 :root {
   --background: #0a0118;
   --foreground: #f8f4ff;
+
+  /* Text */
+  --cp-text-primary: #f8f4ff;
+  --cp-text-heading: #f0ebff;
+  --cp-text-card-title: #e9e2ff;
+  --cp-text-accent-light: #c4b5fd;
+  --cp-text-secondary: #9ca3af;
+  --cp-text-muted: #6b7280;
+  --cp-text-dim: #4b5563;
+  --cp-text-dimmer: #374151;
+  --cp-text-faint: #1f2937;
+  --cp-text-nav: #7c5fa0;
+  --cp-text-nav-label: #3b1d6e;
+  --cp-text-notification-dim: #4a3660;
+  --cp-text-notification-read: #5a4478;
+  --cp-text-notification-unread: #ddd6fe;
+
+  /* Surfaces */
+  --cp-card-bg: rgba(255, 255, 255, 0.02);
+  --cp-card-bg-hover: rgba(255, 255, 255, 0.03);
+  --cp-input-bg: rgba(255, 255, 255, 0.04);
+  --cp-separator-bg: rgba(255, 255, 255, 0.05);
+  --cp-code-bg: rgba(0, 0, 0, 0.3);
+  --cp-tag-bg: rgba(0, 0, 0, 0.25);
+  --cp-table-header-bg: rgba(0, 0, 0, 0.2);
+  --cp-panel-bg: linear-gradient(180deg, #150228 0%, #0e0120 100%);
+  --cp-tooltip-bg: rgba(17, 7, 30, 0.95);
+  --cp-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Sidebar */
+  --cp-sidebar-bg: #0e0120;
+  --cp-sidebar-bg-bottom: #080112;
+  --cp-sidebar-border: rgba(109, 40, 217, 0.18);
+  --cp-sidebar-hover: rgba(109, 40, 217, 0.1);
+  --cp-sidebar-active: rgba(109, 40, 217, 0.18);
+
+  /* Borders */
+  --cp-border: rgba(109, 40, 217, 0.14);
+  --cp-border-strong: rgba(109, 40, 217, 0.18);
+  --cp-border-stronger: rgba(109, 40, 217, 0.25);
+  --cp-border-subtle: rgba(255, 255, 255, 0.07);
+  --cp-divider: rgba(255, 255, 255, 0.04);
+  --cp-divider-accent: rgba(109, 40, 217, 0.12);
+
+  /* Scrollbar */
+  --cp-scrollbar-track: #0a0118;
+  --cp-scrollbar-thumb: #2d1054;
+  --cp-scrollbar-thumb-hover: #7c3aed;
+}
+
+/* ── Light theme ─────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --background: #f7f5fb;
+  --foreground: #1a1a2e;
+
+  /* Text */
+  --cp-text-primary: #1a1a2e;
+  --cp-text-heading: #1e1b3a;
+  --cp-text-card-title: #2d2a4a;
+  --cp-text-accent-light: #6412A6;
+  --cp-text-secondary: #4b5563;
+  --cp-text-muted: #6b7280;
+  --cp-text-dim: #9ca3af;
+  --cp-text-dimmer: #d1d5db;
+  --cp-text-faint: #e5e7eb;
+  --cp-text-nav: #6412A6;
+  --cp-text-nav-label: #a78bfa;
+  --cp-text-notification-dim: #9ca3af;
+  --cp-text-notification-read: #6b7280;
+  --cp-text-notification-unread: #2d2a4a;
+
+  /* Surfaces */
+  --cp-card-bg: rgba(255, 255, 255, 0.7);
+  --cp-card-bg-hover: rgba(255, 255, 255, 0.85);
+  --cp-input-bg: rgba(0, 0, 0, 0.03);
+  --cp-separator-bg: rgba(0, 0, 0, 0.06);
+  --cp-code-bg: rgba(0, 0, 0, 0.04);
+  --cp-tag-bg: rgba(0, 0, 0, 0.05);
+  --cp-table-header-bg: rgba(0, 0, 0, 0.03);
+  --cp-panel-bg: linear-gradient(180deg, #ffffff 0%, #f3f0fa 100%);
+  --cp-tooltip-bg: rgba(255, 255, 255, 0.97);
+  --cp-overlay: rgba(0, 0, 0, 0.3);
+
+  /* Sidebar */
+  --cp-sidebar-bg: #ffffff;
+  --cp-sidebar-bg-bottom: #f8f6fd;
+  --cp-sidebar-border: rgba(100, 18, 166, 0.12);
+  --cp-sidebar-hover: rgba(100, 18, 166, 0.06);
+  --cp-sidebar-active: rgba(100, 18, 166, 0.1);
+
+  /* Borders */
+  --cp-border: rgba(100, 18, 166, 0.12);
+  --cp-border-strong: rgba(100, 18, 166, 0.18);
+  --cp-border-stronger: rgba(100, 18, 166, 0.25);
+  --cp-border-subtle: rgba(0, 0, 0, 0.08);
+  --cp-divider: rgba(0, 0, 0, 0.06);
+  --cp-divider-accent: rgba(100, 18, 166, 0.1);
+
+  /* Scrollbar */
+  --cp-scrollbar-track: #f7f5fb;
+  --cp-scrollbar-thumb: #d4c8e8;
+  --cp-scrollbar-thumb-hover: #6412A6;
 }
 
 @theme inline {
@@ -27,16 +130,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0118;
+  background: var(--cp-scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2d1054;
+  background: var(--cp-scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7c3aed;
+  background: var(--cp-scrollbar-thumb-hover);
 }
 
 @keyframes glow-pulse {
@@ -52,7 +155,6 @@ body {
   animation: glow-pulse 2s ease-in-out infinite;
 }
 
-/* Realtime fade-in for new activity items */
 @keyframes realtime-fade-in {
   0% {
     opacity: 0;
@@ -73,7 +175,6 @@ body {
   animation: realtime-fade-in 0.6s ease-out;
 }
 
-/* Live badge pulse/glow */
 @keyframes live-badge-glow {
   0%, 100% {
     box-shadow: 0 0 4px rgba(52, 211, 153, 0.3), 0 0 8px rgba(52, 211, 153, 0.1);

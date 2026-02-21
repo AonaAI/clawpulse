@@ -105,8 +105,8 @@ export default function UsagePage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Token Usage & Cost</h1>
-        <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Track token consumption and API costs across all agents</p>
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Token Usage & Cost</h1>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Track token consumption and API costs across all agents</p>
       </div>
 
       {/* Summary cards */}
@@ -117,16 +117,16 @@ export default function UsagePage() {
             style={{ background: card.gradient, border: `1px solid ${card.border}`, backdropFilter: 'blur(12px)', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}
             className="rounded-xl p-5"
           >
-            <div style={{ color: '#6b7280' }} className="text-xs font-semibold uppercase tracking-wider mb-3">{card.label}</div>
+            <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-semibold uppercase tracking-wider mb-3">{card.label}</div>
             <div style={{ color: card.color }} className="text-3xl font-bold tracking-tight mb-1">
               {loading ? '—' : formatTokens(card.tokens)}
             </div>
-            <div style={{ color: '#6b7280' }} className="text-xs font-medium">tokens</div>
-            <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">tokens</div>
+            <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--cp-divider)' }}>
               <span style={{ color: card.color }} className="text-lg font-bold">
                 {loading ? '—' : formatCost(card.cost)}
               </span>
-              <span style={{ color: '#4b5563' }} className="text-xs ml-1 font-medium">USD</span>
+              <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs ml-1 font-medium">USD</span>
             </div>
           </div>
         ))}
@@ -136,14 +136,14 @@ export default function UsagePage() {
         {/* Per-agent breakdown */}
         <div className="xl:col-span-2">
           <div
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl p-5"
           >
-            <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base mb-5">Per-Agent Token Usage</h2>
+            <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base mb-5">Per-Agent Token Usage</h2>
             {loading ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-8">Loading…</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">Loading…</div>
             ) : agentStats.length === 0 ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-8">No usage data yet</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">No usage data yet</div>
             ) : (
               <div className="space-y-4">
                 {agentStats.map(agent => {
@@ -159,18 +159,18 @@ export default function UsagePage() {
                             {agent.agent_name.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{agent.agent_name}</span>
+                            <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold">{agent.agent_name}</span>
                           </div>
                           <ModelBadge model={agent.model} />
                         </div>
                         <div className="text-right">
-                          <span style={{ color: '#f8f4ff' }} className="text-sm font-bold">{formatTokens(agent.total_tokens)}</span>
-                          <span style={{ color: '#6b7280' }} className="text-xs ml-1">tokens</span>
-                          <div style={{ color: '#4b5563' }} className="text-xs">{formatCost(agent.total_cost)}</div>
+                          <span style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-bold">{formatTokens(agent.total_tokens)}</span>
+                          <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs ml-1">tokens</span>
+                          <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{formatCost(agent.total_cost)}</div>
                         </div>
                       </div>
                       <div
-                        style={{ background: 'rgba(255,255,255,0.05)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}
+                        style={{ background: 'var(--cp-separator-bg)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}
                       >
                         <div
                           style={{
@@ -193,14 +193,14 @@ export default function UsagePage() {
         {/* Daily trend */}
         <div>
           <div
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl p-5"
           >
-            <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base mb-5">7-Day Trend</h2>
+            <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base mb-5">7-Day Trend</h2>
             {loading ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-8">Loading…</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">Loading…</div>
             ) : dailyStats.length === 0 ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-8">No data</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">No data</div>
             ) : (
               <div className="space-y-3">
                 {dailyStats.map(day => {
@@ -208,10 +208,10 @@ export default function UsagePage() {
                   return (
                     <div key={day.date}>
                       <div className="flex items-center justify-between mb-1">
-                        <span style={{ color: '#6b7280' }} className="text-xs font-medium">{formatDate(day.date)}</span>
-                        <span style={{ color: '#e9e2ff' }} className="text-xs font-bold">{formatTokens(day.total_tokens)}</span>
+                        <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">{formatDate(day.date)}</span>
+                        <span style={{ color: 'var(--cp-text-card-title)' }} className="text-xs font-bold">{formatTokens(day.total_tokens)}</span>
                       </div>
-                      <div style={{ background: 'rgba(255,255,255,0.05)', height: '4px', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ background: 'var(--cp-separator-bg)', height: '4px', borderRadius: '999px', overflow: 'hidden' }}>
                         <div
                           style={{
                             width: `${pct}%`,
@@ -221,7 +221,7 @@ export default function UsagePage() {
                           }}
                         />
                       </div>
-                      <div style={{ color: '#4b5563' }} className="text-xs mt-0.5 text-right">{formatCost(day.total_cost)}</div>
+                      <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5 text-right">{formatCost(day.total_cost)}</div>
                     </div>
                   )
                 })}
@@ -233,13 +233,13 @@ export default function UsagePage() {
 
       {/* Detailed records table */}
       <div
-        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+        style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
         className="rounded-xl overflow-hidden"
       >
-        <div className="px-5 py-4 flex items-center justify-between flex-wrap gap-2" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
-          <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Recent Sessions</h2>
+        <div className="px-5 py-4 flex items-center justify-between flex-wrap gap-2" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
+          <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Recent Sessions</h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <span style={{ color: '#4b5563' }} className="text-xs font-medium">Sort by:</span>
+            <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium">Sort by:</span>
             {(['date', 'tokens', 'cost'] as const).map(opt => (
               <button
                 key={opt}
@@ -258,7 +258,7 @@ export default function UsagePage() {
         </div>
 
         {loading ? (
-          <div style={{ color: '#4b5563' }} className="text-sm text-center py-12">Loading…</div>
+          <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-12">Loading…</div>
         ) : (
           <div className="overflow-x-auto">
             <div style={{ minWidth: '560px' }}>
@@ -267,12 +267,12 @@ export default function UsagePage() {
               className="grid px-5 py-2.5"
               style={{
                 gridTemplateColumns: '1fr 1fr 80px 80px 80px 90px',
-                borderBottom: '1px solid rgba(255,255,255,0.04)',
-                background: 'rgba(0,0,0,0.2)',
+                borderBottom: '1px solid var(--cp-divider)',
+                background: 'var(--cp-table-header-bg)',
               }}
             >
               {['Agent', 'Model', 'Input', 'Output', 'Total', 'Cost'].map(h => (
-                <span key={h} style={{ color: '#4b5563' }} className="text-xs font-bold uppercase tracking-wider">{h}</span>
+                <span key={h} style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-bold uppercase tracking-wider">{h}</span>
               ))}
             </div>
             {sortedRecords.map((r, i) => (
@@ -285,13 +285,13 @@ export default function UsagePage() {
                 }}
               >
                 <div>
-                  <div style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{r.agent_name}</div>
-                  <div style={{ color: '#4b5563' }} className="text-xs">{formatTimestamp(r.recorded_at)}</div>
+                  <div style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold">{r.agent_name}</div>
+                  <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{formatTimestamp(r.recorded_at)}</div>
                 </div>
                 <div><ModelBadge model={r.model} /></div>
-                <div style={{ color: '#6b7280' }} className="text-sm font-medium">{formatTokens(r.input_tokens)}</div>
-                <div style={{ color: '#6b7280' }} className="text-sm font-medium">{formatTokens(r.output_tokens)}</div>
-                <div style={{ color: '#f8f4ff' }} className="text-sm font-bold">{formatTokens(r.total_tokens)}</div>
+                <div style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">{formatTokens(r.input_tokens)}</div>
+                <div style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">{formatTokens(r.output_tokens)}</div>
+                <div style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-bold">{formatTokens(r.total_tokens)}</div>
                 <div style={{ color: '#34d399' }} className="text-sm font-bold">{formatCost(Number(r.cost_usd))}</div>
               </div>
             ))}

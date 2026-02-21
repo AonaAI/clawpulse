@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
     idle: {
       dot: '#4b5563',
       text: 'Idle',
-      color: '#6b7280',
+      color: 'var(--cp-text-muted)',
       bg: 'rgba(75, 85, 99, 0.06)',
       border: 'rgba(75, 85, 99, 0.2)',
       pulse: false,
@@ -62,7 +62,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
     offline: {
       dot: '#374151',
       text: 'Offline',
-      color: '#4b5563',
+      color: 'var(--cp-text-dim)',
       bg: 'rgba(55, 65, 81, 0.04)',
       border: 'rgba(55, 65, 81, 0.15)',
       pulse: false,
@@ -70,7 +70,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
     unknown: {
       dot: '#4b5563',
       text: 'Unknown',
-      color: '#6b7280',
+      color: 'var(--cp-text-muted)',
       bg: 'rgba(75, 85, 99, 0.04)',
       border: 'rgba(75, 85, 99, 0.15)',
       pulse: false,
@@ -164,8 +164,8 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
               {initials}
             </div>
             <div className="min-w-0">
-              <div style={{ color: '#f8f4ff' }} className="font-bold text-base leading-tight">{agent.name}</div>
-              <div style={{ color: '#6b7280' }} className="text-sm mt-0.5">{agent.role}</div>
+              <div style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-base leading-tight">{agent.name}</div>
+              <div style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-0.5">{agent.role}</div>
             </div>
           </div>
           <div className="flex-shrink-0">
@@ -177,17 +177,17 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
       {/* Card body */}
       <div className="p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider">Model</span>
+          <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider">Model</span>
           <ModelBadge model={agent.model} />
         </div>
 
         <div>
-          <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Workspace</span>
+          <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Workspace</span>
           <code
             style={{
-              color: '#6b7280',
-              background: 'rgba(0, 0, 0, 0.3)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
+              color: 'var(--cp-text-muted)',
+              background: 'var(--cp-code-bg)',
+              border: '1px solid var(--cp-border-subtle)',
               fontSize: '11px',
             }}
             className="block px-2.5 py-1.5 rounded-lg font-mono truncate"
@@ -198,7 +198,7 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
 
         {agent.slack_channels.length > 0 && (
           <div>
-            <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">
+            <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">
               Slack channels ({agent.slack_channels.length})
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -206,9 +206,9 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
                 <span
                   key={ch}
                   style={{
-                    color: '#6b7280',
-                    background: 'rgba(0, 0, 0, 0.25)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    color: 'var(--cp-text-muted)',
+                    background: 'var(--cp-tag-bg)',
+                    border: '1px solid var(--cp-border-subtle)',
                     fontSize: '11px',
                   }}
                   className="px-2 py-0.5 rounded-md font-mono"
@@ -222,7 +222,7 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
 
         {agent.spawn_permissions.length > 0 && (
           <div>
-            <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Can spawn</span>
+            <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Can spawn</span>
             <div className="flex flex-wrap gap-1.5">
               {agent.spawn_permissions.map((id) => {
                 const target = AGENTS.find(a => a.id === id)
@@ -248,15 +248,15 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
         <div className="flex items-center justify-between pt-1">
           <div>
             {agent.sessionCount > 0 ? (
-              <span style={{ color: '#6b7280' }} className="text-xs font-medium">
+              <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">
                 {agent.sessionCount} sessions
               </span>
             ) : (
-              <span style={{ color: '#374151' }} className="text-xs">No sessions</span>
+              <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">No sessions</span>
             )}
           </div>
           {agent.lastActive !== null && (
-            <div style={{ color: '#374151' }} className="text-xs font-medium">
+            <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs font-medium">
               Last seen {formatLastActive(agent.lastActive)}
             </div>
           )}
@@ -266,7 +266,7 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
           <div
             style={{
               background: 'rgba(124,58,237,0.08)',
-              border: '1px solid rgba(109,40,217,0.18)',
+              border: '1px solid var(--cp-border-strong)',
               borderRadius: '10px',
             }}
             className="flex items-center justify-between px-3 py-2"
@@ -275,19 +275,19 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
               </svg>
-              <span style={{ color: '#6b7280' }} className="text-xs font-medium">Tokens (7d)</span>
+              <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">Tokens (7d)</span>
             </div>
             <div className="text-right">
               <span style={{ color: '#a78bfa' }} className="text-xs font-bold">{formatTokensShort(tokenStats.total_tokens)}</span>
-              <span style={{ color: '#4b5563' }} className="text-xs ml-1">${tokenStats.total_cost.toFixed(3)}</span>
+              <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs ml-1">${tokenStats.total_cost.toFixed(3)}</span>
             </div>
           </div>
         )}
 
         {mission && (
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
-            <span style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Mission</span>
-            <p style={{ color: '#6b7280', fontSize: '12px', lineHeight: '1.5' }} className="line-clamp-2">{mission}</p>
+          <div style={{ borderTop: '1px solid var(--cp-divider)', paddingTop: '12px' }}>
+            <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Mission</span>
+            <p style={{ color: 'var(--cp-text-muted)', fontSize: '12px', lineHeight: '1.5' }} className="line-clamp-2">{mission}</p>
           </div>
         )}
       </div>
@@ -339,22 +339,22 @@ export default function AgentsPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Agent Registry</h1>
-        <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">All agents in the ClawPulse network</p>
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Agent Registry</h1>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">All agents in the ClawPulse network</p>
       </div>
 
       {/* Summary pills */}
       <div className="flex items-center gap-3 mb-8 flex-wrap">
         <div
           style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(109, 40, 217, 0.18)',
+            background: 'var(--cp-card-bg-hover)',
+            border: '1px solid var(--cp-border-strong)',
             backdropFilter: 'blur(12px)',
           }}
           className="rounded-xl px-4 py-2 flex items-center gap-2.5"
         >
-          <span style={{ color: '#6b7280' }} className="text-sm font-medium">Total</span>
-          <span style={{ color: '#f8f4ff' }} className="text-sm font-bold">{agents.length}</span>
+          <span style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">Total</span>
+          <span style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-bold">{agents.length}</span>
         </div>
         <div
           style={{
@@ -377,8 +377,8 @@ export default function AgentsPage() {
           className="rounded-xl px-4 py-2 flex items-center gap-2.5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-gray-500 inline-block" />
-          <span style={{ color: '#9ca3af' }} className="text-sm font-semibold">Idle</span>
-          <span style={{ color: '#9ca3af' }} className="text-sm font-bold">{idle}</span>
+          <span style={{ color: 'var(--cp-text-secondary)' }} className="text-sm font-semibold">Idle</span>
+          <span style={{ color: 'var(--cp-text-secondary)' }} className="text-sm font-bold">{idle}</span>
         </div>
         <div
           style={{
@@ -389,8 +389,8 @@ export default function AgentsPage() {
           className="rounded-xl px-4 py-2 flex items-center gap-2.5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-gray-700 inline-block" />
-          <span style={{ color: '#4b5563' }} className="text-sm font-semibold">Offline</span>
-          <span style={{ color: '#4b5563' }} className="text-sm font-bold">{offline}</span>
+          <span style={{ color: 'var(--cp-text-dim)' }} className="text-sm font-semibold">Offline</span>
+          <span style={{ color: 'var(--cp-text-dim)' }} className="text-sm font-bold">{offline}</span>
         </div>
       </div>
 

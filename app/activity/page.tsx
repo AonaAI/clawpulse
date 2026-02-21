@@ -229,8 +229,8 @@ export default function ActivityPage() {
       {/* Header */}
       <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Activity Feed</h1>
-          <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Live event stream &amp; Slack messages from all agents</p>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Activity Feed</h1>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Live event stream &amp; Slack messages from all agents</p>
         </div>
         <div
           style={{
@@ -282,8 +282,8 @@ export default function ActivityPage() {
       {/* Filters */}
       <div
         style={{
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(109, 40, 217, 0.14)',
+          background: 'var(--cp-card-bg)',
+          border: '1px solid var(--cp-border)',
           backdropFilter: 'blur(12px)',
         }}
         className="rounded-xl p-4 mb-6 space-y-3"
@@ -291,7 +291,7 @@ export default function ActivityPage() {
         {/* Search */}
         <div className="relative">
           <svg
-            style={{ color: '#4b5563', position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+            style={{ color: 'var(--cp-text-dim)', position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -302,9 +302,9 @@ export default function ActivityPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              background: 'rgba(0, 0, 0, 0.3)',
-              border: '1px solid rgba(109, 40, 217, 0.18)',
-              color: '#f8f4ff',
+              background: 'var(--cp-code-bg)',
+              border: '1px solid var(--cp-border-strong)',
+              color: 'var(--cp-text-primary)',
               paddingLeft: '36px',
             }}
             className="w-full rounded-lg px-3 py-2 text-sm outline-none focus:border-purple-500 placeholder-gray-600"
@@ -380,7 +380,7 @@ export default function ActivityPage() {
 
       {/* Count */}
       <div className="flex items-center justify-between mb-4">
-        <span style={{ color: '#4b5563' }} className="text-xs font-medium">
+        <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium">
           {filtered.length} item{filtered.length !== 1 ? 's' : ''}
           {filterType !== 'all' || filterAgent !== 'all' || search ? ' (filtered)' : ''}
         </span>
@@ -388,12 +388,12 @@ export default function ActivityPage() {
 
       {/* Feed */}
       {loading ? (
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)' }} className="rounded-xl p-12 text-center">
-          <div style={{ color: '#4b5563' }} className="text-sm">Loading…</div>
+        <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)' }} className="rounded-xl p-12 text-center">
+          <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm">Loading…</div>
         </div>
       ) : groups.length === 0 ? (
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)' }} className="rounded-xl p-12 text-center">
-          <div style={{ color: '#4b5563' }} className="text-sm">No items found</div>
+        <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)' }} className="rounded-xl p-12 text-center">
+          <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm">No items found</div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -403,7 +403,7 @@ export default function ActivityPage() {
                 <span
                   style={{
                     background: 'rgba(109, 40, 217, 0.12)',
-                    border: '1px solid rgba(109, 40, 217, 0.22)',
+                    border: '1px solid var(--cp-border-stronger)',
                     color: '#7c3aed',
                   }}
                   className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"
@@ -415,8 +415,8 @@ export default function ActivityPage() {
 
               <div
                 style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(109, 40, 217, 0.14)',
+                  background: 'var(--cp-card-bg)',
+                  border: '1px solid var(--cp-border)',
                   backdropFilter: 'blur(12px)',
                 }}
                 className="rounded-xl overflow-hidden"
@@ -469,7 +469,7 @@ export default function ActivityPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-3 mb-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{item.agent_name}</span>
+                                <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold">{item.agent_name}</span>
                                 <span
                                   style={{ background: SLACK_STYLE.bg, color: SLACK_STYLE.color, border: `1px solid ${SLACK_STYLE.border}` }}
                                   className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -477,13 +477,13 @@ export default function ActivityPage() {
                                   💬 Slack
                                 </span>
                                 <span
-                                  style={{ color: '#6b7280' }}
+                                  style={{ color: 'var(--cp-text-muted)' }}
                                   className="text-xs font-mono"
                                 >
                                   #{item.channel.length > 12 ? item.channel.slice(0, 12) + '…' : item.channel}
                                 </span>
                               </div>
-                              <span style={{ color: '#374151', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
+                              <span style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
                                 {formatTimestamp(item.sent_at)}
                               </span>
                             </div>
@@ -493,7 +493,7 @@ export default function ActivityPage() {
                                 background: 'rgba(232, 121, 249, 0.04)',
                                 border: '1px solid rgba(232, 121, 249, 0.12)',
                                 borderRadius: '0 12px 12px 12px',
-                                color: '#9ca3af',
+                                color: 'var(--cp-text-secondary)',
                               }}
                               className="text-xs leading-relaxed px-3 py-2 mt-1 max-w-lg"
                             >
@@ -551,7 +551,7 @@ export default function ActivityPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3 mb-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{item.agent_name}</span>
+                              <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold">{item.agent_name}</span>
                               <span
                                 style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
                                 className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -567,13 +567,13 @@ export default function ActivityPage() {
                                 </span>
                               )}
                             </div>
-                            <span style={{ color: '#374151', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
+                            <span style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
                               {formatTimestamp(item.created_at)}
                             </span>
                           </div>
                           <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold mb-0.5">{item.action}</div>
                           {item.details && (
-                            <div style={{ color: '#4b5563' }} className="text-xs leading-relaxed">{item.details}</div>
+                            <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs leading-relaxed">{item.details}</div>
                           )}
                         </div>
                       </div>

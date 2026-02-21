@@ -66,15 +66,15 @@ const SESSION_STATUS_CONFIG = {
 }
 
 const TASK_STATUS_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
-  todo: { color: '#6b7280', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.2)', label: 'To Do' },
+  todo: { color: 'var(--cp-text-muted)', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.2)', label: 'To Do' },
   in_progress: { color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)', label: 'In Progress' },
   done: { color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', label: 'Done' },
   blocked: { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', label: 'Blocked' },
 }
 
 const PRIORITY_CONFIG: Record<string, { color: string }> = {
-  low: { color: '#4b5563' },
-  medium: { color: '#6b7280' },
+  low: { color: 'var(--cp-text-dim)' },
+  medium: { color: 'var(--cp-text-muted)' },
   high: { color: '#f59e0b' },
   critical: { color: '#f87171' },
 }
@@ -116,9 +116,9 @@ function formatSessionDate(iso: string): string {
 function StatusBadge({ status }: { status: AgentStatus }) {
   const cfg = {
     working: { dot: '#34d399', text: 'Working', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)', pulse: true },
-    idle: { dot: '#4b5563', text: 'Idle', color: '#6b7280', bg: 'rgba(75,85,99,0.06)', border: 'rgba(75,85,99,0.2)', pulse: false },
-    offline: { dot: '#374151', text: 'Offline', color: '#4b5563', bg: 'rgba(55,65,81,0.04)', border: 'rgba(55,65,81,0.15)', pulse: false },
-    unknown: { dot: '#4b5563', text: 'Unknown', color: '#6b7280', bg: 'rgba(75,85,99,0.04)', border: 'rgba(75,85,99,0.15)', pulse: false },
+    idle: { dot: '#4b5563', text: 'Idle', color: 'var(--cp-text-muted)', bg: 'rgba(75,85,99,0.06)', border: 'rgba(75,85,99,0.2)', pulse: false },
+    offline: { dot: '#374151', text: 'Offline', color: 'var(--cp-text-dim)', bg: 'rgba(55,65,81,0.04)', border: 'rgba(55,65,81,0.15)', pulse: false },
+    unknown: { dot: '#4b5563', text: 'Unknown', color: 'var(--cp-text-muted)', bg: 'rgba(75,85,99,0.04)', border: 'rgba(75,85,99,0.15)', pulse: false },
   }[status]
 
   return (
@@ -152,15 +152,15 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(109,40,217,0.14)',
+        background: 'var(--cp-card-bg)',
+        border: '1px solid var(--cp-border)',
         backdropFilter: 'blur(12px)',
       }}
       className="rounded-xl p-4 sm:p-5"
     >
-      <div style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider mb-2">{label}</div>
+      <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider mb-2">{label}</div>
       <div style={{ color }} className="text-xl sm:text-2xl font-bold tracking-tight">{value}</div>
-      {sub && <div style={{ color: '#4b5563' }} className="text-xs font-medium mt-1">{sub}</div>}
+      {sub && <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium mt-1">{sub}</div>}
     </div>
   )
 }
@@ -194,7 +194,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
           style={{ background: statusCfg.color }}
           className={`w-2 h-2 rounded-full ${isRecentHeartbeat ? 'status-glow-working' : ''}`}
         />
-        {!isLast && <div style={{ background: 'rgba(255,255,255,0.06)', width: '1px', height: '24px' }} />}
+        {!isLast && <div style={{ background: 'var(--cp-separator-bg)', width: '1px', height: '24px' }} />}
       </div>
 
       {/* Content */}
@@ -211,19 +211,19 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
               <span style={{ color: '#34d399', fontSize: '10px' }} className="font-semibold">● live</span>
             )}
           </div>
-          <span style={{ color: '#374151', fontSize: '11px' }} className="font-mono flex-shrink-0">
+          <span style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px' }} className="font-mono flex-shrink-0">
             {formatSessionDate(session.started_at)}
           </span>
         </div>
 
         {session.summary && (
-          <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.5' }} className="mb-2">{session.summary}</p>
+          <p style={{ color: 'var(--cp-text-secondary)', fontSize: '13px', lineHeight: '1.5' }} className="mb-2">{session.summary}</p>
         )}
 
         <div className="flex items-center gap-3 flex-wrap">
           {session.duration_minutes != null && (
-            <span style={{ color: '#6b7280' }} className="text-xs font-medium">
-              <span style={{ color: '#4b5563' }}>Duration</span> {session.duration_minutes}m
+            <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">
+              <span style={{ color: 'var(--cp-text-dim)' }}>Duration</span> {session.duration_minutes}m
             </span>
           )}
           {(session.tokens_used ?? session.token_count ?? 0) > 0 && (
@@ -232,7 +232,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
             </span>
           )}
           {session.model && (
-            <span style={{ color: '#4b5563' }} className="text-xs font-mono">
+            <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-mono">
               {session.model}
             </span>
           )}
@@ -326,13 +326,13 @@ export default function AgentDetailClient({ id }: { id: string }) {
   if (!agent) {
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-        <Link href="/agents" style={{ color: '#6b7280' }} className="text-sm font-medium flex items-center gap-1.5 mb-6 hover:text-purple-400 transition-colors">
+        <Link href="/agents" style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium flex items-center gap-1.5 mb-6 hover:text-purple-400 transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 5l-7 7 7 7" />
           </svg>
           Back to agents
         </Link>
-        <div style={{ color: '#4b5563' }} className="text-center py-20">Agent not found</div>
+        <div style={{ color: 'var(--cp-text-dim)' }} className="text-center py-20">Agent not found</div>
       </div>
     )
   }
@@ -354,7 +354,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
       {/* Back link */}
       <Link
         href="/agents"
-        style={{ color: '#6b7280' }}
+        style={{ color: 'var(--cp-text-muted)' }}
         className="text-sm font-medium flex items-center gap-1.5 mb-6 hover:text-purple-400 transition-colors w-fit"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -367,7 +367,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
       <div
         style={{
           background: 'linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(79,46,220,0.03) 100%)',
-          border: '1px solid rgba(109,40,217,0.22)',
+          border: '1px solid var(--cp-border-stronger)',
           backdropFilter: 'blur(12px)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
         }}
@@ -380,7 +380,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
               background: 'linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(79,46,220,0.15) 100%)',
               border: '2px solid rgba(139,92,246,0.45)',
               boxShadow: '0 0 32px rgba(124,58,237,0.2)',
-              color: '#c4b5fd',
+              color: 'var(--cp-text-accent-light)',
               fontSize: '28px',
               fontWeight: 700,
               width: '72px',
@@ -395,14 +395,14 @@ export default function AgentDetailClient({ id }: { id: string }) {
           {/* Name + role + badges */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <h1 style={{ color: '#f8f4ff' }} className="text-xl sm:text-2xl font-bold tracking-tight">{agent.name}</h1>
+              <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-xl sm:text-2xl font-bold tracking-tight">{agent.name}</h1>
               {data && <StatusBadge status={data.status} />}
             </div>
-            <div style={{ color: '#9ca3af' }} className="text-sm sm:text-base font-medium mb-3">{agent.role}</div>
+            <div style={{ color: 'var(--cp-text-secondary)' }} className="text-sm sm:text-base font-medium mb-3">{agent.role}</div>
             <div className="flex items-center gap-2 flex-wrap">
               <ModelBadge model={agent.model} />
               <span
-                style={{ color: '#4b5563', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)', fontSize: '12px' }}
+                style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-code-bg)', border: '1px solid var(--cp-border-subtle)', fontSize: '12px' }}
                 className="px-2.5 py-1 rounded-lg font-mono"
               >
                 {agent.workspace}
@@ -415,13 +415,13 @@ export default function AgentDetailClient({ id }: { id: string }) {
         {data?.mission && (
           <div
             style={{
-              borderTop: '1px solid rgba(109,40,217,0.18)',
+              borderTop: '1px solid var(--cp-divider-accent)',
               marginTop: '20px',
               paddingTop: '16px',
             }}
           >
-            <div style={{ color: '#4b5563' }} className="text-xs font-bold uppercase tracking-wider mb-2">Mission</div>
-            <p style={{ color: '#9ca3af', lineHeight: '1.6' }} className="text-sm">{data.mission}</p>
+            <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-bold uppercase tracking-wider mb-2">Mission</div>
+            <p style={{ color: 'var(--cp-text-secondary)', lineHeight: '1.6' }} className="text-sm">{data.mission}</p>
           </div>
         )}
       </div>
@@ -460,14 +460,14 @@ export default function AgentDetailClient({ id }: { id: string }) {
         <div className="xl:col-span-2 space-y-6">
           {/* Session History */}
           <div
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl overflow-hidden"
           >
-            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Session History</h2>
-                  <p style={{ color: '#4b5563' }} className="text-xs mt-0.5">
+                  <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Session History</h2>
+                  <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">
                     {loading ? '—' : `${sessions.length} sessions`}
                   </p>
                 </div>
@@ -476,13 +476,13 @@ export default function AgentDetailClient({ id }: { id: string }) {
                   <div className="flex items-center gap-3 flex-wrap">
                     {avgDuration > 0 && (
                       <div className="text-right">
-                        <div style={{ color: '#4b5563' }} className="text-xs">Avg duration</div>
+                        <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">Avg duration</div>
                         <div style={{ color: '#8b5cf6' }} className="text-sm font-bold">{avgDuration}m</div>
                       </div>
                     )}
                     {sessionTokens > 0 && (
                       <div className="text-right">
-                        <div style={{ color: '#4b5563' }} className="text-xs">Session tokens</div>
+                        <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">Session tokens</div>
                         <div style={{ color: '#22d3ee' }} className="text-sm font-bold">{formatTokens(sessionTokens)}</div>
                       </div>
                     )}
@@ -492,9 +492,9 @@ export default function AgentDetailClient({ id }: { id: string }) {
             </div>
 
             {loading ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-10">Loading…</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">Loading…</div>
             ) : sessions.length === 0 ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-10">No sessions recorded yet</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">No sessions recorded yet</div>
             ) : (
               <div>
                 {sessions.map((session, i) => (
@@ -506,22 +506,22 @@ export default function AgentDetailClient({ id }: { id: string }) {
 
           {/* 7-day token chart */}
           <div
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl p-4 sm:p-5"
           >
             <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">7-Day Token Usage</h2>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">7-Day Token Usage</h2>
               {data && data.weeklyStats.length > 0 && (
-                <span style={{ color: '#4b5563' }} className="text-xs font-medium">
+                <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium">
                   {formatTokens(data.weeklyStats.reduce((s, d) => s + d.total_tokens, 0))} this week
                 </span>
               )}
             </div>
 
             {loading ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-8">Loading…</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">Loading…</div>
             ) : weeklyChart.every(d => d.total_tokens === 0) ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-8">No token usage in the last 7 days</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">No token usage in the last 7 days</div>
             ) : (
               <div className="space-y-2.5">
                 {weeklyChart.map(day => {
@@ -529,10 +529,10 @@ export default function AgentDetailClient({ id }: { id: string }) {
                   return (
                     <div key={day.date}>
                       <div className="flex items-center mb-1">
-                        <span style={{ color: '#6b7280' }} className="text-xs font-medium w-14 sm:w-16 flex-shrink-0">
+                        <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium w-14 sm:w-16 flex-shrink-0">
                           {formatDate(day.date)}
                         </span>
-                        <div className="flex-1 mx-2 sm:mx-3" style={{ background: 'rgba(255,255,255,0.05)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}>
+                        <div className="flex-1 mx-2 sm:mx-3" style={{ background: 'var(--cp-separator-bg)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}>
                           <div
                             style={{
                               width: `${pct}%`,
@@ -544,11 +544,11 @@ export default function AgentDetailClient({ id }: { id: string }) {
                           />
                         </div>
                         <div className="text-right flex-shrink-0" style={{ minWidth: '72px' }}>
-                          <span style={{ color: '#e9e2ff' }} className="text-xs font-bold">
+                          <span style={{ color: 'var(--cp-text-card-title)' }} className="text-xs font-bold">
                             {day.total_tokens > 0 ? formatTokens(day.total_tokens) : '—'}
                           </span>
                           {day.total_cost > 0 && (
-                            <span style={{ color: '#4b5563' }} className="text-xs ml-1">{formatCost(day.total_cost)}</span>
+                            <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs ml-1">{formatCost(day.total_cost)}</span>
                           )}
                         </div>
                       </div>
@@ -561,18 +561,18 @@ export default function AgentDetailClient({ id }: { id: string }) {
 
           {/* Recent activity */}
           <div
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl overflow-hidden"
           >
-            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
-              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Recent Activity</h2>
-              <p style={{ color: '#4b5563' }} className="text-xs mt-0.5">Last 50 events</p>
+            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Recent Activity</h2>
+              <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">Last 50 events</p>
             </div>
 
             {loading ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-12">Loading…</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-12">Loading…</div>
             ) : !data || data.activity.length === 0 ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-12">No activity yet</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-12">No activity yet</div>
             ) : (
               <div>
                 {data.activity.map((event, i) => {
@@ -594,12 +594,12 @@ export default function AgentDetailClient({ id }: { id: string }) {
                       <div className="flex-1 min-w-0">
                         <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold leading-tight">{event.action}</div>
                         {event.details && (
-                          <div style={{ color: '#4b5563' }} className="text-xs mt-0.5 leading-relaxed truncate">{event.details}</div>
+                          <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5 leading-relaxed truncate">{event.details}</div>
                         )}
                       </div>
                       <div className="flex-shrink-0 text-right">
-                        <div style={{ color: '#374151', fontSize: '11px' }} className="font-mono">{formatTimestamp(event.created_at)}</div>
-                        <div style={{ color: '#374151', fontSize: '10px' }}>{formatTimeAgo(event.created_at)}</div>
+                        <div style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px' }} className="font-mono">{formatTimestamp(event.created_at)}</div>
+                        <div style={{ color: 'var(--cp-text-dimmer)', fontSize: '10px' }}>{formatTimeAgo(event.created_at)}</div>
                       </div>
                     </div>
                   )
@@ -613,20 +613,20 @@ export default function AgentDetailClient({ id }: { id: string }) {
         <div className="space-y-6">
           {/* Assigned tasks */}
           <div
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl overflow-hidden"
           >
-            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
-              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Assigned Tasks</h2>
-              <p style={{ color: '#4b5563' }} className="text-xs mt-0.5">
+            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Assigned Tasks</h2>
+              <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">
                 {loading ? '—' : `${data?.tasks.length ?? 0} tasks`}
               </p>
             </div>
 
             {loading ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-10">Loading…</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">Loading…</div>
             ) : !data || data.tasks.length === 0 ? (
-              <div style={{ color: '#4b5563' }} className="text-sm text-center py-10">No assigned tasks</div>
+              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">No assigned tasks</div>
             ) : (
               <div>
                 {data.tasks.map((task, i) => {
@@ -640,7 +640,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                       style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold leading-tight">{task.title}</span>
+                        <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold leading-tight">{task.title}</span>
                         <span
                           style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '10px' }}
                           className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap"
@@ -650,8 +650,8 @@ export default function AgentDetailClient({ id }: { id: string }) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span style={{ color: pc.color }} className="text-xs font-semibold capitalize">{task.priority}</span>
-                        <span style={{ color: '#374151' }} className="text-xs">·</span>
-                        <span style={{ color: '#4b5563' }} className="text-xs">{task.project}</span>
+                        <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">·</span>
+                        <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{task.project}</span>
                       </div>
                     </div>
                   )
@@ -663,21 +663,21 @@ export default function AgentDetailClient({ id }: { id: string }) {
           {/* Slack channels */}
           {agent.slack_channels.length > 0 && (
             <div
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+              style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
               className="rounded-xl p-4 sm:p-5"
             >
-              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base mb-4">Slack Channels</h2>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base mb-4">Slack Channels</h2>
               <div className="space-y-2">
                 {agent.slack_channels.map(ch => (
                   <div
                     key={ch}
-                    style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    style={{ background: 'var(--cp-tag-bg)', border: '1px solid var(--cp-border-subtle)' }}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
-                    <span style={{ color: '#6b7280', fontSize: '12px' }} className="font-mono">{ch}</span>
+                    <span style={{ color: 'var(--cp-text-muted)', fontSize: '12px' }} className="font-mono">{ch}</span>
                   </div>
                 ))}
               </div>
@@ -687,10 +687,10 @@ export default function AgentDetailClient({ id }: { id: string }) {
           {/* Can spawn */}
           {agent.spawn_permissions.length > 0 && (
             <div
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+              style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
               className="rounded-xl p-4 sm:p-5"
             >
-              <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base mb-4">Can Spawn</h2>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base mb-4">Can Spawn</h2>
               <div className="flex flex-wrap gap-2">
                 {agent.spawn_permissions.map(spawnId => {
                   const target = AGENTS.find(a => a.id === spawnId)
