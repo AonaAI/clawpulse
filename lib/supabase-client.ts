@@ -466,6 +466,29 @@ export async function fetchSlackMessages(limit = 100) {
   }))
 }
 
+// ── Spawn Requests ──────────────────────────────────────────────────────────
+
+export async function fetchSpawnRequests(agentId: string, limit = 10) {
+  const { data, error } = await supabase
+    .from('spawn_requests')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) { console.error('Error fetching spawn requests:', error); return [] }
+  return data || []
+}
+
+export async function createSpawnRequest(req: { agent_id: string; task: string; model?: string }) {
+  const { data, error } = await supabase
+    .from('spawn_requests')
+    .insert([req])
+    .select()
+    .single()
+  if (error) { console.error('Error creating spawn request:', error); return null }
+  return data
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(date: Date): string {

@@ -639,6 +639,61 @@ async function pushCronJobs() {
   }
 }
 
+// ─── Spawn Requests ────────────────────────────────────────────────────────
+
+async function processSpawnRequests() {
+  const { execSync } = await import('child_process')
+
+  // Fetch pending requests
+  const { data: pending, error } = await supabase
+    .from('spawn_requests')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('  Failed to fetch spawn_requests:', error.message)
+    return
+  }
+
+  if (!pending || pending.length === 0) {
+    console.log('  No pending spawn requests')
+    return
+  }
+
+  for (const req of pending) {
+    console.log(`  Processing spawn request ${req.id} for agent ${req.agent_id}: ${req.task.slice(0, 60)}...`)
+
+    // Mark as running
+    await supabase.from('spawn_requests').update({ status: 'running' }).eq('id', req.id)
+
+    try {
+      const modelFlag = req.model && req.model !== 'default' ? ` --model ${req.model}` : ''
+      const escapedTask = req.task.replace(/"/g, '\\"').replace(/\$/g, '\\$')
+      const cmd = `openclaw sessions spawn --agent ${req.agent_id} --task "${escapedTask}"${modelFlag} 2>&1`
+
+      const output = execSync(cmd, { encoding: 'utf-8', timeout: 30000 })
+
+      await supabase
+        .from('spawn_requests')
+        .update({ status: 'done', result: output.slice(0, 500) })
+        .eq('id', req.id)
+
+      console.log(`  ✓ Spawn request ${req.id} completed`)
+    } catch (e: any) {
+      const errMsg = e.stderr || e.stdout || e.message || 'Unknown error'
+      await supabase
+        .from('spawn_requests')
+        .update({ status: 'error', result: String(errMsg).slice(0, 500) })
+        .eq('id', req.id)
+
+      console.error(`  ✗ Spawn request ${req.id} failed:`, String(errMsg).slice(0, 100))
+    }
+  }
+
+  console.log(`  Processed ${pending.length} spawn request(s)`)
+}
+
 async function main() {
   const dirs = await readdir(AGENTS_DIR)
   const agents = await Promise.all(dirs.map(readAgent))
@@ -689,6 +744,10 @@ async function main() {
   // Push cron jobs from OpenClaw CLI
   console.log('Fetching cron jobs from OpenClaw...')
   await pushCronJobs()
+
+  // Process spawn requests
+  console.log('Processing spawn requests...')
+  await processSpawnRequests()
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

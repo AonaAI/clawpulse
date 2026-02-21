@@ -7,6 +7,7 @@ import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
 import CustomizePanel from '@/components/widgets/CustomizePanel'
+import SpawnModal from '@/components/SpawnModal'
 import QuickActionsWidget from '@/components/widgets/QuickActionsWidget'
 import CostSummaryWidget from '@/components/widgets/CostSummaryWidget'
 import RecentDeploymentsWidget from '@/components/widgets/RecentDeploymentsWidget'
@@ -61,7 +62,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
   )
 }
 
-function AgentCard({ agent, compact }: { agent: MergedAgent; compact?: boolean }) {
+function AgentCard({ agent, compact, onSpawn }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void }) {
   const initials = agent.name.slice(0, 2).toUpperCase()
   const isWorking = agent.status === 'working'
 
@@ -117,7 +118,17 @@ function AgentCard({ agent, compact }: { agent: MergedAgent; compact?: boolean }
             <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5 truncate">{agent.role}</div>
           </div>
         </div>
-        <div className="flex-shrink-0"><StatusBadge status={agent.status} /></div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {onSpawn && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSpawn(agent) }}
+              title="Spawn task"
+              style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.22)' }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-purple-500/20 transition-colors text-sm"
+            >▶</button>
+          )}
+          <StatusBadge status={agent.status} />
+        </div>
       </div>
       <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">
         {agent.sessionCount > 0 ? `${agent.sessionCount} sessions · last ${formatLastActive(agent.lastActive)}` : 'No sessions'}
@@ -153,6 +164,7 @@ export default function OverviewPage() {
   const [companyMission, setCompanyMission] = useState('')
   const [widgetLayout, setWidgetLayout] = useState<WidgetConfig[]>([])
   const [showCustomize, setShowCustomize] = useState(false)
+  const [spawnAgent, setSpawnAgent] = useState<MergedAgent | null>(null)
 
   // Load widget layout from localStorage
   useEffect(() => {
@@ -284,7 +296,7 @@ export default function OverviewPage() {
               <span style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-2.5 py-0.5 rounded-full font-medium">{agents.length} agents</span>
             </div>
             <div className={`grid ${compact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}`}>
-              {agents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} />)}
+              {agents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} />)}
             </div>
           </div>
         )
@@ -437,6 +449,15 @@ export default function OverviewPage() {
           widgets={widgetLayout}
           onChange={updateLayout}
           onClose={() => setShowCustomize(false)}
+        />
+      )}
+
+      {/* Spawn Modal */}
+      {spawnAgent && (
+        <SpawnModal
+          agentId={spawnAgent.id}
+          agentName={spawnAgent.name}
+          onClose={() => setSpawnAgent(null)}
         />
       )}
     </div>
