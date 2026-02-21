@@ -550,3 +550,81 @@ function formatTimeAgo(date: Date): string {
   if (diffMs < 86_400_000) return `${Math.floor(diffMs / 3_600_000)} hr ago`
   return `${Math.floor(diffMs / 86_400_000)}d ago`
 }
+
+// ── Audit Log ──
+
+export interface AuditLogEntry {
+  id: string
+  action: string
+  entity_type: string
+  entity_id: string
+  changes: Record<string, unknown>
+  actor: string
+  created_at: string
+}
+
+export async function fetchAuditLog(opts: {
+  limit?: number
+  offset?: number
+  action?: string
+  entity_type?: string
+  actor?: string
+  from?: string
+  to?: string
+}): Promise<{ items: AuditLogEntry[]; total: number }> {
+  const { limit = 50, offset = 0, action, entity_type, actor, from, to } = opts
+
+  let query = supabase
+    .from('audit_log')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (action && action !== 'all') query = query.eq('action', action)
+  if (entity_type && entity_type !== 'all') query = query.eq('entity_type', entity_type)
+  if (actor && actor !== 'all') query = query.eq('actor', actor)
+  if (from) query = query.gte('created_at', `${from}T00:00:00.000Z`)
+  if (to) query = query.lte('created_at', `${to}T23:59:59.999Z`)
+
+  const { data, error, count } = await query
+  if (error) {
+    console.error('Error fetching audit log:', error)
+    return { items: [], total: 0 }
+  }
+  return { items: (data || []) as AuditLogEntry[], total: count || 0 }
+}
+
+export async function fetchAuditStats(): Promise<{
+  todayCount: number
+  topActor: string
+  topEntityType: string
+}> {
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { count: todayCount } = await supabase
+    .from('audit_log')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', `${today}T00:00:00.000Z`)
+
+  const { data: actorData } = await supabase
+    .from('audit_log')
+    .select('actor')
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  const { data: entityData } = await supabase
+    .from('audit_log')
+    .select('entity_type')
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  const actorCounts: Record<string, number> = {}
+  for (const r of actorData || []) actorCounts[r.actor] = (actorCounts[r.actor] || 0) + 1
+  const topActor = Object.entries(actorCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
+
+  const entityCounts: Record<string, number> = {}
+  for (const r of entityData || []) entityCounts[r.entity_type] = (entityCounts[r.entity_type] || 0) + 1
+  const topEntityType = Object.entries(entityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
+
+  return { todayCount: todayCount || 0, topActor, topEntityType }
+}
