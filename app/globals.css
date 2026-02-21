@@ -203,3 +203,43 @@ body {
 .page-transition {
   animation: fadeSlideIn 200ms ease-out;
 }
+
+/* ── Skeleton shimmer ─────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #11021d 0%,
+    #1a0533 20%,
+    #2d1054 40%,
+    rgba(100, 18, 166, 0.35) 50%,
+    #2d1054 60%,
+    #1a0533 80%,
+    #11021d 100%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skeleton-shimmer-light {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.07) 30%,
+    rgba(100, 18, 166, 0.15) 50%,
+    rgba(255, 255, 255, 0.07) 70%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+  border-radius: 6px;
+}
