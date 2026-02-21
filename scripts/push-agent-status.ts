@@ -6,6 +6,7 @@
 import { readdir, readFile } from 'fs/promises'
 import { join } from 'path'
 import { homedir } from 'os'
+import { createHash } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
 
@@ -45,7 +46,22 @@ interface AgentSessionRow {
   token_count: number
 }
 
+interface TokenAggregate {
+  date: string
+  model: string
+  input_tokens: number
+  output_tokens: number
+  total_tokens: number
+  cost_usd: number
+  session_count: number
+}
+
 type Status = 'working' | 'idle' | 'offline'
+
+function makeUUID(str: string): string {
+  const hash = createHash('md5').update(str).digest('hex')
+  return hash.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5')
+}
 
 function deriveStatus(lastActiveMs: number | null): Status {
   if (lastActiveMs === null) return 'offline'
@@ -78,7 +94,7 @@ async function readAgent(dir: string) {
       const sessionStatus = ageMs < 5 * 60 * 1000 ? 'active' : 'completed'
 
       sessionRows.push({
-        id: require('crypto').createHash('md5').update(`${dir}:${key}`).digest('hex').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5'),
+        id: makeUUID(`${dir}:${key}`),
         agent_id: dir,
         session_key: key,
         kind: s.kind ?? 'session',
@@ -107,6 +123,116 @@ async function readAgent(dir: string) {
       sessionRows: [] as AgentSessionRow[],
     }
   }
+}
+
+async function pushTokenUsage(agentIds: string[]) {
+  let totalRows = 0
+
+  for (const agentId of agentIds) {
+    // Use a per-bucket set to track unique sessions
+    const sessionsDir = join(AGENTS_DIR, agentId, 'sessions')
+    const result = new Map<string, TokenAggregate & { _sessions: Set<string> }>()
+
+    let files: string[]
+    try {
+      files = await readdir(sessionsDir)
+    } catch {
+      continue
+    }
+
+    const jsonlFiles = files.filter(f =>
+      f.endsWith('.jsonl') &&
+      !f.includes('.deleted.') &&
+      !f.endsWith('.lock')
+    )
+
+    for (const file of jsonlFiles) {
+      const sessionId = file.slice(0, -'.jsonl'.length)
+      let content: string
+      try {
+        content = await readFile(join(sessionsDir, file), 'utf-8')
+      } catch {
+        continue
+      }
+
+      for (const line of content.split('\n')) {
+        if (!line.trim()) continue
+        let entry: any
+        try {
+          entry = JSON.parse(line)
+        } catch {
+          continue
+        }
+
+        if (entry.type !== 'message') continue
+        if (entry.message?.role !== 'assistant') continue
+        const usage = entry.message?.usage
+        if (!usage) continue
+
+        const model: string = entry.message.model ?? 'unknown'
+        const date: string = entry.timestamp ? entry.timestamp.slice(0, 10) : new Date().toISOString().slice(0, 10)
+        const key = `${date}:${model}`
+
+        if (!result.has(key)) {
+          result.set(key, {
+            date,
+            model,
+            input_tokens: 0,
+            output_tokens: 0,
+            total_tokens: 0,
+            cost_usd: 0,
+            session_count: 0,
+            _sessions: new Set(),
+          })
+        }
+
+        const agg = result.get(key)!
+        agg.input_tokens += usage.input ?? 0
+        agg.output_tokens += usage.output ?? 0
+        agg.total_tokens += usage.totalTokens ?? ((usage.input ?? 0) + (usage.output ?? 0))
+        agg.cost_usd += usage.cost?.total ?? 0
+        agg._sessions.add(sessionId)
+      }
+    }
+
+    if (result.size === 0) continue
+
+    const rows = []
+    for (const [key, agg] of result) {
+      rows.push({
+        id: makeUUID(`${agentId}:${key}`),
+        agent_id: agentId,
+        input_tokens: agg.input_tokens,
+        output_tokens: agg.output_tokens,
+        total_tokens: agg.total_tokens,
+        cost_usd: Math.round(agg.cost_usd * 1e8) / 1e8, // round to 8 decimal places
+        model: agg.model,
+        recorded_at: new Date(`${agg.date}T00:00:00Z`).toISOString(),
+      })
+    }
+
+    const { error } = await supabase
+      .from('token_usage')
+      .upsert(rows, { onConflict: 'id' })
+
+    if (error) {
+      console.error(`  Failed to upsert token_usage for ${agentId}:`, error.message)
+    } else {
+      totalRows += rows.length
+    }
+  }
+
+  // Clean up seed/stale rows for agents not in the real agent list
+  const { error: delErr } = await supabase
+    .from('token_usage')
+    .delete()
+    .not('agent_id', 'in', `(${agentIds.join(',')})`)
+
+  if (delErr) {
+    console.error('  Failed to clean up stale token_usage rows:', delErr.message)
+  }
+
+  console.log(`  Upserted ${totalRows} token_usage rows across ${agentIds.length} agents`)
 }
 
 async function main() {
@@ -143,6 +269,10 @@ async function main() {
   }
 
   console.log(`[${new Date().toISOString()}] Pushed status for ${agents.length} agents (${totalSessions} sessions): ${agents.map(a => `${a.id}=${a.status}`).join(', ')}`)
+
+  // Push real token usage from .jsonl session files
+  console.log('Parsing .jsonl session files for token usage...')
+  await pushTokenUsage(dirs)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })
