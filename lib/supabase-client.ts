@@ -20,12 +20,15 @@ export async function fetchAgents() {
   return data || []
 }
 
-export async function fetchTasks() {
-  const { data, error } = await supabase
+export async function fetchTasks(from?: string, to?: string) {
+  let query = supabase
     .from('tasks')
     .select('*')
     .order('created_at', { ascending: false })
+  if (from) query = query.gte('created_at', `${from}T00:00:00.000Z`)
+  if (to)   query = query.lte('created_at', `${to}T23:59:59.999Z`)
   
+  const { data, error } = await query
   if (error) {
     console.error('Error fetching tasks:', error)
     return []
@@ -34,12 +37,15 @@ export async function fetchTasks() {
   return data || []
 }
 
-export async function fetchActivityLog(limit = 10) {
-  const { data, error } = await supabase
+export async function fetchActivityLog(limit = 10, from?: string, to?: string) {
+  let query = supabase
     .from('activity_log')
     .select('*, agent:agents(name)')
     .order('created_at', { ascending: false })
     .limit(limit)
+  if (from) query = query.gte('created_at', `${from}T00:00:00.000Z`)
+  if (to)   query = query.lte('created_at', `${to}T23:59:59.999Z`)
+  const { data, error } = await query
   
   if (error) {
     console.error('Error fetching activity log:', error)
@@ -263,12 +269,15 @@ export async function upsertSetting(key: string, value: string): Promise<boolean
 
 // ── Token Usage ─────────────────────────────────────────────────────────────
 
-export async function fetchTokenUsage(limit = 100) {
-  const { data, error } = await supabase
+export async function fetchTokenUsage(limit = 100, from?: string, to?: string) {
+  let query = supabase
     .from('token_usage')
     .select('*, agent:agents(name)')
     .order('recorded_at', { ascending: false })
     .limit(limit)
+  if (from) query = query.gte('recorded_at', `${from}T00:00:00.000Z`)
+  if (to)   query = query.lte('recorded_at', `${to}T23:59:59.999Z`)
+  const { data, error } = await query
   if (error) { console.error('Error fetching token usage:', error); return [] }
   return (data || []).map(r => ({
     ...r,
@@ -276,10 +285,13 @@ export async function fetchTokenUsage(limit = 100) {
   }))
 }
 
-export async function fetchTokenStatsByAgent() {
-  const { data, error } = await supabase
+export async function fetchTokenStatsByAgent(from?: string, to?: string) {
+  let query = supabase
     .from('token_usage')
     .select('agent_id, total_tokens, cost_usd, model, agent:agents!agent_id(name)')
+  if (from) query = query.gte('recorded_at', `${from}T00:00:00.000Z`)
+  if (to)   query = query.lte('recorded_at', `${to}T23:59:59.999Z`)
+  const { data, error } = await query
   if (error) { console.error('Error fetching token stats by agent:', error); return [] }
 
   const map = new Map<string, { agent_id: string; agent_name: string; total_tokens: number; total_cost: number; model: string }>()
@@ -296,12 +308,15 @@ export async function fetchTokenStatsByAgent() {
   return Array.from(map.values()).sort((a, b) => b.total_tokens - a.total_tokens)
 }
 
-export async function fetchDailyTokenStats() {
-  const { data, error } = await supabase
+export async function fetchDailyTokenStats(from?: string, to?: string) {
+  let query = supabase
     .from('token_usage')
     .select('total_tokens, cost_usd, recorded_at')
-    .gte('recorded_at', new Date(Date.now() - 7 * 86400000).toISOString())
     .order('recorded_at', { ascending: true })
+  if (from) query = query.gte('recorded_at', `${from}T00:00:00.000Z`)
+  else query = query.gte('recorded_at', new Date(Date.now() - 7 * 86400000).toISOString())
+  if (to) query = query.lte('recorded_at', `${to}T23:59:59.999Z`)
+  const { data, error } = await query
   if (error) { console.error('Error fetching daily token stats:', error); return [] }
 
   const map = new Map<string, { date: string; total_tokens: number; total_cost: number }>()
@@ -315,17 +330,22 @@ export async function fetchDailyTokenStats() {
   return Array.from(map.values())
 }
 
-export async function fetchTokenSummary() {
+export async function fetchTokenSummary(from?: string, to?: string) {
+  let query = supabase
+    .from('token_usage')
+    .select('total_tokens, cost_usd, recorded_at')
+  if (from) query = query.gte('recorded_at', `${from}T00:00:00.000Z`)
+  if (to)   query = query.lte('recorded_at', `${to}T23:59:59.999Z`)
+  if (!from) {
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+    query = query.gte('recorded_at', monthStart)
+  }
+  const { data, error } = await query
+  if (error) return { today: { tokens: 0, cost: 0 }, week: { tokens: 0, cost: 0 }, month: { tokens: 0, cost: 0 } }
+
   const now = new Date()
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
   const weekStart = new Date(Date.now() - 7 * 86400000).toISOString()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-
-  const { data, error } = await supabase
-    .from('token_usage')
-    .select('total_tokens, cost_usd, recorded_at')
-    .gte('recorded_at', monthStart)
-  if (error) return { today: { tokens: 0, cost: 0 }, week: { tokens: 0, cost: 0 }, month: { tokens: 0, cost: 0 } }
 
   const summary = { today: { tokens: 0, cost: 0 }, week: { tokens: 0, cost: 0 }, month: { tokens: 0, cost: 0 } }
   for (const r of data || []) {

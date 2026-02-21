@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { fetchTasks, fetchActivityLog } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
 import type { Task } from '@/lib/types'
+import { DateRangePicker, type DateRange, getPresetDates } from '@/components/DateRangePicker'
 
 // ── Chart primitives ──────────────────────────────────────────────────────
 
@@ -178,13 +179,21 @@ export default function MetricsPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
+  const dateRangeRef = useRef<DateRange>({ preset: '7d', ...getPresetDates('7d') })
 
   const loadData = useCallback(async () => {
-    const [t, a] = await Promise.all([fetchTasks(), fetchActivityLog(20)])
+    const { from, to } = dateRangeRef.current
+    const [t, a] = await Promise.all([fetchTasks(from, to), fetchActivityLog(20, from, to)])
     setTasks(t as Task[])
     setActivity(a as ActivityItem[])
     setLoading(false)
   }, [])
+
+  const handleDateRangeChange = useCallback((range: DateRange) => {
+    dateRangeRef.current = range
+    setLoading(true)
+    loadData()
+  }, [loadData])
 
   const handleTaskInsert = useCallback((record: Record<string, unknown>) => {
     setTasks(prev => [record as unknown as Task, ...prev])
@@ -263,12 +272,17 @@ export default function MetricsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+      <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity</p>
         </div>
         <LiveBadge connectionStatus={connectionStatus} />
+      </div>
+
+      {/* Date Range Picker */}
+      <div className="mb-6">
+        <DateRangePicker onChange={handleDateRangeChange} />
       </div>
 
       {loading ? (

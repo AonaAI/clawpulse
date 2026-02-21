@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { fetchTokenSummary, fetchTokenStatsByAgent, fetchDailyTokenStats, fetchTokenUsage } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
+import { DateRangePicker, type DateRange, getPresetDates } from '@/components/DateRangePicker'
 
 interface AgentStat { agent_id: string; agent_name: string; total_tokens: number; total_cost: number; model: string }
 interface DailyStat { date: string; total_tokens: number; total_cost: number }
@@ -68,13 +69,15 @@ export default function UsagePage() {
   const [records, setRecords] = useState<UsageRecord[]>([])
   const [sortBy, setSortBy] = useState<'tokens' | 'cost' | 'date'>('date')
   const [loading, setLoading] = useState(true)
+  const dateRangeRef = useRef<DateRange>({ preset: '7d', ...getPresetDates('7d') })
 
   const loadAllData = useCallback(async () => {
+    const { from, to } = dateRangeRef.current
     const [s, a, d, r] = await Promise.all([
-      fetchTokenSummary(),
-      fetchTokenStatsByAgent(),
-      fetchDailyTokenStats(),
-      fetchTokenUsage(50),
+      fetchTokenSummary(from, to),
+      fetchTokenStatsByAgent(from, to),
+      fetchDailyTokenStats(from, to),
+      fetchTokenUsage(50, from, to),
     ])
     setSummary(s as typeof summary)
     setAgentStats(a as AgentStat[])
@@ -82,6 +85,12 @@ export default function UsagePage() {
     setRecords(r as UsageRecord[])
     setLoading(false)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleDateRangeChange = useCallback((range: DateRange) => {
+    dateRangeRef.current = range
+    setLoading(true)
+    loadAllData()
+  }, [loadAllData])
 
   const { connectionStatus } = useRealtimeSubscription([
     { table: 'token_usage', event: 'INSERT', onInsert: loadAllData },
@@ -126,9 +135,14 @@ export default function UsagePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Token Usage & Cost</h1>
         <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Track token consumption and API costs across all agents</p>
+      </div>
+
+      {/* Date Range Picker */}
+      <div className="mb-6">
+        <DateRangePicker onChange={handleDateRangeChange} />
       </div>
 
       {/* Summary cards */}
