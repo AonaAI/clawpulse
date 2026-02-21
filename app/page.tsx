@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
 import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
@@ -11,8 +12,6 @@ import SpawnModal from '@/components/SpawnModal'
 import QuickActionsWidget from '@/components/widgets/QuickActionsWidget'
 import CostSummaryWidget from '@/components/widgets/CostSummaryWidget'
 import RecentDeploymentsWidget from '@/components/widgets/RecentDeploymentsWidget'
-
-const POLL_INTERVAL = 10_000
 
 function formatLastActive(ms: number | null): string {
   if (ms === null) return 'Never'
@@ -155,6 +154,23 @@ function ActivityItem({ item, isLast, isNew }: { item: { id: string; agent_id: s
   )
 }
 
+function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus }) {
+  const cfg = {
+    connected: { badge: 'realtime-live-badge', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)', color: '#34d399', dot: 'bg-emerald-400', ping: true, label: 'Live' },
+    reconnecting: { badge: '', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)', color: '#fbbf24', dot: 'bg-amber-400', ping: false, label: 'Reconnecting' },
+    disconnected: { badge: '', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)', color: '#f87171', dot: 'bg-red-400', ping: false, label: 'Offline' },
+  }[connectionStatus]
+  return (
+    <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full ${cfg.badge}`} style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+      <span className="relative flex h-2 w-2">
+        {cfg.ping && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+        <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
+      </span>
+      <span style={{ color: cfg.color }} className="text-xs font-semibold">{cfg.label}</span>
+    </div>
+  )
+}
+
 export default function OverviewPage() {
   const [agents, setAgents] = useState<MergedAgent[]>(UNKNOWN_AGENTS)
   const [tasks, setTasks] = useState<Task[]>([])
@@ -195,12 +211,6 @@ export default function OverviewPage() {
   }, [refreshing, fetchAgentsData])
 
   useEffect(() => {
-    fetchAgentsData()
-    const id = setInterval(fetchAgentsData, POLL_INTERVAL)
-    return () => clearInterval(id)
-  }, [fetchAgentsData])
-
-  useEffect(() => {
     async function loadData() {
       const [tasksData, activityData, missionValue] = await Promise.all([
         fetchTasks(),
@@ -229,13 +239,13 @@ export default function OverviewPage() {
   const handleTaskUpdate = useCallback((record: any) => { setTasks(prev => prev.map(t => t.id === record.id ? { ...t, ...record } : t)) }, [])
   const handleTaskDelete = useCallback((old: any) => { if (old.id) setTasks(prev => prev.filter(t => t.id !== old.id)) }, [])
 
-  const { isConnected } = useRealtimeSubscription([
+  const { connectionStatus } = useRealtimeSubscription([
     { table: 'activity_log', event: 'INSERT', onInsert: handleActivityInsert },
     { table: 'agents', event: 'UPDATE', onUpdate: handleAgentUpdate },
     { table: 'tasks', event: 'INSERT', onInsert: handleTaskInsert },
     { table: 'tasks', event: 'UPDATE', onUpdate: handleTaskUpdate },
     { table: 'tasks', event: 'DELETE', onDelete: handleTaskDelete },
-  ])
+  ], { onFallbackRefresh: fetchAgentsData })
 
   const activeTasks = tasks.filter(t => t.status === 'in_progress')
   const doneTasks = tasks.filter(t => t.status === 'done')
@@ -386,13 +396,7 @@ export default function OverviewPage() {
           <div key="activity-feed">
             <div className="flex items-center justify-between mb-5">
               <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Activity Feed</h2>
-              <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full ${isConnected ? 'realtime-live-badge' : ''}`} style={{ background: isConnected ? 'rgba(52, 211, 153, 0.08)' : 'rgba(107, 114, 128, 0.08)', border: `1px solid ${isConnected ? 'rgba(52, 211, 153, 0.25)' : 'rgba(107, 114, 128, 0.2)'}` }}>
-                <span className="relative flex h-2 w-2">
-                  {isConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isConnected ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
-                </span>
-                <span style={{ color: isConnected ? '#34d399' : '#6b7280' }} className="text-xs font-semibold">{isConnected ? 'Live' : 'Connecting…'}</span>
-              </div>
+              <LiveBadge connectionStatus={connectionStatus} />
             </div>
             <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }} className="rounded-xl px-4 overflow-hidden">
               {activity.length === 0 ? (

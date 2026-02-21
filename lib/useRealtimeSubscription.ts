@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase-client'
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+
+export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected'
 
 type PostgresEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
 
@@ -17,18 +19,39 @@ interface SubscriptionConfig<T extends Record<string, unknown>> {
   onChange?: (payload: RealtimePostgresChangesPayload<T>) => void
 }
 
+export interface SubscriptionOptions {
+  /** Extra deps that trigger re-subscription (e.g. [agentId] when filter changes) */
+  deps?: unknown[]
+  /** Called immediately and every `fallbackInterval`ms when WebSocket is not connected */
+  onFallbackRefresh?: () => void
+  /** Interval in ms for fallback polling. Default: 60_000 */
+  fallbackInterval?: number
+}
+
 /**
  * Reusable hook for Supabase Realtime postgres_changes subscriptions.
- * Returns `isConnected` boolean for UI indicators.
+ *
+ * Returns:
+ *   - `connectionStatus`: 'connected' | 'reconnecting' | 'disconnected'
+ *   - `isConnected`: boolean shorthand for connectionStatus === 'connected'
+ *
+ * When WebSocket is not connected, `onFallbackRefresh` is called immediately
+ * then every `fallbackInterval`ms (default 60s) until the socket reconnects.
  */
 export function useRealtimeSubscription<T extends Record<string, unknown>>(
   configs: SubscriptionConfig<T>[],
-  deps: unknown[] = [],
+  options: SubscriptionOptions = {},
 ) {
-  const [isConnected, setIsConnected] = useState(false)
+  const { deps = [], onFallbackRefresh, fallbackInterval = 60_000 } = options
+
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected')
   const channelRef = useRef<RealtimeChannel | null>(null)
+  // Keep a stable ref so the fallback interval always calls the latest version
+  const onFallbackRefreshRef = useRef(onFallbackRefresh)
+  onFallbackRefreshRef.current = onFallbackRefresh
 
   useEffect(() => {
+    let wasConnected = false
     const channelName = `realtime-${configs.map(c => `${c.table}-${c.event ?? '*'}`).join('-')}-${Date.now()}`
     let channel = supabase.channel(channelName)
 
@@ -59,7 +82,14 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>(
     }
 
     channel.subscribe((status) => {
-      setIsConnected(status === 'SUBSCRIBED')
+      if (status === 'SUBSCRIBED') {
+        wasConnected = true
+        setConnectionStatus('connected')
+      } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+        setConnectionStatus(wasConnected ? 'reconnecting' : 'disconnected')
+      } else if (status === 'CLOSED') {
+        setConnectionStatus('disconnected')
+      }
     })
 
     channelRef.current = channel
@@ -67,12 +97,21 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>(
     return () => {
       channel.unsubscribe()
       channelRef.current = null
-      setIsConnected(false)
+      setConnectionStatus('disconnected')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
-  return { isConnected }
+  // Fallback poll: fires immediately when not connected, then every fallbackInterval ms
+  useEffect(() => {
+    if (connectionStatus === 'connected' || !onFallbackRefreshRef.current) return
+    onFallbackRefreshRef.current()
+    const id = setInterval(() => onFallbackRefreshRef.current?.(), fallbackInterval)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectionStatus, fallbackInterval])
+
+  return { connectionStatus, isConnected: connectionStatus === 'connected' }
 }
 
 /**
@@ -85,7 +124,7 @@ export function useTableSubscription<T extends Record<string, unknown>>(
     onUpdate?: (record: T, old: Partial<T>) => void
     onDelete?: (old: Partial<T>) => void
   },
-  deps: unknown[] = [],
+  options: SubscriptionOptions = {},
 ) {
-  return useRealtimeSubscription<T>([{ table, ...callbacks }], deps)
+  return useRealtimeSubscription<T>([{ table, ...callbacks }], options)
 }

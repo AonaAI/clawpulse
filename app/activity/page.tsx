@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { fetchFullActivityLog, fetchSlackMessages } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
+import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { supabase } from '@/lib/supabase-client'
 
 type EventType = 'task_started' | 'task_completed' | 'message_sent' | 'error' | 'deployment' | 'info' | 'warning' | 'analysis'
@@ -111,6 +112,23 @@ function getItemAgentName(item: FeedItem): string {
   return item.agent_name
 }
 
+function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus }) {
+  const cfg = {
+    connected: { badge: 'realtime-live-badge', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.3)', color: '#34d399', dot: 'bg-emerald-400', ping: true, label: 'LIVE' },
+    reconnecting: { badge: '', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.3)', color: '#fbbf24', dot: 'bg-amber-400', ping: false, label: 'RECONNECTING' },
+    disconnected: { badge: '', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.3)', color: '#f87171', dot: 'bg-red-400', ping: false, label: 'OFFLINE' },
+  }[connectionStatus]
+  return (
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${cfg.badge}`} style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+      <span className="relative flex h-2 w-2">
+        {cfg.ping && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+        <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
+      </span>
+      <span style={{ color: cfg.color }} className="text-xs font-bold tracking-wide">{cfg.label}</span>
+    </div>
+  )
+}
+
 // Slack icon SVG
 function SlackIcon() {
   return (
@@ -183,7 +201,7 @@ export default function ActivityPage() {
     })
   }, [])
 
-  const { isConnected } = useRealtimeSubscription([
+  const { connectionStatus } = useRealtimeSubscription([
     { table: 'activity_log', event: 'INSERT', onInsert: handleInsert as (record: Record<string, unknown>) => void },
   ])
 
@@ -251,21 +269,7 @@ export default function ActivityPage() {
             {totalEvents > 0 && <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">· {totalEvents.toLocaleString()} events</span>}
           </p>
         </div>
-        <div
-          style={{
-            background: isConnected ? 'rgba(52, 211, 153, 0.08)' : 'rgba(107, 114, 128, 0.08)',
-            border: `1px solid ${isConnected ? 'rgba(52, 211, 153, 0.3)' : 'rgba(107, 114, 128, 0.2)'}`,
-          }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full"
-        >
-          <span className="relative flex h-2 w-2">
-            {isConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${isConnected ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
-          </span>
-          <span style={{ color: isConnected ? '#34d399' : '#6b7280' }} className="text-xs font-bold tracking-wide">
-            {isConnected ? 'LIVE' : 'CONNECTING'}
-          </span>
-        </div>
+        <LiveBadge connectionStatus={connectionStatus} />
       </div>
 
       {/* Feed type toggle: All / Events / Messages */}

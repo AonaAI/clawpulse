@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
 import { supabase, fetchSessions } from '@/lib/supabase-client'
+import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
+import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, Task, Session } from '@/lib/types'
 import SpawnModal from '@/components/SpawnModal'
 
@@ -253,6 +255,23 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
   )
 }
 
+function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus }) {
+  const cfg = {
+    connected: { badge: 'realtime-live-badge', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)', color: '#34d399', dot: 'bg-emerald-400', ping: true, label: 'Live' },
+    reconnecting: { badge: '', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)', color: '#fbbf24', dot: 'bg-amber-400', ping: false, label: 'Reconnecting' },
+    disconnected: { badge: '', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)', color: '#f87171', dot: 'bg-red-400', ping: false, label: 'Offline' },
+  }[connectionStatus]
+  return (
+    <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full ${cfg.badge}`} style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+      <span className="relative flex h-2 w-2">
+        {cfg.ping && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+        <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
+      </span>
+      <span style={{ color: cfg.color }} className="text-xs font-semibold">{cfg.label}</span>
+    </div>
+  )
+}
+
 export default function AgentDetailClient({ id }: { id: string }) {
   const agent = AGENTS.find(a => a.id === id)
 
@@ -261,22 +280,82 @@ export default function AgentDetailClient({ id }: { id: string }) {
   const [showSpawnModal, setShowSpawnModal] = useState(false)
   const [spawnRequests, setSpawnRequests] = useState<SpawnRequest[]>([])
 
-  // Fetch spawn requests
-  useEffect(() => {
+  // Stable callback for refreshing spawn requests (used as fallback poll)
+  const loadSpawns = useCallback(async () => {
     if (!agent) return
-    async function loadSpawns() {
-      const { data } = await supabase
-        .from('spawn_requests')
-        .select('*')
-        .eq('agent_id', id)
-        .order('created_at', { ascending: false })
-        .limit(10)
-      if (data) setSpawnRequests(data)
-    }
-    loadSpawns()
-    const interval = setInterval(loadSpawns, 5000)
-    return () => clearInterval(interval)
+    const { data: rows } = await supabase
+      .from('spawn_requests')
+      .select('*')
+      .eq('agent_id', id)
+      .order('created_at', { ascending: false })
+      .limit(10)
+    if (rows) setSpawnRequests(rows)
   }, [id, agent])
+
+  // Realtime: spawn_requests + activity_log + agent status for this agent
+  const handleSpawnInsert = useCallback((record: Record<string, unknown>) => {
+    setSpawnRequests(prev => [record as unknown as SpawnRequest, ...prev].slice(0, 10))
+  }, [])
+
+  const handleSpawnUpdate = useCallback((record: Record<string, unknown>) => {
+    setSpawnRequests(prev => prev.map(r => r.id === record.id ? { ...r, ...record } as unknown as SpawnRequest : r))
+  }, [])
+
+  const handleSpawnDelete = useCallback((old: Partial<Record<string, unknown>>) => {
+    if (old.id) setSpawnRequests(prev => prev.filter(r => r.id !== old.id))
+  }, [])
+
+  const handleActivityInsert = useCallback((record: Record<string, unknown>) => {
+    setData(prev => {
+      if (!prev) return prev
+      const newEvent: ActivityItem = {
+        id: record.id as string,
+        agent_id: record.agent_id as string,
+        action: record.action as string,
+        details: (record.details as string) || '',
+        metadata: (record.metadata as Record<string, unknown>) || {},
+        created_at: record.created_at as string,
+      }
+      return { ...prev, activity: [newEvent, ...prev.activity].slice(0, 50) }
+    })
+  }, [])
+
+  const handleAgentStatusUpdate = useCallback((record: Record<string, unknown>) => {
+    setData(prev => prev ? { ...prev, status: record.status as AgentStatus } : prev)
+  }, [])
+
+  const { connectionStatus } = useRealtimeSubscription([
+    {
+      table: 'spawn_requests',
+      event: 'INSERT',
+      filter: `agent_id=eq.${id}`,
+      onInsert: handleSpawnInsert,
+    },
+    {
+      table: 'spawn_requests',
+      event: 'UPDATE',
+      filter: `agent_id=eq.${id}`,
+      onUpdate: handleSpawnUpdate,
+    },
+    {
+      table: 'spawn_requests',
+      event: 'DELETE',
+      filter: `agent_id=eq.${id}`,
+      onDelete: handleSpawnDelete,
+    },
+    {
+      table: 'activity_log',
+      event: 'INSERT',
+      filter: `agent_id=eq.${id}`,
+      onInsert: handleActivityInsert,
+    },
+    {
+      table: 'agents',
+      event: 'UPDATE',
+      filter: `id=eq.${id}`,
+      onUpdate: handleAgentStatusUpdate,
+    },
+  ], { deps: [id], onFallbackRefresh: loadSpawns })
 
   useEffect(() => {
     if (!agent) { setLoading(false); return }
@@ -445,6 +524,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
               >
                 ▶ Spawn Task
               </button>
+              <LiveBadge connectionStatus={connectionStatus} />
             </div>
           </div>
         </div>

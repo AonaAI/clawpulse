@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useCallback } from 'react'
 import { fetchTasks, fetchActivityLog } from '@/lib/supabase-client'
+import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
+import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
 import type { Task } from '@/lib/types'
 
@@ -155,18 +157,64 @@ const PRIORITY_COLORS: Record<string, string> = {
   critical: '#ef4444',
 }
 
+function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus }) {
+  const cfg = {
+    connected: { badge: 'realtime-live-badge', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)', color: '#34d399', dot: 'bg-emerald-400', ping: true, label: 'Live' },
+    reconnecting: { badge: '', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)', color: '#fbbf24', dot: 'bg-amber-400', ping: false, label: 'Reconnecting' },
+    disconnected: { badge: '', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)', color: '#f87171', dot: 'bg-red-400', ping: false, label: 'Offline' },
+  }[connectionStatus]
+  return (
+    <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full ${cfg.badge}`} style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+      <span className="relative flex h-2 w-2">
+        {cfg.ping && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+        <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
+      </span>
+      <span style={{ color: cfg.color }} className="text-xs font-semibold">{cfg.label}</span>
+    </div>
+  )
+}
+
 export default function MetricsPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    Promise.all([fetchTasks(), fetchActivityLog(20)]).then(([t, a]) => {
-      setTasks(t as Task[])
-      setActivity(a as ActivityItem[])
-      setLoading(false)
-    })
+  const loadData = useCallback(async () => {
+    const [t, a] = await Promise.all([fetchTasks(), fetchActivityLog(20)])
+    setTasks(t as Task[])
+    setActivity(a as ActivityItem[])
+    setLoading(false)
   }, [])
+
+  const handleTaskInsert = useCallback((record: Record<string, unknown>) => {
+    setTasks(prev => [record as unknown as Task, ...prev])
+  }, [])
+
+  const handleTaskUpdate = useCallback((record: Record<string, unknown>) => {
+    setTasks(prev => prev.map(t => t.id === record.id ? { ...t, ...record } as Task : t))
+  }, [])
+
+  const handleTaskDelete = useCallback((old: Partial<Record<string, unknown>>) => {
+    if (old.id) setTasks(prev => prev.filter(t => t.id !== old.id))
+  }, [])
+
+  const handleActivityInsert = useCallback((record: Record<string, unknown>) => {
+    setActivity(prev => [{
+      id: record.id as string,
+      agent_id: record.agent_id as string,
+      agent_name: record.agent_id as string,
+      action: record.action as string,
+      details: (record.details as string) || '',
+      time: 'Just now',
+    }, ...prev].slice(0, 20))
+  }, [])
+
+  const { connectionStatus } = useRealtimeSubscription([
+    { table: 'tasks', event: 'INSERT', onInsert: handleTaskInsert },
+    { table: 'tasks', event: 'UPDATE', onUpdate: handleTaskUpdate },
+    { table: 'tasks', event: 'DELETE', onDelete: handleTaskDelete },
+    { table: 'activity_log', event: 'INSERT', onInsert: handleActivityInsert },
+  ], { onFallbackRefresh: loadData })
 
   // ── Derived metrics ─────────────────────────────────────────────────────
   const total = tasks.length
@@ -215,9 +263,12 @@ export default function MetricsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
-        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity</p>
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity</p>
+        </div>
+        <LiveBadge connectionStatus={connectionStatus} />
       </div>
 
       {loading ? (

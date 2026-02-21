@@ -156,7 +156,7 @@ export function useNotifications() {
         })
       },
     },
-  ], [])
+  ])
 
   const unreadCount = notifications.filter(n => !readIds.has(n.id)).length
 
