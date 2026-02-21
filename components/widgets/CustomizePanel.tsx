@@ -1,6 +1,6 @@
 'use client'
 
-import { WidgetConfig } from '@/lib/widget-config'
+import { WidgetConfig, DEFAULT_WIDGETS } from '@/lib/widget-config'
 
 interface Props {
   widgets: WidgetConfig[]
@@ -67,9 +67,21 @@ export default function CustomizePanel({ widgets, onChange, onClose }: Props) {
           </button>
         </div>
 
-        <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mb-5">
-          Toggle widgets on/off, reorder them, and choose compact or expanded view.
+        <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mb-4">
+          Toggle widgets on/off, reorder them, and choose compact or expanded view. Drag widgets on the dashboard to reorder.
         </p>
+
+        <button
+          onClick={() => onChange(DEFAULT_WIDGETS.map(w => ({ ...w })))}
+          style={{
+            color: '#f87171',
+            background: 'rgba(248, 113, 113, 0.08)',
+            border: '1px solid rgba(248, 113, 113, 0.2)',
+          }}
+          className="w-full mb-5 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-red-500/15 transition-colors"
+        >
+          ↺ Reset Layout
+        </button>
 
         <div className="space-y-2">
           {widgets.map((w, i) => (

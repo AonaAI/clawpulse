@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, memo } from 'react'
+import { useEffect, useState, useCallback, memo, useRef } from 'react'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
 import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines } from '@/lib/supabase-client'
@@ -12,6 +12,7 @@ import Sparkline from '@/components/Sparkline'
 
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), { ssr: false })
 const SpawnModal = dynamic(() => import('@/components/SpawnModal'), { ssr: false })
+import DraggableWidget from '@/components/widgets/DraggableWidget'
 import QuickActionsWidget from '@/components/widgets/QuickActionsWidget'
 import CostSummaryWidget from '@/components/widgets/CostSummaryWidget'
 import RecentDeploymentsWidget from '@/components/widgets/RecentDeploymentsWidget'
@@ -190,6 +191,17 @@ export default function OverviewPage() {
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [sparklines, setSparklines] = useState<Record<string, number[]>>({})
+  const [dragSourceId, setDragSourceId] = useState<string | null>(null)
+  const [dragTargetId, setDragTargetId] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Load widget layout from localStorage
   useEffect(() => {
@@ -200,6 +212,34 @@ export default function OverviewPage() {
     setWidgetLayout(newLayout)
     saveWidgetLayout(newLayout)
   }
+
+  const handleDragStart = useCallback((id: string) => setDragSourceId(id), [])
+  const handleDragOver = useCallback((id: string) => setDragTargetId(id), [])
+  const handleDragEnd = useCallback(() => {
+    if (dragSourceId && dragTargetId && dragSourceId !== dragTargetId) {
+      setWidgetLayout(prev => {
+        const sorted = [...prev].sort((a, b) => a.order - b.order)
+        const srcIdx = sorted.findIndex(w => w.id === dragSourceId)
+        const tgtIdx = sorted.findIndex(w => w.id === dragTargetId)
+        if (srcIdx === -1 || tgtIdx === -1) return prev
+        const [moved] = sorted.splice(srcIdx, 1)
+        sorted.splice(tgtIdx, 0, moved)
+        const reordered = sorted.map((w, i) => ({ ...w, order: i }))
+        saveWidgetLayout(reordered)
+        return reordered
+      })
+    }
+    setDragSourceId(null)
+    setDragTargetId(null)
+  }, [dragSourceId, dragTargetId])
+
+  const handleToggleCollapse = useCallback((id: string) => {
+    setWidgetLayout(prev => {
+      const updated = prev.map(w => w.id === id ? { ...w, collapsed: !w.collapsed } : w)
+      saveWidgetLayout(updated)
+      return updated
+    })
+  }, [])
 
   const fetchAgentsData = useCallback(async () => {
     try {
@@ -485,7 +525,21 @@ export default function OverviewPage() {
 
       {/* Widgets */}
       <div className="space-y-8">
-        {sortedWidgets.map(w => w.enabled ? <div key={w.id}>{renderWidget(w.id)}</div> : null)}
+        {sortedWidgets.map(w => w.enabled ? (
+          <DraggableWidget
+            key={w.id}
+            widget={w}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onToggleCollapse={handleToggleCollapse}
+            isDragTarget={dragTargetId === w.id && dragSourceId !== w.id}
+            isDragging={dragSourceId === w.id}
+            isMobile={isMobile}
+          >
+            {renderWidget(w.id)}
+          </DraggableWidget>
+        ) : null)}
       </div>
 
       {/* Customize Panel */}
