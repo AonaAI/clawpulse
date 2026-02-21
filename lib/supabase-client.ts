@@ -341,14 +341,14 @@ export async function fetchTokenSummary() {
 
 // ── Activity Log (enhanced) ─────────────────────────────────────────────────
 
-export async function fetchFullActivityLog(limit = 50) {
-  const { data, error } = await supabase
+export async function fetchFullActivityLog(limit = 50, offset = 0) {
+  const { data, error, count } = await supabase
     .from('activity_log')
-    .select('*, agent:agents(name)')
+    .select('*, agent:agents(name)', { count: 'exact' })
     .order('created_at', { ascending: false })
-    .limit(limit)
-  if (error) { console.error('Error fetching activity log:', error); return [] }
-  return (data || []).map(item => ({
+    .range(offset, offset + limit - 1)
+  if (error) { console.error('Error fetching activity log:', error); return { items: [], total: 0 } }
+  const items = (data || []).map(item => ({
     id: item.id,
     agent_id: item.agent_id,
     agent_name: item.agent?.name || item.agent_id,
@@ -358,6 +358,18 @@ export async function fetchFullActivityLog(limit = 50) {
     created_at: item.created_at,
     time: formatTimeAgo(new Date(item.created_at)),
   }))
+  return { items, total: count ?? 0 }
+}
+
+// ── Cron Jobs ───────────────────────────────────────────────────────────────
+
+export async function fetchCronJobs() {
+  const { data, error } = await supabase
+    .from('cron_jobs')
+    .select('*')
+    .order('name', { ascending: true })
+  if (error) { console.error('Error fetching cron jobs:', error); return [] }
+  return data || []
 }
 
 // ── Agent missions ──────────────────────────────────────────────────────────

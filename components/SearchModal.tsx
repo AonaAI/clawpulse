@@ -86,8 +86,9 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
     // Fetch live data
     fetchKnowledge().then(d => d && setKnowledge(d))
     fetchTasks().then(d => d && setTasks(d))
-    fetchFullActivityLog(50).then(d => {
-      if (d) setActivityItems(d.map((item: any) => ({
+    fetchFullActivityLog(50).then(result => {
+      const d = result?.items || result
+      if (d) setActivityItems((d as any[]).map((item: any) => ({
         id: item.id,
         agent_id: item.agent_id,
         agent_name: item.agent_name || item.agent_id,

@@ -128,7 +128,11 @@ function SlackIcon() {
 }
 
 export default function ActivityPage() {
+  const PAGE_SIZE = 50
   const [events, setEvents] = useState<ActivityItem[]>([])
+  const [totalEvents, setTotalEvents] = useState(0)
+  const [eventsOffset, setEventsOffset] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [slackMessages, setSlackMessages] = useState<SlackMessageItem[]>([])
   const [newIds, setNewIds] = useState<Set<string>>(new Set())
   const [feedFilter, setFeedFilter] = useState<FeedFilter>('all')
@@ -139,14 +143,26 @@ export default function ActivityPage() {
 
   useEffect(() => {
     Promise.all([
-      fetchFullActivityLog(100),
+      fetchFullActivityLog(PAGE_SIZE, 0),
       fetchSlackMessages(100),
-    ]).then(([activityData, slackData]) => {
-      setEvents((activityData as ActivityItem[]).map(e => ({ ...e, _type: 'event' as const })))
+    ]).then(([activityResult, slackData]) => {
+      const { items, total } = activityResult as { items: ActivityItem[]; total: number }
+      setEvents(items.map(e => ({ ...e, _type: 'event' as const })))
+      setTotalEvents(total)
+      setEventsOffset(PAGE_SIZE)
       setSlackMessages(slackData.map(s => ({ ...s, _type: 'slack_message' as const })))
       setLoading(false)
     })
   }, [])
+
+  const loadMoreEvents = useCallback(async () => {
+    setLoadingMore(true)
+    const { items, total } = await fetchFullActivityLog(PAGE_SIZE, eventsOffset) as { items: ActivityItem[]; total: number }
+    setEvents(prev => [...prev, ...items.map(e => ({ ...e, _type: 'event' as const }))])
+    setTotalEvents(total)
+    setEventsOffset(prev => prev + PAGE_SIZE)
+    setLoadingMore(false)
+  }, [eventsOffset])
 
   const handleInsert = useCallback((record: Record<string, unknown>) => {
     supabase.from('agents').select('name').eq('id', record.agent_id).single().then(({ data }) => {
@@ -230,7 +246,10 @@ export default function ActivityPage() {
       <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Activity Feed</h1>
-          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Live event stream &amp; Slack messages from all agents</p>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">
+            Live event stream &amp; Slack messages from all agents
+            {totalEvents > 0 && <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">· {totalEvents.toLocaleString()} events</span>}
+          </p>
         </div>
         <div
           style={{
@@ -397,7 +416,7 @@ export default function ActivityPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {groups.map(group => (
+          {groups.map((group: { date: string; items: FeedItem[] }) => (
             <div key={group.date}>
               <div className="flex items-center gap-3 mb-3">
                 <span
@@ -583,6 +602,24 @@ export default function ActivityPage() {
               </div>
             </div>
           ))}
+
+          {/* Load More button */}
+          {events.length < totalEvents && (
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={loadMoreEvents}
+                disabled={loadingMore}
+                style={{
+                  background: 'rgba(124, 58, 237, 0.15)',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  color: '#c4b5fd',
+                }}
+                className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-purple-500/20 disabled:opacity-50"
+              >
+                {loadingMore ? 'Loading…' : `Load More (${events.length} of ${totalEvents.toLocaleString()})`}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

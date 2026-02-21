@@ -574,6 +574,71 @@ async function pushActivityLog(agentIds: string[]) {
   console.log(`  Upserted ${totalRows} activity_log rows across ${agentIds.length} agents`)
 }
 
+// ─── Cron Jobs from OpenClaw CLI ───────────────────────────────────────────
+
+async function pushCronJobs() {
+  const { execSync } = await import('child_process')
+  let raw: string
+  try {
+    raw = execSync('openclaw cron list --json 2>/dev/null', { encoding: 'utf-8', timeout: 15000 })
+  } catch (e) {
+    console.error('  Failed to run openclaw cron list:', (e as Error).message)
+    return
+  }
+
+  let jobs: any[]
+  try {
+    const parsed = JSON.parse(raw)
+    jobs = parsed.jobs || []
+  } catch {
+    console.error('  Failed to parse cron list JSON')
+    return
+  }
+
+  if (jobs.length === 0) {
+    console.log('  No cron jobs found')
+    return
+  }
+
+  const rows = jobs.map((j: any) => {
+    // Build schedule string
+    let schedule = ''
+    if (j.schedule?.kind === 'cron') {
+      schedule = j.schedule.expr || ''
+      if (j.schedule.tz) schedule += ` (${j.schedule.tz})`
+    } else if (j.schedule?.kind === 'every') {
+      const mins = Math.round((j.schedule.everyMs || 0) / 60000)
+      schedule = mins >= 60 ? `every ${(mins / 60).toFixed(0)}h` : `every ${mins}m`
+    } else {
+      schedule = JSON.stringify(j.schedule).slice(0, 80)
+    }
+
+    return {
+      id: j.id,
+      name: j.name || 'Unnamed',
+      schedule,
+      agent_id: j.agentId || 'unknown',
+      enabled: j.enabled ?? true,
+      status: j.state?.lastStatus || 'pending',
+      last_run: j.state?.lastRunAtMs ? new Date(j.state.lastRunAtMs).toISOString() : null,
+      next_run: j.state?.nextRunAtMs ? new Date(j.state.nextRunAtMs).toISOString() : null,
+      last_duration_ms: j.state?.lastDurationMs ?? null,
+      consecutive_errors: j.state?.consecutiveErrors ?? 0,
+      payload_message: j.payload?.message?.slice(0, 500) || null,
+    }
+  })
+
+  const { error } = await supabase
+    .from('cron_jobs')
+    .upsert(rows, { onConflict: 'id' })
+
+  if (error) {
+    console.error('  Failed to upsert cron_jobs:', error.message)
+  } else {
+    console.log(`  Upserted ${rows.length} cron jobs`)
+  }
+}
+
 async function main() {
   const dirs = await readdir(AGENTS_DIR)
   const agents = await Promise.all(dirs.map(readAgent))
@@ -620,6 +685,10 @@ async function main() {
   // Push Slack message previews from .jsonl session files
   console.log('Parsing .jsonl session files for Slack messages...')
   await pushSlackMessages(dirs)
+
+  // Push cron jobs from OpenClaw CLI
+  console.log('Fetching cron jobs from OpenClaw...')
+  await pushCronJobs()
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Component, type ReactNode } from 'react'
 import { AGENTS } from '@/lib/data'
-import { fetchHandoffs } from '@/lib/supabase-client'
+import { fetchHandoffs, fetchCronJobs } from '@/lib/supabase-client'
 import type { Task } from '@/lib/types'
 import AgentCommGraph from './AgentCommGraph'
 
@@ -25,33 +25,38 @@ class GraphErrorBoundary extends Component<{children: ReactNode}, {error: string
   }
 }
 
-// ── Static cron job data ──────────────────────────────────────────────────
+// ── Cron job types (from Supabase) ────────────────────────────────────────
 
 interface CronJob {
   id: string
   name: string
   schedule: string
-  description: string
   agent_id: string
-  last_run: string
-  status: 'active' | 'paused' | 'error'
+  enabled: boolean
+  status: string
+  last_run: string | null
+  next_run: string | null
+  last_duration_ms: number | null
+  consecutive_errors: number
+  payload_message: string | null
 }
 
-const CRON_JOBS: CronJob[] = [
-  { id: '1', name: 'Daily Summary Report',       schedule: '0 9 * * *',   description: 'Compile status from all agents into a daily ops report', agent_id: 'main',     last_run: '9 hr ago',  status: 'active' },
-  { id: '2', name: 'Weekly Sprint Review',        schedule: '0 10 * * MON', description: 'Review task board, update priorities, send to Slack',     agent_id: 'pm',       last_run: '3 days ago', status: 'active' },
-  { id: '3', name: 'SEO Rank Check',              schedule: '0 6 * * *',   description: 'Pull keyword rankings from SERPs for top 50 keywords',     agent_id: 'seo',      last_run: '15 hr ago', status: 'active' },
-  { id: '4', name: 'Sales Outreach Batch',        schedule: '0 8 * * MON-FRI', description: 'Send scheduled outreach messages to prospect list',   agent_id: 'sales',    last_run: '7 hr ago',  status: 'active' },
-  { id: '5', name: 'Security Benchmark Scan',     schedule: '0 2 * * SUN', description: 'Run weekly AI security compliance checks and log results', agent_id: 'research', last_run: '5 days ago', status: 'active' },
-  { id: '6', name: 'Content Calendar Sync',       schedule: '0 8 * * MON', description: 'Sync upcoming content schedule to Notion and Slack',       agent_id: 'seo',      last_run: '3 days ago', status: 'active' },
-  { id: '7', name: 'WanderBuddies Analytics',    schedule: '0 18 * * *',  description: 'Pull daily engagement metrics from WanderBuddies channels', agent_id: 'growth',   last_run: '18 hr ago', status: 'paused' },
-  { id: '8', name: 'Fiverr Order Monitor',        schedule: '*/30 * * * *', description: 'Check for new Fiverr orders and route to relevant agents', agent_id: 'fiverr',   last_run: '28 min ago', status: 'error' },
-]
+const STATUS_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
+  active:   { color: '#34d399', bg: 'rgba(52,211,153,0.06)', border: 'rgba(52,211,153,0.2)', label: 'Active' },
+  ok:       { color: '#34d399', bg: 'rgba(52,211,153,0.06)', border: 'rgba(52,211,153,0.2)', label: 'OK' },
+  disabled: { color: '#6b7280', bg: 'rgba(107,114,128,0.06)', border: 'rgba(107,114,128,0.2)', label: 'Disabled' },
+  paused:   { color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.2)', label: 'Paused' },
+  error:    { color: '#f87171', bg: 'rgba(248,113,113,0.06)', border: 'rgba(248,113,113,0.2)', label: 'Error' },
+  pending:  { color: '#60a5fa', bg: 'rgba(96,165,250,0.06)', border: 'rgba(96,165,250,0.2)', label: 'Pending' },
+}
 
-const STATUS_CONFIG = {
-  active: { color: '#34d399', bg: 'rgba(52,211,153,0.06)', border: 'rgba(52,211,153,0.2)', label: 'Active' },
-  paused: { color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.2)', label: 'Paused' },
-  error:  { color: '#f87171', bg: 'rgba(248,113,113,0.06)', border: 'rgba(248,113,113,0.2)', label: 'Error' },
+function formatTimeAgo(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  if (diffMs < 60_000) return 'Just now'
+  if (diffMs < 3_600_000) return `${Math.floor(diffMs / 60_000)} min ago`
+  if (diffMs < 86_400_000) return `${Math.floor(diffMs / 3_600_000)} hr ago`
+  return `${Math.floor(diffMs / 86_400_000)}d ago`
 }
 
 // ── Derived Slack channel map from AGENTS ─────────────────────────────────
@@ -115,17 +120,23 @@ const PRIORITY_CONFIG = {
 export default function CommsPage() {
   const [handoffs, setHandoffs] = useState<Task[]>([])
   const [handoffsLoading, setHandoffsLoading] = useState(true)
+  const [cronJobs, setCronJobs] = useState<CronJob[]>([])
+  const [cronLoading, setCronLoading] = useState(true)
 
   useEffect(() => {
     fetchHandoffs().then(data => {
       setHandoffs(data as Task[])
       setHandoffsLoading(false)
     })
+    fetchCronJobs().then(data => {
+      setCronJobs(data as CronJob[])
+      setCronLoading(false)
+    })
   }, [])
 
   const totalChannels = CHANNEL_MAP.length
-  const activeJobs = CRON_JOBS.filter(j => j.status === 'active').length
-  const errorJobs = CRON_JOBS.filter(j => j.status === 'error').length
+  const activeJobs = cronJobs.filter(j => j.enabled && j.status !== 'error').length
+  const errorJobs = cronJobs.filter(j => j.status === 'error' || j.consecutive_errors > 0).length
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -204,6 +215,17 @@ export default function CommsPage() {
             title="Scheduled Jobs"
             subtitle="Cron-style automations running across agents"
           />
+          {cronLoading ? (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} style={{ background: 'var(--cp-card-bg)', border: '1px solid rgba(109,40,217,0.1)', height: 64 }} className="rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : cronJobs.length === 0 ? (
+            <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)' }} className="rounded-xl p-8 text-center">
+              <span style={{ color: 'var(--cp-text-dim)' }} className="text-sm">No cron jobs found. Run the push script to sync from OpenClaw.</span>
+            </div>
+          ) : (
           <div
             style={{
               background: 'var(--cp-card-bg)',
@@ -212,9 +234,12 @@ export default function CommsPage() {
             }}
             className="rounded-xl overflow-hidden"
           >
-            {CRON_JOBS.map((job, i) => {
+            {cronJobs.map((job, i) => {
               const agent = AGENTS.find(a => a.id === job.agent_id)
-              const status = STATUS_CONFIG[job.status]
+              const statusKey = !job.enabled ? 'disabled' : job.consecutive_errors > 0 ? 'error' : job.status === 'error' ? 'error' : 'ok'
+              const status = STATUS_CONFIG[statusKey] || STATUS_CONFIG.ok
+              const lastRunStr = job.last_run ? formatTimeAgo(new Date(job.last_run)) : 'Never'
+              const description = job.payload_message ? job.payload_message.slice(0, 100) + (job.payload_message.length > 100 ? '…' : '') : ''
               return (
                 <div
                   key={job.id}
@@ -225,7 +250,7 @@ export default function CommsPage() {
                 >
                   {/* Status dot */}
                   <span
-                    style={{ background: status.color, boxShadow: job.status === 'active' ? `0 0 6px ${status.color}88` : undefined }}
+                    style={{ background: status.color, boxShadow: job.enabled && statusKey === 'ok' ? `0 0 6px ${status.color}88` : undefined }}
                     className="w-2 h-2 rounded-full flex-shrink-0"
                   />
 
@@ -239,8 +264,13 @@ export default function CommsPage() {
                       >
                         {status.label}
                       </span>
+                      {job.last_duration_ms !== null && (
+                        <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">
+                          {job.last_duration_ms < 1000 ? `${job.last_duration_ms}ms` : `${(job.last_duration_ms / 1000).toFixed(1)}s`}
+                        </span>
+                      )}
                     </div>
-                    <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5 truncate">{job.description}</p>
+                    {description && <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5 truncate">{description}</p>}
                   </div>
 
                   {/* Schedule */}
@@ -254,12 +284,13 @@ export default function CommsPage() {
                   {/* Agent + last run */}
                   <div className="hidden md:flex items-center gap-2 flex-shrink-0">
                     {agent && <AgentAvatar agentId={job.agent_id} size={22} />}
-                    <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs font-medium">{job.last_run}</span>
+                    <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs font-medium">{lastRunStr}</span>
                   </div>
                 </div>
               )
             })}
           </div>
+          )}
         </section>
 
         {/* ── 3. Pending Handoffs ──────────────────────────────────── */}
