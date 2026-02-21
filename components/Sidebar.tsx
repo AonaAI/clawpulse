@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AGENTS } from '@/lib/data'
+import SearchModal from './SearchModal'
 
 const navItems = [
   {
@@ -109,7 +110,7 @@ const navItems = [
   },
 ]
 
-function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
+function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void; onSearchClick?: () => void }) {
   const pathname = usePathname()
 
   return (
@@ -138,6 +139,25 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Search button */}
+      <div className="px-3 pt-3">
+        <button
+          onClick={() => { onNavClick?.(); onSearchClick?.() }}
+          style={{
+            color: '#7c5fa0',
+            background: 'rgba(255,255,255,0.025)',
+            border: '1px solid rgba(109,40,217,0.15)',
+          }}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span className="flex-1 text-left">Search...</span>
+          <kbd style={{ color: '#4b5563', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)' }} className="text-xs px-1.5 py-0.5 rounded font-mono hidden sm:inline">⌘K</kbd>
+        </button>
       </div>
 
       {/* Nav */}
@@ -218,12 +238,25 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   // Close on route change
   const pathname = usePathname()
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
+
+  // Cmd+K / Ctrl+K global shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -247,7 +280,7 @@ export default function Sidebar() {
         }}
         className="hidden md:flex flex-col h-screen sticky top-0"
       >
-        <SidebarContent />
+        <SidebarContent onSearchClick={() => setSearchOpen(true)} />
       </aside>
 
       {/* Mobile: hamburger button */}
@@ -302,8 +335,11 @@ export default function Sidebar() {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
-        <SidebarContent onNavClick={() => setMobileOpen(false)} />
+        <SidebarContent onNavClick={() => setMobileOpen(false)} onSearchClick={() => setSearchOpen(true)} />
       </aside>
+
+      {/* Global search modal */}
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   )
 }
