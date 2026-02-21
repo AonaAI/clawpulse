@@ -165,6 +165,8 @@ export default function OverviewPage() {
   const [widgetLayout, setWidgetLayout] = useState<WidgetConfig[]>([])
   const [showCustomize, setShowCustomize] = useState(false)
   const [spawnAgent, setSpawnAgent] = useState<MergedAgent | null>(null)
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   // Load widget layout from localStorage
   useEffect(() => {
@@ -176,18 +178,27 @@ export default function OverviewPage() {
     saveWidgetLayout(newLayout)
   }
 
+  const fetchAgentsData = useCallback(async () => {
+    try {
+      const live = await fetchAgentLiveStatus()
+      setAgents(mergeLiveData(live))
+      setLastRefreshed(new Date())
+      setApiError(false)
+    } catch { setApiError(true) }
+  }, [])
+
+  const handleManualRefresh = useCallback(async () => {
+    if (refreshing) return
+    setRefreshing(true)
+    await fetchAgentsData()
+    setRefreshing(false)
+  }, [refreshing, fetchAgentsData])
+
   useEffect(() => {
-    async function fetchAgentsData() {
-      try {
-        const live = await fetchAgentLiveStatus()
-        setAgents(mergeLiveData(live))
-        setApiError(false)
-      } catch { setApiError(true) }
-    }
     fetchAgentsData()
     const id = setInterval(fetchAgentsData, POLL_INTERVAL)
     return () => clearInterval(id)
-  }, [])
+  }, [fetchAgentsData])
 
   useEffect(() => {
     async function loadData() {
@@ -293,7 +304,28 @@ export default function OverviewPage() {
           <div key="agent-grid">
             <div className="flex items-center justify-between mb-5">
               <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Agent Status</h2>
-              <span style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-2.5 py-0.5 rounded-full font-medium">{agents.length} agents</span>
+              <div className="flex items-center gap-2">
+                {lastRefreshed && (
+                  <span style={{ color: 'var(--cp-text-dim)', fontSize: '11px' }}>
+                    Updated {formatLastActive(lastRefreshed.getTime())}
+                  </span>
+                )}
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={refreshing}
+                  title="Refresh agent status"
+                  style={{ color: refreshing ? 'var(--cp-text-dim)' : '#8b5cf6', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center hover:border-[rgba(139,92,246,0.3)] transition-colors disabled:opacity-50"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: refreshing ? 'rotate(360deg)' : 'none', transition: refreshing ? 'transform 0.6s linear' : 'none' }}>
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                </button>
+                <span style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-2.5 py-0.5 rounded-full font-medium">{agents.length} agents</span>
+              </div>
             </div>
             <div className={`grid ${compact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}`}>
               {agents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} />)}

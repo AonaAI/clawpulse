@@ -71,9 +71,30 @@ function deriveStatus(lastActiveMs: number | null): Status {
   return 'offline'
 }
 
+const STALE_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
+
 async function readAgent(dir: string) {
   const sessionsPath = join(AGENTS_DIR, dir, 'sessions', 'sessions.json')
   try {
+    // Check file mtime first — if the file itself hasn't been touched in 5min the agent is offline
+    let fileMtime: number | null = null
+    try {
+      const fileStat = await fsStat(sessionsPath)
+      fileMtime = fileStat.mtimeMs
+    } catch {
+      // file doesn't exist → offline
+    }
+
+    if (fileMtime === null || Date.now() - fileMtime > STALE_THRESHOLD_MS) {
+      return {
+        id: dir,
+        status: 'offline' as Status,
+        last_activity: fileMtime ? new Date(fileMtime).toISOString() : null,
+        current_task: JSON.stringify({ sessionCount: 0, totalTokens: 0 }),
+        sessionRows: [] as AgentSessionRow[],
+      }
+    }
+
     const raw = await readFile(sessionsPath, 'utf-8')
     const sessions = JSON.parse(raw) as Record<string, SessionEntry>
     const entries = Object.entries(sessions)
@@ -91,7 +112,7 @@ async function readAgent(dir: string) {
 
       // Determine session status based on activity age
       const ageMs = s.updatedAt ? Date.now() - s.updatedAt : Infinity
-      const sessionStatus = ageMs < 5 * 60 * 1000 ? 'active' : 'completed'
+      const sessionStatus = ageMs < STALE_THRESHOLD_MS ? 'active' : 'completed'
 
       sessionRows.push({
         id: makeUUID(`${dir}:${key}`),
@@ -104,6 +125,11 @@ async function readAgent(dir: string) {
         model: s.model ?? null,
         token_count: tokens,
       })
+    }
+
+    // Use file mtime as a floor for lastActive (the file was written at least as recently)
+    if (fileMtime !== null && (lastActive === null || fileMtime > lastActive)) {
+      lastActive = fileMtime
     }
 
     const status = deriveStatus(lastActive)
@@ -695,35 +721,46 @@ async function processSpawnRequests() {
 }
 
 async function main() {
-  const dirs = await readdir(AGENTS_DIR)
+  let dirs: string[]
+  try {
+    dirs = await readdir(AGENTS_DIR)
+  } catch (e) {
+    console.error(`Failed to read agents dir ${AGENTS_DIR}:`, (e as Error).message)
+    return
+  }
+
   const agents = await Promise.all(dirs.map(readAgent))
 
   let totalSessions = 0
   for (const agent of agents) {
-    const { error } = await supabase
-      .from('agents')
-      .update({
-        status: agent.status,
-        last_activity: agent.last_activity,
-        current_task: agent.current_task,
-      })
-      .eq('id', agent.id)
+    try {
+      const { error } = await supabase
+        .from('agents')
+        .update({
+          status: agent.status,
+          last_activity: agent.last_activity,
+          current_task: agent.current_task,
+        })
+        .eq('id', agent.id)
 
-    if (error) {
-      console.error(`Failed to update ${agent.id}:`, error.message)
-    }
-
-    // Push session data to agent_sessions
-    if (agent.sessionRows.length > 0) {
-      const { error: sessErr } = await supabase
-        .from('agent_sessions')
-        .upsert(agent.sessionRows, { onConflict: 'agent_id,session_key' })
-
-      if (sessErr) {
-        console.error(`Failed to push sessions for ${agent.id}:`, sessErr.message)
-      } else {
-        totalSessions += agent.sessionRows.length
+      if (error) {
+        console.error(`Failed to update ${agent.id}:`, error.message)
       }
+
+      // Push session data to agent_sessions
+      if (agent.sessionRows.length > 0) {
+        const { error: sessErr } = await supabase
+          .from('agent_sessions')
+          .upsert(agent.sessionRows, { onConflict: 'agent_id,session_key' })
+
+        if (sessErr) {
+          console.error(`Failed to push sessions for ${agent.id}:`, sessErr.message)
+        } else {
+          totalSessions += agent.sessionRows.length
+        }
+      }
+    } catch (e) {
+      console.error(`Unexpected error updating agent ${agent.id}:`, (e as Error).message)
     }
   }
 
@@ -731,23 +768,23 @@ async function main() {
 
   // Push real token usage from .jsonl session files
   console.log('Parsing .jsonl session files for token usage...')
-  await pushTokenUsage(dirs)
+  try { await pushTokenUsage(dirs) } catch (e) { console.error('pushTokenUsage failed:', (e as Error).message) }
 
   // Push real activity log from .jsonl session files
   console.log('Parsing .jsonl session files for activity log...')
-  await pushActivityLog(dirs)
+  try { await pushActivityLog(dirs) } catch (e) { console.error('pushActivityLog failed:', (e as Error).message) }
 
   // Push Slack message previews from .jsonl session files
   console.log('Parsing .jsonl session files for Slack messages...')
-  await pushSlackMessages(dirs)
+  try { await pushSlackMessages(dirs) } catch (e) { console.error('pushSlackMessages failed:', (e as Error).message) }
 
   // Push cron jobs from OpenClaw CLI
   console.log('Fetching cron jobs from OpenClaw...')
-  await pushCronJobs()
+  try { await pushCronJobs() } catch (e) { console.error('pushCronJobs failed:', (e as Error).message) }
 
   // Process spawn requests
   console.log('Processing spawn requests...')
-  await processSpawnRequests()
+  try { await processSpawnRequests() } catch (e) { console.error('processSpawnRequests failed:', (e as Error).message) }
 }
 
-main().catch(e => { console.error(e); process.exit(1) })
+main().catch(e => { console.error('Fatal error in main:', e); process.exit(1) })
