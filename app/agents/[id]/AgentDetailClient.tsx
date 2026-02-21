@@ -178,8 +178,8 @@ function buildWeeklyChart(stats: DailyTokenStat[]): DailyTokenStat[] {
 
 function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) {
   const statusCfg = SESSION_STATUS_CONFIG[session.status] || SESSION_STATUS_CONFIG.completed
-  const heartbeatAge = session.status === 'active'
-    ? Date.now() - new Date(session.started_at).getTime()
+  const heartbeatAge = session.status === 'active' && session.last_active
+    ? Date.now() - new Date(session.last_active).getTime()
     : null
   const isRecentHeartbeat = heartbeatAge !== null && heartbeatAge < 5 * 60 * 1000
 
@@ -226,14 +226,14 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
               <span style={{ color: '#4b5563' }}>Duration</span> {session.duration_minutes}m
             </span>
           )}
-          {session.tokens_used > 0 && (
+          {(session.tokens_used ?? session.token_count ?? 0) > 0 && (
             <span style={{ color: '#8b5cf6' }} className="text-xs font-semibold">
-              {formatTokens(session.tokens_used)} tokens
+              {formatTokens(session.tokens_used ?? session.token_count ?? 0)} tokens
             </span>
           )}
-          {session.cost_usd > 0 && (
-            <span style={{ color: '#4b5563' }} className="text-xs">
-              {formatCost(Number(session.cost_usd))}
+          {session.model && (
+            <span style={{ color: '#4b5563' }} className="text-xs font-mono">
+              {session.model}
             </span>
           )}
         </div>
@@ -347,7 +347,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
   const avgDuration = completedSessions.length > 0
     ? Math.round(completedSessions.reduce((s, r) => s + (r.duration_minutes ?? 0), 0) / completedSessions.length)
     : 0
-  const sessionTokens = sessions.reduce((s, r) => s + (r.tokens_used ?? 0), 0)
+  const sessionTokens = sessions.reduce((s, r) => s + (r.tokens_used ?? r.token_count ?? 0), 0)
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">

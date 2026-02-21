@@ -355,17 +355,29 @@ export async function updateAgentMission(agentId: string, mission: string): Prom
 
 export async function fetchSessions(agentId: string, limit = 20) {
   const { data, error } = await supabase
-    .from('sessions')
+    .from('agent_sessions')
     .select('*')
     .eq('agent_id', agentId)
-    .order('started_at', { ascending: false })
+    .order('last_active', { ascending: false })
     .limit(limit)
 
   if (error) {
     console.error('Error fetching sessions:', error)
     return []
   }
-  return data || []
+  // Map agent_sessions columns to Session interface
+  return (data || []).map(r => {
+    const durationMs = r.last_active && r.started_at
+      ? new Date(r.last_active).getTime() - new Date(r.started_at).getTime()
+      : null
+    return {
+      ...r,
+      tokens_used: r.token_count ?? 0,
+      duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
+      cost_usd: 0,
+      summary: null,
+    }
+  })
 }
 
 // ── Live Agent Status ──────────────────────────────────────────────────────

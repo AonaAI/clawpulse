@@ -27,6 +27,22 @@ interface SessionEntry {
   totalTokens?: number
   inputTokens?: number
   outputTokens?: number
+  createdAt?: number
+  model?: string
+  kind?: string
+  status?: string
+}
+
+interface AgentSessionRow {
+  id: string
+  agent_id: string
+  session_key: string
+  kind: string
+  status: string
+  started_at: string | null
+  last_active: string | null
+  model: string | null
+  token_count: number
 }
 
 type Status = 'working' | 'idle' | 'offline'
@@ -44,16 +60,34 @@ async function readAgent(dir: string) {
   try {
     const raw = await readFile(sessionsPath, 'utf-8')
     const sessions = JSON.parse(raw) as Record<string, SessionEntry>
-    const entries = Object.values(sessions)
+    const entries = Object.entries(sessions)
 
     let lastActive: number | null = null
     let totalTokens = 0
+    const sessionRows: AgentSessionRow[] = []
 
-    for (const s of entries) {
+    for (const [key, s] of entries) {
       if (s.updatedAt && (lastActive === null || s.updatedAt > lastActive)) {
         lastActive = s.updatedAt
       }
-      totalTokens += s.totalTokens ?? ((s.inputTokens ?? 0) + (s.outputTokens ?? 0))
+      const tokens = s.totalTokens ?? ((s.inputTokens ?? 0) + (s.outputTokens ?? 0))
+      totalTokens += tokens
+
+      // Determine session status based on activity age
+      const ageMs = s.updatedAt ? Date.now() - s.updatedAt : Infinity
+      const sessionStatus = ageMs < 5 * 60 * 1000 ? 'active' : 'completed'
+
+      sessionRows.push({
+        id: require('crypto').createHash('md5').update(`${dir}:${key}`).digest('hex').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5'),
+        agent_id: dir,
+        session_key: key,
+        kind: s.kind ?? 'session',
+        status: sessionStatus,
+        started_at: s.createdAt ? new Date(s.createdAt).toISOString() : (s.updatedAt ? new Date(s.updatedAt).toISOString() : null),
+        last_active: s.updatedAt ? new Date(s.updatedAt).toISOString() : null,
+        model: s.model ?? null,
+        token_count: tokens,
+      })
     }
 
     const status = deriveStatus(lastActive)
@@ -61,8 +95,8 @@ async function readAgent(dir: string) {
       id: dir,
       status,
       last_activity: lastActive ? new Date(lastActive).toISOString() : null,
-      // Pack session_count and total_tokens into current_task as JSON metadata
       current_task: JSON.stringify({ sessionCount: entries.length, totalTokens }),
+      sessionRows,
     }
   } catch {
     return {
@@ -70,6 +104,7 @@ async function readAgent(dir: string) {
       status: 'offline' as Status,
       last_activity: null,
       current_task: JSON.stringify({ sessionCount: 0, totalTokens: 0 }),
+      sessionRows: [] as AgentSessionRow[],
     }
   }
 }
@@ -78,6 +113,7 @@ async function main() {
   const dirs = await readdir(AGENTS_DIR)
   const agents = await Promise.all(dirs.map(readAgent))
 
+  let totalSessions = 0
   for (const agent of agents) {
     const { error } = await supabase
       .from('agents')
@@ -91,9 +127,22 @@ async function main() {
     if (error) {
       console.error(`Failed to update ${agent.id}:`, error.message)
     }
+
+    // Push session data to agent_sessions
+    if (agent.sessionRows.length > 0) {
+      const { error: sessErr } = await supabase
+        .from('agent_sessions')
+        .upsert(agent.sessionRows, { onConflict: 'agent_id,session_key' })
+
+      if (sessErr) {
+        console.error(`Failed to push sessions for ${agent.id}:`, sessErr.message)
+      } else {
+        totalSessions += agent.sessionRows.length
+      }
+    }
   }
 
-  console.log(`[${new Date().toISOString()}] Pushed status for ${agents.length} agents: ${agents.map(a => `${a.id}=${a.status}`).join(', ')}`)
+  console.log(`[${new Date().toISOString()}] Pushed status for ${agents.length} agents (${totalSessions} sessions): ${agents.map(a => `${a.id}=${a.status}`).join(', ')}`)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

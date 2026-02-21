@@ -91,12 +91,17 @@ export type SessionStatus = 'active' | 'completed' | 'failed'
 export interface Session {
   id: string
   agent_id: string
-  started_at: string
-  ended_at: string | null
-  duration_minutes: number | null
-  tokens_used: number
-  cost_usd: number
-  summary: string | null
+  session_key: string
+  kind: string
   status: SessionStatus
+  started_at: string
+  last_active: string | null
+  model: string | null
+  token_count: number
   created_at: string
+  // Computed client-side
+  duration_minutes?: number | null
+  tokens_used?: number
+  cost_usd?: number
+  summary?: string | null
 }
