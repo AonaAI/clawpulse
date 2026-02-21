@@ -86,6 +86,17 @@ export interface DailyTokenStats {
   total_cost: number
 }
 
+export interface SlackMessage {
+  id: string
+  agent_id: string
+  agent_name?: string
+  channel: string
+  message: string
+  sent_at: string
+  session_id: string | null
+  created_at: string
+}
+
 export type SessionStatus = 'active' | 'completed' | 'failed'
 
 export interface Session {

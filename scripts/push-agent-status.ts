@@ -235,6 +235,136 @@ async function pushTokenUsage(agentIds: string[]) {
   console.log(`  Upserted ${totalRows} token_usage rows across ${agentIds.length} agents`)
 }
 
+// ─── SQL to run once in the Supabase SQL editor ────────────────────────────
+// CREATE TABLE IF NOT EXISTS public.slack_messages (
+//   id TEXT PRIMARY KEY,
+//   agent_id TEXT NOT NULL,
+//   channel TEXT NOT NULL,
+//   message TEXT NOT NULL,
+//   sent_at TIMESTAMPTZ NOT NULL,
+//   session_id TEXT,
+//   created_at TIMESTAMPTZ DEFAULT now()
+// );
+// CREATE INDEX IF NOT EXISTS idx_slack_messages_sent ON public.slack_messages (sent_at DESC);
+// ALTER TABLE public.slack_messages ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "anon_read" ON public.slack_messages FOR SELECT TO anon USING (true);
+// CREATE POLICY "service_all" ON public.slack_messages FOR ALL TO service_role USING (true);
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SlackMessageRow {
+  id: string
+  agent_id: string
+  channel: string
+  message: string
+  sent_at: string
+  session_id: string
+}
+
+async function pushSlackMessages(agentIds: string[]) {
+  const CREATE_TABLE_SQL = `
+-- Run this once in your Supabase SQL editor:
+CREATE TABLE IF NOT EXISTS public.slack_messages (
+  id TEXT PRIMARY KEY,
+  agent_id TEXT NOT NULL,
+  channel TEXT NOT NULL,
+  message TEXT NOT NULL,
+  sent_at TIMESTAMPTZ NOT NULL,
+  session_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_slack_messages_sent ON public.slack_messages (sent_at DESC);
+ALTER TABLE public.slack_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_read" ON public.slack_messages FOR SELECT TO anon USING (true);
+CREATE POLICY "service_all" ON public.slack_messages FOR ALL TO service_role USING (true);`
+
+  let totalRows = 0
+
+  for (const agentId of agentIds) {
+    const sessionsDir = join(AGENTS_DIR, agentId, 'sessions')
+    const messages: SlackMessageRow[] = []
+
+    let files: string[]
+    try {
+      files = await readdir(sessionsDir)
+    } catch {
+      continue
+    }
+
+    const jsonlFiles = files.filter(f =>
+      f.endsWith('.jsonl') &&
+      !f.includes('.deleted.') &&
+      !f.endsWith('.lock')
+    )
+
+    for (const file of jsonlFiles) {
+      const sessionId = file.slice(0, -'.jsonl'.length)
+      let content: string
+      try {
+        content = await readFile(join(sessionsDir, file), 'utf-8')
+      } catch {
+        continue
+      }
+
+      for (const line of content.split('\n')) {
+        if (!line.trim()) continue
+        let entry: any
+        try {
+          entry = JSON.parse(line)
+        } catch {
+          continue
+        }
+
+        // Only look at assistant messages
+        if (entry.type !== 'message') continue
+        if (entry.message?.role !== 'assistant') continue
+
+        const contentArr = entry.message?.content
+        if (!Array.isArray(contentArr)) continue
+
+        for (const block of contentArr) {
+          if (block.type !== 'tool_use' && block.type !== 'toolCall') continue
+          if (block.name !== 'message') continue
+          const input = block.input || block.arguments || {}
+          if (input.action !== 'send') continue
+
+          const channel = String(input.target || input.channel || input.channel_id || 'unknown')
+          const text = String(input.message || input.text || input.content || '')
+          const truncated = text.slice(0, 500)
+          const timestamp: string = entry.timestamp || new Date().toISOString()
+
+          const id = makeUUID(`${agentId}:${sessionId}:${timestamp}:${channel}:${truncated.slice(0, 50)}`)
+          messages.push({ id, agent_id: agentId, channel, message: truncated, sent_at: timestamp, session_id: sessionId })
+        }
+      }
+    }
+
+    if (messages.length === 0) continue
+
+    // Keep last 100 per agent sorted newest first
+    const sorted = messages.sort((a, b) => b.sent_at.localeCompare(a.sent_at)).slice(0, 100)
+
+    const { error } = await supabase
+      .from('slack_messages')
+      .upsert(sorted, { onConflict: 'id' })
+
+    if (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((error as any).code === '42P01') {
+        console.error('\n  ⚠  slack_messages table does not exist. Run this SQL in the Supabase dashboard:')
+        console.error(CREATE_TABLE_SQL)
+        console.error()
+      } else {
+        console.error(`  Failed to upsert slack_messages for ${agentId}:`, error.message)
+      }
+    } else {
+      totalRows += sorted.length
+      console.log(`  ${agentId}: ${sorted.length} Slack message(s)`)
+    }
+  }
+
+  console.log(`  Upserted ${totalRows} slack_messages rows across ${agentIds.length} agents`)
+}
+
 async function main() {
   const dirs = await readdir(AGENTS_DIR)
   const agents = await Promise.all(dirs.map(readAgent))
@@ -273,6 +403,10 @@ async function main() {
   // Push real token usage from .jsonl session files
   console.log('Parsing .jsonl session files for token usage...')
   await pushTokenUsage(dirs)
+
+  // Push Slack message previews from .jsonl session files
+  console.log('Parsing .jsonl session files for Slack messages...')
+  await pushSlackMessages(dirs)
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

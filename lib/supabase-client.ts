@@ -413,6 +413,27 @@ export async function fetchAgentLiveStatus() {
   })
 }
 
+// ── Slack Messages ──────────────────────────────────────────────────────────
+
+export async function fetchSlackMessages(limit = 100) {
+  const { data, error } = await supabase
+    .from('slack_messages')
+    .select('*, agent:agents(name)')
+    .order('sent_at', { ascending: false })
+    .limit(limit)
+  if (error) { console.error('Error fetching slack messages:', error); return [] }
+  return (data || []).map((r: Record<string, unknown> & { agent?: { name: string } | null }) => ({
+    id: r.id as string,
+    agent_id: r.agent_id as string,
+    agent_name: r.agent?.name || (r.agent_id as string),
+    channel: r.channel as string,
+    message: r.message as string,
+    sent_at: r.sent_at as string,
+    session_id: (r.session_id as string | null) ?? null,
+    created_at: r.created_at as string,
+  }))
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(date: Date): string {

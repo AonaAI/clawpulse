@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { fetchFullActivityLog } from '@/lib/supabase-client'
+import { fetchFullActivityLog, fetchSlackMessages } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import { supabase } from '@/lib/supabase-client'
 
 type EventType = 'task_started' | 'task_completed' | 'message_sent' | 'error' | 'deployment' | 'info' | 'warning' | 'analysis'
+type FeedFilter = 'all' | 'events' | 'messages'
 
 interface ActivityItem {
   id: string
@@ -16,7 +17,21 @@ interface ActivityItem {
   metadata: Record<string, unknown>
   created_at: string
   time: string
+  _type: 'event'
 }
+
+interface SlackMessageItem {
+  id: string
+  agent_id: string
+  agent_name: string
+  channel: string
+  message: string
+  sent_at: string
+  created_at: string
+  _type: 'slack_message'
+}
+
+type FeedItem = ActivityItem | SlackMessageItem
 
 function detectEventType(action: string): EventType {
   const a = action.toLowerCase()
@@ -32,103 +47,46 @@ function detectEventType(action: string): EventType {
 
 const EVENT_CONFIG: Record<EventType, { color: string; bg: string; border: string; label: string; icon: React.ReactNode }> = {
   task_completed: {
-    color: '#34d399',
-    bg: 'rgba(52, 211, 153, 0.1)',
-    border: 'rgba(52, 211, 153, 0.25)',
-    label: 'Completed',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-    ),
+    color: '#34d399', bg: 'rgba(52, 211, 153, 0.1)', border: 'rgba(52, 211, 153, 0.25)', label: 'Completed',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
   },
   task_started: {
-    color: '#818cf8',
-    bg: 'rgba(129, 140, 248, 0.1)',
-    border: 'rgba(129, 140, 248, 0.25)',
-    label: 'Started',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="5 3 19 12 5 21 5 3" />
-      </svg>
-    ),
+    color: '#818cf8', bg: 'rgba(129, 140, 248, 0.1)', border: 'rgba(129, 140, 248, 0.25)', label: 'Started',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg>,
   },
   error: {
-    color: '#f87171',
-    bg: 'rgba(248, 113, 113, 0.1)',
-    border: 'rgba(248, 113, 113, 0.25)',
-    label: 'Error',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-    ),
+    color: '#f87171', bg: 'rgba(248, 113, 113, 0.1)', border: 'rgba(248, 113, 113, 0.25)', label: 'Error',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
   },
   deployment: {
-    color: '#f59e0b',
-    bg: 'rgba(245, 158, 11, 0.1)',
-    border: 'rgba(245, 158, 11, 0.25)',
-    label: 'Deployed',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 19V5M5 12l7-7 7 7" />
-      </svg>
-    ),
+    color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.25)', label: 'Deployed',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>,
   },
   message_sent: {
-    color: '#22d3ee',
-    bg: 'rgba(34, 211, 238, 0.1)',
-    border: 'rgba(34, 211, 238, 0.25)',
-    label: 'Message',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
+    color: '#22d3ee', bg: 'rgba(34, 211, 238, 0.1)', border: 'rgba(34, 211, 238, 0.25)', label: 'Message',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
   },
   warning: {
-    color: '#fbbf24',
-    bg: 'rgba(251, 191, 36, 0.1)',
-    border: 'rgba(251, 191, 36, 0.25)',
-    label: 'Warning',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    ),
+    color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)', border: 'rgba(251, 191, 36, 0.25)', label: 'Warning',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
   },
   analysis: {
-    color: '#a78bfa',
-    bg: 'rgba(167, 139, 250, 0.1)',
-    border: 'rgba(167, 139, 250, 0.25)',
-    label: 'Analysis',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-    ),
+    color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.1)', border: 'rgba(167, 139, 250, 0.25)', label: 'Analysis',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
   },
   info: {
-    color: '#60a5fa',
-    bg: 'rgba(96, 165, 250, 0.1)',
-    border: 'rgba(96, 165, 250, 0.25)',
-    label: 'Info',
-    icon: (
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="16" x2="12" y2="12" />
-        <line x1="12" y1="8" x2="12.01" y2="8" />
-      </svg>
-    ),
+    color: '#60a5fa', bg: 'rgba(96, 165, 250, 0.1)', border: 'rgba(96, 165, 250, 0.25)', label: 'Info',
+    icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>,
   },
 }
 
 const ALL_TYPES: EventType[] = ['task_completed', 'task_started', 'error', 'deployment', 'message_sent', 'warning', 'analysis', 'info']
+
+const SLACK_STYLE = {
+  color: '#e879f9',
+  bg: 'rgba(232, 121, 249, 0.1)',
+  border: 'rgba(232, 121, 249, 0.25)',
+}
 
 function formatTimestamp(iso: string): string {
   const d = new Date(iso)
@@ -140,29 +98,57 @@ function formatDate(iso: string): string {
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)
-
   if (d.toDateString() === today.toDateString()) return 'Today'
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+function getItemTimestamp(item: FeedItem): string {
+  return item._type === 'slack_message' ? item.sent_at : item.created_at
+}
+
+function getItemAgentName(item: FeedItem): string {
+  return item.agent_name
+}
+
+// Slack icon SVG
+function SlackIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z" />
+      <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+      <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z" />
+      <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z" />
+      <path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z" />
+      <path d="M14 20.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5z" />
+      <path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z" />
+      <path d="M10 3.5C10 4.33 9.33 5 8.5 5S7 4.33 7 3.5 7.67 2 8.5 2s1.5.67 1.5 1.5z" />
+    </svg>
+  )
+}
+
 export default function ActivityPage() {
   const [events, setEvents] = useState<ActivityItem[]>([])
+  const [slackMessages, setSlackMessages] = useState<SlackMessageItem[]>([])
   const [newIds, setNewIds] = useState<Set<string>>(new Set())
+  const [feedFilter, setFeedFilter] = useState<FeedFilter>('all')
   const [filterType, setFilterType] = useState<EventType | 'all'>('all')
   const [filterAgent, setFilterAgent] = useState<string>('all')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchFullActivityLog(100).then(data => {
-      setEvents(data as ActivityItem[])
+    Promise.all([
+      fetchFullActivityLog(100),
+      fetchSlackMessages(100),
+    ]).then(([activityData, slackData]) => {
+      setEvents((activityData as ActivityItem[]).map(e => ({ ...e, _type: 'event' as const })))
+      setSlackMessages(slackData.map(s => ({ ...s, _type: 'slack_message' as const })))
       setLoading(false)
     })
   }, [])
 
   const handleInsert = useCallback((record: Record<string, unknown>) => {
-    // Fetch agent name
     supabase.from('agents').select('name').eq('id', record.agent_id).single().then(({ data }) => {
       const newItem: ActivityItem = {
         id: record.id as string,
@@ -173,6 +159,7 @@ export default function ActivityPage() {
         metadata: (record.metadata as Record<string, unknown>) || {},
         created_at: record.created_at as string,
         time: 'Just now',
+        _type: 'event',
       }
       setEvents(prev => [newItem, ...prev])
       setNewIds(prev => new Set(prev).add(newItem.id))
@@ -184,27 +171,58 @@ export default function ActivityPage() {
     { table: 'activity_log', event: 'INSERT', onInsert: handleInsert as (record: Record<string, unknown>) => void },
   ])
 
-  const agents = Array.from(new Set(events.map(e => e.agent_name))).filter(Boolean)
+  // Build merged feed
+  let feedItems: FeedItem[] = []
+  if (feedFilter === 'events') {
+    feedItems = [...events]
+  } else if (feedFilter === 'messages') {
+    feedItems = [...slackMessages]
+  } else {
+    feedItems = [...events, ...slackMessages]
+  }
 
-  const filtered = events.filter(e => {
-    const type = detectEventType(e.action)
-    if (filterType !== 'all' && type !== filterType) return false
-    if (filterAgent !== 'all' && e.agent_name !== filterAgent) return false
+  // Sort by timestamp descending
+  feedItems.sort((a, b) => {
+    const ta = getItemTimestamp(a)
+    const tb = getItemTimestamp(b)
+    return tb.localeCompare(ta)
+  })
+
+  // Collect all agent names
+  const agents = Array.from(new Set(feedItems.map(getItemAgentName))).filter(Boolean)
+
+  // Apply filters
+  const filtered = feedItems.filter(item => {
+    if (item._type === 'event') {
+      const type = detectEventType(item.action)
+      if (filterType !== 'all' && type !== filterType) return false
+    } else {
+      // slack messages don't match event type filters (unless 'all')
+      if (filterType !== 'all') return false
+    }
+    if (filterAgent !== 'all' && getItemAgentName(item) !== filterAgent) return false
     if (search) {
       const q = search.toLowerCase()
-      if (!e.action.toLowerCase().includes(q) && !e.details.toLowerCase().includes(q) && !e.agent_name.toLowerCase().includes(q)) return false
+      if (item._type === 'event') {
+        if (!item.action.toLowerCase().includes(q) && !item.details.toLowerCase().includes(q) && !item.agent_name.toLowerCase().includes(q)) return false
+      } else {
+        if (!item.message.toLowerCase().includes(q) && !item.channel.toLowerCase().includes(q) && !item.agent_name.toLowerCase().includes(q)) return false
+      }
     }
     return true
   })
 
   // Group by date
-  const groups: { date: string; items: ActivityItem[] }[] = []
-  for (const event of filtered) {
-    const d = formatDate(event.created_at)
+  const groups: { date: string; items: FeedItem[] }[] = []
+  for (const item of filtered) {
+    const d = formatDate(getItemTimestamp(item))
     const existing = groups.find(g => g.date === d)
-    if (existing) existing.items.push(event)
-    else groups.push({ date: d, items: [event] })
+    if (existing) existing.items.push(item)
+    else groups.push({ date: d, items: [item] })
   }
+
+  const eventCount = feedFilter === 'messages' ? 0 : events.length
+  const msgCount = feedFilter === 'events' ? 0 : slackMessages.length
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
@@ -212,9 +230,8 @@ export default function ActivityPage() {
       <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Activity Feed</h1>
-          <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Live event stream from all agents</p>
+          <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Live event stream &amp; Slack messages from all agents</p>
         </div>
-        {/* Live indicator */}
         <div
           style={{
             background: isConnected ? 'rgba(52, 211, 153, 0.08)' : 'rgba(107, 114, 128, 0.08)',
@@ -230,6 +247,36 @@ export default function ActivityPage() {
             {isConnected ? 'LIVE' : 'CONNECTING'}
           </span>
         </div>
+      </div>
+
+      {/* Feed type toggle: All / Events / Messages */}
+      <div className="flex gap-2 mb-4">
+        {(['all', 'events', 'messages'] as FeedFilter[]).map(f => (
+          <button
+            key={f}
+            onClick={() => setFeedFilter(f)}
+            style={{
+              background: feedFilter === f ? 'rgba(124, 58, 237, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+              border: feedFilter === f ? '1px solid rgba(139, 92, 246, 0.45)' : '1px solid rgba(255, 255, 255, 0.08)',
+              color: feedFilter === f ? '#c4b5fd' : '#6b7280',
+            }}
+            className="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+          >
+            {f === 'all' && '🔀'}
+            {f === 'events' && '⚡'}
+            {f === 'messages' && '💬'}
+            <span className="capitalize">{f}</span>
+            <span
+              style={{
+                background: feedFilter === f ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                color: feedFilter === f ? '#a78bfa' : '#4b5563',
+              }}
+              className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+            >
+              {f === 'all' ? events.length + slackMessages.length : f === 'events' ? events.length : slackMessages.length}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Filters */}
@@ -251,7 +298,7 @@ export default function ActivityPage() {
           </svg>
           <input
             type="text"
-            placeholder="Search events..."
+            placeholder="Search events & messages..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
@@ -264,38 +311,40 @@ export default function ActivityPage() {
           />
         </div>
 
-        {/* Type filters */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setFilterType('all')}
-            style={{
-              background: filterType === 'all' ? 'rgba(124, 58, 237, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-              border: filterType === 'all' ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.07)',
-              color: filterType === 'all' ? '#c4b5fd' : '#6b7280',
-            }}
-            className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
-          >
-            All events
-          </button>
-          {ALL_TYPES.map(type => {
-            const cfg = EVENT_CONFIG[type]
-            return (
-              <button
-                key={type}
-                onClick={() => setFilterType(filterType === type ? 'all' : type)}
-                style={{
-                  background: filterType === type ? cfg.bg : 'rgba(255, 255, 255, 0.04)',
-                  border: filterType === type ? `1px solid ${cfg.border}` : '1px solid rgba(255, 255, 255, 0.07)',
-                  color: filterType === type ? cfg.color : '#6b7280',
-                }}
-                className="px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
-              >
-                <span style={{ color: filterType === type ? cfg.color : '#6b7280' }}>{cfg.icon}</span>
-                {cfg.label}
-              </button>
-            )
-          })}
-        </div>
+        {/* Type filters (only show when not in messages-only mode) */}
+        {feedFilter !== 'messages' && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilterType('all')}
+              style={{
+                background: filterType === 'all' ? 'rgba(124, 58, 237, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                border: filterType === 'all' ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.07)',
+                color: filterType === 'all' ? '#c4b5fd' : '#6b7280',
+              }}
+              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+            >
+              All types
+            </button>
+            {ALL_TYPES.map(type => {
+              const cfg = EVENT_CONFIG[type]
+              return (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(filterType === type ? 'all' : type)}
+                  style={{
+                    background: filterType === type ? cfg.bg : 'rgba(255, 255, 255, 0.04)',
+                    border: filterType === type ? `1px solid ${cfg.border}` : '1px solid rgba(255, 255, 255, 0.07)',
+                    color: filterType === type ? cfg.color : '#6b7280',
+                  }}
+                  className="px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+                >
+                  <span style={{ color: filterType === type ? cfg.color : '#6b7280' }}>{cfg.icon}</span>
+                  {cfg.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* Agent filter */}
         {agents.length > 0 && (
@@ -332,25 +381,19 @@ export default function ActivityPage() {
       {/* Count */}
       <div className="flex items-center justify-between mb-4">
         <span style={{ color: '#4b5563' }} className="text-xs font-medium">
-          {filtered.length} event{filtered.length !== 1 ? 's' : ''}
+          {filtered.length} item{filtered.length !== 1 ? 's' : ''}
           {filterType !== 'all' || filterAgent !== 'all' || search ? ' (filtered)' : ''}
         </span>
       </div>
 
-      {/* Event groups */}
+      {/* Feed */}
       {loading ? (
-        <div
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)' }}
-          className="rounded-xl p-12 text-center"
-        >
-          <div style={{ color: '#4b5563' }} className="text-sm">Loading events…</div>
+        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)' }} className="rounded-xl p-12 text-center">
+          <div style={{ color: '#4b5563' }} className="text-sm">Loading…</div>
         </div>
       ) : groups.length === 0 ? (
-        <div
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)' }}
-          className="rounded-xl p-12 text-center"
-        >
-          <div style={{ color: '#4b5563' }} className="text-sm">No events found</div>
+        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)' }} className="rounded-xl p-12 text-center">
+          <div style={{ color: '#4b5563' }} className="text-sm">No items found</div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -378,15 +421,97 @@ export default function ActivityPage() {
                 }}
                 className="rounded-xl overflow-hidden"
               >
-                {group.items.map((event, i) => {
-                  const type = detectEventType(event.action)
-                  const cfg = EVENT_CONFIG[type]
-                  const isNew = newIds.has(event.id)
+                {group.items.map((item, i) => {
                   const isLast = i === group.items.length - 1
+                  const isNew = newIds.has(item.id)
+
+                  if (item._type === 'slack_message') {
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                          background: 'transparent',
+                        }}
+                      >
+                        <div className="px-5 py-4 flex items-start gap-4">
+                          {/* Slack icon */}
+                          <div
+                            style={{
+                              background: SLACK_STYLE.bg,
+                              border: `1px solid ${SLACK_STYLE.border}`,
+                              color: SLACK_STYLE.color,
+                              width: '28px',
+                              height: '28px',
+                              minWidth: '28px',
+                            }}
+                            className="rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                          >
+                            <SlackIcon />
+                          </div>
+
+                          {/* Agent avatar */}
+                          <div
+                            style={{
+                              background: 'rgba(109, 40, 217, 0.15)',
+                              border: '1px solid rgba(139, 92, 246, 0.2)',
+                              color: '#8b5cf6',
+                              width: '28px',
+                              height: '28px',
+                              minWidth: '28px',
+                            }}
+                            className="rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5"
+                          >
+                            {item.agent_name.slice(0, 2).toUpperCase()}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3 mb-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{item.agent_name}</span>
+                                <span
+                                  style={{ background: SLACK_STYLE.bg, color: SLACK_STYLE.color, border: `1px solid ${SLACK_STYLE.border}` }}
+                                  className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                                >
+                                  💬 Slack
+                                </span>
+                                <span
+                                  style={{ color: '#6b7280' }}
+                                  className="text-xs font-mono"
+                                >
+                                  #{item.channel.length > 12 ? item.channel.slice(0, 12) + '…' : item.channel}
+                                </span>
+                              </div>
+                              <span style={{ color: '#374151', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
+                                {formatTimestamp(item.sent_at)}
+                              </span>
+                            </div>
+                            {/* Speech bubble style message preview */}
+                            <div
+                              style={{
+                                background: 'rgba(232, 121, 249, 0.04)',
+                                border: '1px solid rgba(232, 121, 249, 0.12)',
+                                borderRadius: '0 12px 12px 12px',
+                                color: '#9ca3af',
+                              }}
+                              className="text-xs leading-relaxed px-3 py-2 mt-1 max-w-lg"
+                            >
+                              {item.message.slice(0, 200)}{item.message.length > 200 ? '…' : ''}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  // Regular event
+                  const type = detectEventType(item.action)
+                  const cfg = EVENT_CONFIG[type]
 
                   return (
                     <div
-                      key={event.id}
+                      key={item.id}
                       className={isNew ? 'realtime-fade-in' : ''}
                       style={{
                         borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
@@ -395,7 +520,6 @@ export default function ActivityPage() {
                       }}
                     >
                       <div className="px-5 py-4 flex items-start gap-4">
-                        {/* Event type icon */}
                         <div
                           style={{
                             background: cfg.bg,
@@ -410,7 +534,6 @@ export default function ActivityPage() {
                           {cfg.icon}
                         </div>
 
-                        {/* Agent avatar */}
                         <div
                           style={{
                             background: 'rgba(109, 40, 217, 0.15)',
@@ -422,14 +545,13 @@ export default function ActivityPage() {
                           }}
                           className="rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5"
                         >
-                          {event.agent_name.slice(0, 2).toUpperCase()}
+                          {item.agent_name.slice(0, 2).toUpperCase()}
                         </div>
 
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3 mb-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{event.agent_name}</span>
+                              <span style={{ color: '#e9e2ff' }} className="text-sm font-semibold">{item.agent_name}</span>
                               <span
                                 style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
                                 className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -446,12 +568,12 @@ export default function ActivityPage() {
                               )}
                             </div>
                             <span style={{ color: '#374151', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
-                              {formatTimestamp(event.created_at)}
+                              {formatTimestamp(item.created_at)}
                             </span>
                           </div>
-                          <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold mb-0.5">{event.action}</div>
-                          {event.details && (
-                            <div style={{ color: '#4b5563' }} className="text-xs leading-relaxed">{event.details}</div>
+                          <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold mb-0.5">{item.action}</div>
+                          {item.details && (
+                            <div style={{ color: '#4b5563' }} className="text-xs leading-relaxed">{item.details}</div>
                           )}
                         </div>
                       </div>
