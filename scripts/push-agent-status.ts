@@ -3,7 +3,7 @@
  * Reads OpenClaw agent session files and pushes live status to Supabase.
  * Run: npx tsx scripts/push-agent-status.ts
  */
-import { readdir, readFile } from 'fs/promises'
+import { readdir, readFile, stat as fsStat } from 'fs/promises'
 import { join } from 'path'
 import { homedir } from 'os'
 import { createHash } from 'crypto'
@@ -365,6 +365,215 @@ CREATE POLICY "service_all" ON public.slack_messages FOR ALL TO service_role USI
   console.log(`  Upserted ${totalRows} slack_messages rows across ${agentIds.length} agents`)
 }
 
+// ─── Activity Log from JSONL sessions ──────────────────────────────────────
+
+interface ActivityRow {
+  id: string
+  agent_id: string
+  action: string
+  details: string
+  metadata: Record<string, any>
+  created_at: string
+}
+
+async function pushActivityLog(agentIds: string[]) {
+  // First, delete old seed data (rows with created_at before 2026-02-20 which were seeded)
+  const { error: delErr } = await supabase
+    .from('activity_log')
+    .delete()
+    .lt('created_at', '2026-02-20T00:00:00Z')
+
+  if (delErr) {
+    console.error('  Failed to delete old seed activity data:', delErr.message)
+  }
+
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000 // only files modified in last 24h
+  let totalRows = 0
+
+  for (const agentId of agentIds) {
+    const sessionsDir = join(AGENTS_DIR, agentId, 'sessions')
+    const events: ActivityRow[] = []
+
+    let files: string[]
+    try {
+      files = await readdir(sessionsDir)
+    } catch {
+      continue
+    }
+
+    const jsonlFiles = files.filter(f =>
+      f.endsWith('.jsonl') &&
+      !f.includes('.deleted.') &&
+      !f.endsWith('.lock')
+    )
+
+    for (const file of jsonlFiles) {
+      const sessionKey = file.slice(0, -'.jsonl'.length)
+      const filePath = join(sessionsDir, file)
+
+      // Check file modification time
+      try {
+        const fileStat = await fsStat(filePath)
+        if (fileStat.mtimeMs < cutoff) continue
+      } catch {
+        continue
+      }
+
+      let content: string
+      try {
+        content = await readFile(filePath, 'utf-8')
+      } catch {
+        continue
+      }
+
+      const lines = content.split('\n')
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        if (!line.trim()) continue
+
+        let entry: any
+        try {
+          entry = JSON.parse(line)
+        } catch {
+          continue
+        }
+
+        const timestamp: string = entry.timestamp || new Date().toISOString()
+        const deterministicId = makeUUID(`activity:${agentId}:${sessionKey}:${i}`)
+
+        // Handle tool_use in assistant messages
+        if (entry.type === 'message' && entry.message?.role === 'assistant') {
+          const contentArr = entry.message?.content
+          if (!Array.isArray(contentArr)) continue
+
+          for (const block of contentArr) {
+            if (block.type === 'tool_use' || block.type === 'toolCall') {
+              const toolName = block.name || 'unknown'
+              const input = block.input || block.arguments || {}
+              let summary = ''
+
+              // Create brief summary based on tool
+              if (toolName === 'exec' || toolName === 'bash') {
+                summary = String(input.command || input.cmd || '').slice(0, 100)
+              } else if (toolName === 'edit' || toolName === 'write' || toolName === 'read') {
+                summary = String(input.file_path || input.path || '').split('/').pop() || ''
+              } else if (toolName === 'message') {
+                summary = `${input.action || 'send'} → ${input.target || input.channel || 'unknown'}`
+              } else if (toolName === 'browser') {
+                summary = String(input.action || input.url || '').slice(0, 80)
+              } else if (toolName === 'web_search') {
+                summary = String(input.query || '').slice(0, 80)
+              } else {
+                summary = JSON.stringify(input).slice(0, 80)
+              }
+
+              const blockId = makeUUID(`activity:${agentId}:${sessionKey}:${i}:${toolName}:${block.id || ''}`)
+
+              events.push({
+                id: blockId,
+                agent_id: agentId,
+                action: 'tool_call',
+                details: `Used ${toolName}: ${summary}`.slice(0, 255),
+                metadata: { tool: toolName, session_key: sessionKey },
+                created_at: timestamp,
+              })
+            }
+
+            // Check for assistant text mentioning deploy/commit/push/build
+            if (block.type === 'text' && typeof block.text === 'string') {
+              const text = block.text.toLowerCase()
+              let action: string | null = null
+              if (text.includes('deployed') || text.includes('firebase deploy') || text.includes('deploy complete')) {
+                action = 'deploy'
+              } else if (text.includes('committed') || text.includes('git commit')) {
+                action = 'commit'
+              } else if (text.includes('git push') || text.includes('pushed to')) {
+                action = 'commit'
+              } else if (text.includes('build succeeded') || text.includes('build complete') || text.includes('npm run build')) {
+                action = 'deploy'
+              }
+
+              if (action) {
+                const snippet = block.text.slice(0, 120)
+                events.push({
+                  id: makeUUID(`activity:${agentId}:${sessionKey}:${i}:action:${action}`),
+                  agent_id: agentId,
+                  action,
+                  details: snippet,
+                  metadata: { session_key: sessionKey },
+                  created_at: timestamp,
+                })
+              }
+            }
+          }
+          continue
+        }
+
+        // System events
+        if (entry.type === 'system') {
+          events.push({
+            id: deterministicId,
+            agent_id: agentId,
+            action: 'system',
+            details: String(entry.message || entry.data?.text || 'System event').slice(0, 255),
+            metadata: { session_key: sessionKey },
+            created_at: timestamp,
+          })
+          continue
+        }
+
+        // Session start
+        if (entry.type === 'session') {
+          events.push({
+            id: deterministicId,
+            agent_id: agentId,
+            action: 'system',
+            details: `Session started: ${sessionKey.slice(0, 8)}...`,
+            metadata: { session_key: sessionKey, version: entry.version },
+            created_at: timestamp,
+          })
+          continue
+        }
+
+        // Error entries
+        if (entry.type === 'error' || entry.type === 'message' && entry.message?.role === 'system' && entry.message?.content?.[0]?.text?.toLowerCase().includes('error')) {
+          events.push({
+            id: deterministicId,
+            agent_id: agentId,
+            action: 'error',
+            details: String(entry.message?.content?.[0]?.text || entry.error || 'Error occurred').slice(0, 255),
+            metadata: { session_key: sessionKey },
+            created_at: timestamp,
+          })
+        }
+      }
+    }
+
+    if (events.length === 0) continue
+
+    // Keep last 200 per agent, sorted newest first
+    const sorted = events.sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 200)
+
+    // Batch upsert in chunks of 50
+    for (let i = 0; i < sorted.length; i += 50) {
+      const chunk = sorted.slice(i, i + 50)
+      const { error } = await supabase
+        .from('activity_log')
+        .upsert(chunk, { onConflict: 'id' })
+
+      if (error) {
+        console.error(`  Failed to upsert activity_log for ${agentId}:`, error.message)
+        break
+      }
+    }
+
+    totalRows += sorted.length
+    console.log(`  ${agentId}: ${sorted.length} activity event(s)`)
+  }
+
+  console.log(`  Upserted ${totalRows} activity_log rows across ${agentIds.length} agents`)
+}
+
 async function main() {
   const dirs = await readdir(AGENTS_DIR)
   const agents = await Promise.all(dirs.map(readAgent))
@@ -403,6 +612,10 @@ async function main() {
   // Push real token usage from .jsonl session files
   console.log('Parsing .jsonl session files for token usage...')
   await pushTokenUsage(dirs)
+
+  // Push real activity log from .jsonl session files
+  console.log('Parsing .jsonl session files for activity log...')
+  await pushActivityLog(dirs)
 
   // Push Slack message previews from .jsonl session files
   console.log('Parsing .jsonl session files for Slack messages...')
