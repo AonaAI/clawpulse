@@ -108,7 +108,7 @@ export default function CommsPage() {
   const errorJobs = CRON_JOBS.filter(j => j.status === 'error').length
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Comms & Coordination</h1>

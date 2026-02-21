@@ -313,7 +313,7 @@ export default function MissionPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-10">
         <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Mission & Vision</h1>

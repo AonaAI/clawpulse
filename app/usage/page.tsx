@@ -102,7 +102,7 @@ export default function UsagePage() {
   ]
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Token Usage & Cost</h1>
@@ -236,9 +236,9 @@ export default function UsagePage() {
         style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
         className="rounded-xl overflow-hidden"
       >
-        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+        <div className="px-5 py-4 flex items-center justify-between flex-wrap gap-2" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
           <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Recent Sessions</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span style={{ color: '#4b5563' }} className="text-xs font-medium">Sort by:</span>
             {(['date', 'tokens', 'cost'] as const).map(opt => (
               <button
@@ -260,7 +260,8 @@ export default function UsagePage() {
         {loading ? (
           <div style={{ color: '#4b5563' }} className="text-sm text-center py-12">Loading…</div>
         ) : (
-          <div>
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: '560px' }}>
             {/* Table header */}
             <div
               className="grid px-5 py-2.5"
@@ -294,6 +295,7 @@ export default function UsagePage() {
                 <div style={{ color: '#34d399' }} className="text-sm font-bold">{formatCost(Number(r.cost_usd))}</div>
               </div>
             ))}
+            </div>
           </div>
         )}
       </div>

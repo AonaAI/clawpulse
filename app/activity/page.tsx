@@ -207,9 +207,9 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Activity Feed</h1>
           <p style={{ color: '#6b7280' }} className="text-sm mt-1.5 font-medium">Live event stream from all agents</p>

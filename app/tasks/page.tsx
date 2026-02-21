@@ -327,7 +327,7 @@ export default function TasksPage() {
   const criticalTasks = tasks.filter(t => t.priority === 'critical').length
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
