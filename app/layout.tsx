@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import NotificationProvider from "@/components/NotificationProvider";
 import ThemeProvider from "@/components/ThemeProvider";
+import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -38,7 +39,8 @@ export default function RootLayout({
           <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
             <Sidebar />
             <NotificationProvider />
-            <main className="flex-1 overflow-auto pt-16 md:pt-0" style={{ background: 'var(--background)' }}>
+            <KeyboardShortcuts />
+            <main className="flex-1 overflow-auto pt-16 md:pt-0 page-transition" style={{ background: 'var(--background)' }}>
               {children}
             </main>
           </div>

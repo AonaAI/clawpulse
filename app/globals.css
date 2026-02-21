@@ -187,3 +187,19 @@ body {
 .realtime-live-badge {
   animation: live-badge-glow 2s ease-in-out infinite;
 }
+
+/* Page transition */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: fadeSlideIn 200ms ease-out;
+}

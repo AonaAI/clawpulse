@@ -381,17 +381,14 @@ export default function AgentDetailClient({ id }: { id: string }) {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-      {/* Back link */}
-      <Link
-        href="/agents"
-        style={{ color: 'var(--cp-text-muted)' }}
-        className="text-sm font-medium flex items-center gap-1.5 mb-6 hover:text-purple-400 transition-colors w-fit"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7" />
-        </svg>
-        Back to agents
-      </Link>
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-1.5 text-xs mb-4" style={{ color: 'var(--cp-text-muted)' }}>
+        <Link href="/" className="hover:text-purple-400 transition-colors">Overview</Link>
+        <span style={{ opacity: 0.4 }}>›</span>
+        <Link href="/agents" className="hover:text-purple-400 transition-colors">Agents</Link>
+        <span style={{ opacity: 0.4 }}>›</span>
+        <span style={{ color: 'var(--foreground)' }}>{agent?.name ?? id}</span>
+      </nav>
 
       {/* Agent header card */}
       <div
