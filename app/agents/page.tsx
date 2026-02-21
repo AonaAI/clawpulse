@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, memo } from 'react'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
 import { fetchTokenStatsByAgent, fetchAgentLiveStatus } from '@/lib/supabase-client'
@@ -121,7 +121,7 @@ function formatTokensShort(n: number): string {
   return String(n)
 }
 
-function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenStats?: { total_tokens: number; total_cost: number } | null; mission?: string | null }) {
+const AgentCard = memo(function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenStats?: { total_tokens: number; total_cost: number } | null; mission?: string | null }) {
   const isWorking = agent.status === 'working'
   const initials = agent.name.slice(0, 2).toUpperCase()
 
@@ -293,7 +293,7 @@ function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenSt
       </div>
     </div>
   )
-}
+})
 
 function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus }) {
   const cfg = {

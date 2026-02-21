@@ -214,6 +214,22 @@ body {
   }
 }
 
+/* Performance: will-change hints for animated elements */
+.animate-in,
+.slide-in-from-right-5,
+.fade-in,
+.realtime-fade-in {
+  will-change: transform, opacity;
+}
+
+.skeleton-shimmer {
+  will-change: background-position;
+}
+
+.skeleton-shimmer-light {
+  will-change: background-position;
+}
+
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,

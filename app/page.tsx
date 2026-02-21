@@ -1,15 +1,17 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, memo } from 'react'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
 import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
-import CustomizePanel from '@/components/widgets/CustomizePanel'
-import SpawnModal from '@/components/SpawnModal'
+import dynamic from 'next/dynamic'
 import Sparkline from '@/components/Sparkline'
+
+const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), { ssr: false })
+const SpawnModal = dynamic(() => import('@/components/SpawnModal'), { ssr: false })
 import QuickActionsWidget from '@/components/widgets/QuickActionsWidget'
 import CostSummaryWidget from '@/components/widgets/CostSummaryWidget'
 import RecentDeploymentsWidget from '@/components/widgets/RecentDeploymentsWidget'
@@ -62,7 +64,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
   )
 }
 
-function AgentCard({ agent, compact, onSpawn, sparkline }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void; sparkline?: number[] }) {
+const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void; sparkline?: number[] }) {
   const initials = agent.name.slice(0, 2).toUpperCase()
   const isWorking = agent.status === 'working'
 
@@ -138,9 +140,9 @@ function AgentCard({ agent, compact, onSpawn, sparkline }: { agent: MergedAgent;
       </div>
     </div>
   )
-}
+})
 
-function ActivityItem({ item, isLast, isNew }: { item: { id: string; agent_id: string; agent_name: string; action: string; details: string; time: string }; isLast: boolean; isNew?: boolean }) {
+const ActivityItem = memo(function ActivityItem({ item, isLast, isNew }: { item: { id: string; agent_id: string; agent_name: string; action: string; details: string; time: string }; isLast: boolean; isNew?: boolean }) {
   return (
     <div className={`flex items-start gap-3 py-3.5 ${isNew ? 'realtime-fade-in' : ''}`} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)' }}>
       <div style={{ background: 'rgba(109, 40, 217, 0.15)', border: '1px solid rgba(139, 92, 246, 0.18)', width: '26px', height: '26px', minWidth: '26px', color: '#8b5cf6' }} className="rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">
@@ -156,7 +158,7 @@ function ActivityItem({ item, isLast, isNew }: { item: { id: string; agent_id: s
       </div>
     </div>
   )
-}
+})
 
 function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus }) {
   const cfg = {

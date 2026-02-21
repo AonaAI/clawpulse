@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { fetchKnowledge, createKnowledge, updateKnowledge, deleteKnowledge, upsertKnowledge } from '@/lib/supabase-client'
 import { AGENTS } from '@/lib/data'
+import { useDebounce } from '@/lib/useDebounce'
 import type { KnowledgeEntry, KnowledgeCategory } from '@/lib/types'
 
 const CATEGORIES: { value: KnowledgeCategory | 'all'; label: string; color: string; bg: string; border: string }[] = [
@@ -569,6 +570,7 @@ export default function KnowledgePage() {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([])
   const [filter, setFilter] = useState<KnowledgeCategory | 'all'>('all')
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState<KnowledgeEntry | null>(null)
   const [deletingEntry, setDeletingEntry] = useState<KnowledgeEntry | null>(null)
@@ -643,7 +645,7 @@ export default function KnowledgePage() {
 
   const filtered = entries.filter(e => {
     const matchCat = filter === 'all' || e.category === filter
-    const q = search.toLowerCase()
+    const q = debouncedSearch.toLowerCase()
     const matchSearch = !q || e.title.toLowerCase().includes(q) || e.content.toLowerCase().includes(q) || e.tags.some(t => t.toLowerCase().includes(q))
     return matchCat && matchSearch
   })

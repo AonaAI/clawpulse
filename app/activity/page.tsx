@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, memo } from 'react'
 import { fetchFullActivityLog, fetchSlackMessages } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { supabase } from '@/lib/supabase-client'
+import { useDebounce } from '@/lib/useDebounce'
 
 type EventType = 'task_started' | 'task_completed' | 'message_sent' | 'error' | 'deployment' | 'info' | 'warning' | 'analysis'
 type FeedFilter = 'all' | 'events' | 'messages'
@@ -157,6 +158,7 @@ export default function ActivityPage() {
   const [filterType, setFilterType] = useState<EventType | 'all'>('all')
   const [filterAgent, setFilterAgent] = useState<string>('all')
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -235,8 +237,8 @@ export default function ActivityPage() {
       if (filterType !== 'all') return false
     }
     if (filterAgent !== 'all' && getItemAgentName(item) !== filterAgent) return false
-    if (search) {
-      const q = search.toLowerCase()
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase()
       if (item._type === 'event') {
         if (!item.action.toLowerCase().includes(q) && !item.details.toLowerCase().includes(q) && !item.agent_name.toLowerCase().includes(q)) return false
       } else {
@@ -405,7 +407,7 @@ export default function ActivityPage() {
       <div className="flex items-center justify-between mb-4">
         <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium">
           {filtered.length} item{filtered.length !== 1 ? 's' : ''}
-          {filterType !== 'all' || filterAgent !== 'all' || search ? ' (filtered)' : ''}
+          {filterType !== 'all' || filterAgent !== 'all' || debouncedSearch ? ' (filtered)' : ''}
         </span>
       </div>
 

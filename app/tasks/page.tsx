@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, memo } from 'react'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
 import { AGENTS } from '@/lib/data'
 import { fetchTasks, createTask, updateTask, deleteTask } from '@/lib/supabase-client'
@@ -60,7 +60,7 @@ function IconButton({ onClick, title, children, danger }: { onClick: () => void;
 
 // ── Task Card ──────────────────────────────────────────────────────────────
 
-function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdit: (t: Task) => void; onDelete: (t: Task) => void }) {
+const TaskCard = memo(function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdit: (t: Task) => void; onDelete: (t: Task) => void }) {
   const agent = AGENTS.find(a => a.id === task.assigned_agent)
   const priorityColor = PRIORITY_CONFIG[task.priority].color
 
@@ -113,7 +113,7 @@ function TaskCard({ task, onEdit, onDelete }: { task: Task; onEdit: (t: Task) =>
       )}
     </div>
   )
-}
+})
 
 // ── Modal / Form ───────────────────────────────────────────────────────────
 

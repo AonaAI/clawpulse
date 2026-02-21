@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AGENTS, SAMPLE_TASKS, ACTIVITY_LOG } from '@/lib/data'
 import { fetchKnowledge, fetchFullActivityLog, fetchTasks } from '@/lib/supabase-client'
 import type { KnowledgeEntry, Task } from '@/lib/types'
+import { useDebounce } from '@/lib/useDebounce'
 
 interface SearchResult {
   type: 'agent' | 'task' | 'knowledge' | 'activity'
@@ -99,9 +100,11 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
     })
   }, [open])
 
+  const debouncedQuery = useDebounce(query, 300)
+
   const results = useMemo<SearchResult[]>(() => {
-    if (!query.trim()) return []
-    const q = query.trim()
+    if (!debouncedQuery.trim()) return []
+    const q = debouncedQuery.trim()
     const out: SearchResult[] = []
 
     // Agents
@@ -133,7 +136,7 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
     }
 
     return out.slice(0, 20)
-  }, [query, tasks, knowledge, activityItems])
+  }, [debouncedQuery, tasks, knowledge, activityItems])
 
   // Reset selection on results change
   useEffect(() => { setSelectedIndex(0) }, [results])

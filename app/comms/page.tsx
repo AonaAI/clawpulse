@@ -4,7 +4,12 @@ import { useEffect, useState, Component, type ReactNode } from 'react'
 import { AGENTS } from '@/lib/data'
 import { fetchHandoffs, fetchCronJobs } from '@/lib/supabase-client'
 import type { Task } from '@/lib/types'
-import AgentCommGraph from './AgentCommGraph'
+import dynamic from 'next/dynamic'
+
+const AgentCommGraph = dynamic(() => import('./AgentCommGraph'), {
+  loading: () => <div className="skeleton-shimmer" style={{ width: '100%', height: 400, borderRadius: 12 }} />,
+  ssr: false,
+})
 
 class GraphErrorBoundary extends Component<{children: ReactNode}, {error: string | null}> {
   constructor(props: {children: ReactNode}) {
