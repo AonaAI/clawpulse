@@ -7,6 +7,7 @@ import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
 import type { Task } from '@/lib/types'
 import { DateRangePicker, type DateRange, getPresetDates } from '@/components/DateRangePicker'
+import ExportButton, { exportToCSV } from '@/components/ExportButton'
 
 // ── Chart primitives ──────────────────────────────────────────────────────
 
@@ -277,7 +278,13 @@ export default function MetricsPage() {
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity</p>
         </div>
-        <LiveBadge connectionStatus={connectionStatus} />
+        <div className="flex items-center gap-2">
+          <ExportButton onExportCSV={() => exportToCSV('clawpulse-metrics',
+            ['Task', 'Agent', 'Status', 'Created', 'Updated'],
+            tasks.map(t => [t.title || t.id, t.assigned_agent || '', t.status, t.created_at, t.updated_at || ''])
+          )} />
+          <LiveBadge connectionStatus={connectionStatus} />
+        </div>
       </div>
 
       {/* Date Range Picker */}

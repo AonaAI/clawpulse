@@ -8,6 +8,7 @@ import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
 import dynamic from 'next/dynamic'
+import ExportButton from '@/components/ExportButton'
 import Sparkline from '@/components/Sparkline'
 
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), { ssr: false })
@@ -479,6 +480,11 @@ export default function OverviewPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      {/* Print Header */}
+      <div className="print-header" style={{ marginBottom: 24, borderBottom: '2px solid #7c3aed', paddingBottom: 12 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>ClawPulse — Dashboard Report</h1>
+        <p style={{ fontSize: 12, color: '#666' }}>Generated: {new Date().toLocaleString()}</p>
+      </div>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -486,6 +492,8 @@ export default function OverviewPage() {
             <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Overview</h1>
             <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
           </div>
+          <div className="flex items-center gap-2">
+          <ExportButton onPrintPDF={() => window.print()} />
           <button
             onClick={() => setShowCustomize(true)}
             style={{
@@ -500,6 +508,7 @@ export default function OverviewPage() {
             </svg>
             Customize
           </button>
+          </div>
         </div>
         {companyMission && (
           <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(109,40,217,0.2)', backdropFilter: 'blur(12px)' }} className="mt-4 rounded-xl px-5 py-3.5 flex items-start gap-3">

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { AGENTS } from '@/lib/data'
 import { fetchTasks, fetchTokenStatsByAgent, fetchActivityLog, fetchSessions } from '@/lib/supabase-client'
 import type { Task, ActivityLog } from '@/lib/types'
+import ExportButton, { exportToCSV } from '@/components/ExportButton'
 
 // ── Color palette for dark purple theme ──────────────────────────────────
 const PALETTE = [
@@ -357,13 +358,25 @@ export default function ComparePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">
-          Agent Comparison
-        </h1>
-        <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm mt-1">
-          Select 2–3 agents to compare metrics side by side
-        </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Agent Comparison
+          </h1>
+          <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm mt-1">
+            Select 2–3 agents to compare metrics side by side
+          </p>
+        </div>
+        <ExportButton onExportCSV={() => {
+          const agentNames = selected.map(id => AGENTS.find(a => a.id === id)?.name || id)
+          const rows = selected.map(id => {
+            const a = AGENTS.find(x => x.id === id)
+            const ts = tokenStats.find(t => t.agent_id === id)
+            const taskCount = tasks.filter(t => t.assigned_agent === id).length
+            return [a?.name || id, taskCount, ts?.total_tokens || 0, sessionCounts[id] || 0]
+          })
+          exportToCSV('clawpulse-compare', ['Agent', 'Tasks', 'Total Tokens', 'Sessions'], rows)
+        }} />
       </div>
 
       {/* Agent picker */}

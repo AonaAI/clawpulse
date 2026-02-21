@@ -6,6 +6,7 @@ import { AGENTS } from '@/lib/data'
 import { fetchTokenStatsByAgent, fetchAgentLiveStatus } from '@/lib/supabase-client'
 import { supabase } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
+import ExportButton, { exportToCSV } from '@/components/ExportButton'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
 
@@ -369,7 +370,13 @@ export default function AgentsPage() {
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Agent Registry</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">All agents in the ClawPulse network</p>
         </div>
-        <LiveBadge connectionStatus={connectionStatus} />
+        <div className="flex items-center gap-2">
+          <ExportButton onExportCSV={() => exportToCSV('clawpulse-agents',
+            ['Agent', 'Role', 'Status', 'Total Tokens', 'Total Cost'],
+            agents.map(a => [a.name, a.role || '', a.status || '', tokenMap[a.id]?.total_tokens || 0, tokenMap[a.id]?.total_cost || 0])
+          )} />
+          <LiveBadge connectionStatus={connectionStatus} />
+        </div>
       </div>
 
       {/* Summary pills */}

@@ -259,3 +259,72 @@ body {
   animation: shimmer 2s ease-in-out infinite;
   border-radius: 6px;
 }
+
+/* ── Export Button ────────────────────────────────────────────────── */
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--cp-card-border, rgba(139,92,246,0.15));
+  background: var(--cp-card-bg, rgba(139,92,246,0.06));
+  color: var(--cp-text-muted, #a78bfa);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.export-btn:hover {
+  background: rgba(139,92,246,0.15);
+  color: var(--cp-text-primary, #f8f4ff);
+  border-color: rgba(139,92,246,0.3);
+}
+.export-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  min-width: 150px;
+  background: #1a0a2e;
+  border: 1px solid rgba(139,92,246,0.25);
+  border-radius: 10px;
+  padding: 4px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.export-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #c4b5fd;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+.export-dropdown-item:hover {
+  background: rgba(139,92,246,0.15);
+  color: #f8f4ff;
+}
+
+/* ── Print Styles ─────────────────────────────────────────────────── */
+@media print {
+  body { background: white !important; color: black !important; }
+  .sidebar, nav, .export-btn, .export-dropdown,
+  .no-print, [class*="realtime-live"] { display: none !important; }
+  .print-header { display: block !important; }
+  * {
+    color: black !important;
+    border-color: #ddd !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+}
+.print-header {
+  display: none;
+}

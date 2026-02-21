@@ -5,6 +5,7 @@ import { fetchTokenSummary, fetchTokenStatsByAgent, fetchDailyTokenStats, fetchT
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { DateRangePicker, type DateRange, getPresetDates } from '@/components/DateRangePicker'
+import ExportButton, { exportToCSV } from '@/components/ExportButton'
 
 interface AgentStat { agent_id: string; agent_name: string; total_tokens: number; total_cost: number; model: string }
 interface DailyStat { date: string; total_tokens: number; total_cost: number }
@@ -135,9 +136,15 @@ export default function UsagePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Token Usage & Cost</h1>
-        <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Track token consumption and API costs across all agents</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Token Usage & Cost</h1>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Track token consumption and API costs across all agents</p>
+        </div>
+        <ExportButton onExportCSV={() => exportToCSV('clawpulse-usage',
+          ['Agent', 'Model', 'Input Tokens', 'Output Tokens', 'Total Tokens', 'Cost USD', 'Date'],
+          records.map(r => [r.agent_name, r.model, r.input_tokens, r.output_tokens, r.total_tokens, r.cost_usd, r.recorded_at])
+        )} />
       </div>
 
       {/* Date Range Picker */}

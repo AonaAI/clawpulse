@@ -6,6 +6,7 @@ import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { supabase } from '@/lib/supabase-client'
 import { useDebounce } from '@/lib/useDebounce'
+import ExportButton, { exportToCSV } from '@/components/ExportButton'
 
 type EventType = 'task_started' | 'task_completed' | 'message_sent' | 'error' | 'deployment' | 'info' | 'warning' | 'analysis'
 type FeedFilter = 'all' | 'events' | 'messages'
@@ -271,7 +272,13 @@ export default function ActivityPage() {
             {totalEvents > 0 && <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">· {totalEvents.toLocaleString()} events</span>}
           </p>
         </div>
-        <LiveBadge connectionStatus={connectionStatus} />
+        <div className="flex items-center gap-2">
+          <ExportButton onExportCSV={() => exportToCSV('clawpulse-activity',
+            ['Action', 'Agent', 'Details', 'Timestamp'],
+            events.map(e => [e.action || '', e.agent_name || e.agent_id || '', e.details || '', e.created_at || ''])
+          )} />
+          <LiveBadge connectionStatus={connectionStatus} />
+        </div>
       </div>
 
       {/* Feed type toggle: All / Events / Messages */}
