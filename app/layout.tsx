@@ -24,7 +24,7 @@ export default function RootLayout({
       <body className="antialiased" style={{ background: '#0a0118', color: '#f8f4ff' }}>
         <div className="flex min-h-screen" style={{ background: '#0a0118' }}>
           <Sidebar />
-          <main className="flex-1 overflow-auto" style={{ background: '#0a0118' }}>
+          <main className="flex-1 overflow-auto pt-16 md:pt-0" style={{ background: '#0a0118' }}>
             {children}
           </main>
         </div>

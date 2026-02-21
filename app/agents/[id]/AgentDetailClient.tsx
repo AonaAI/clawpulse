@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
-import { supabase } from '@/lib/supabase-client'
-import type { AgentStatus, Task } from '@/lib/types'
+import { supabase, fetchSessions } from '@/lib/supabase-client'
+import type { AgentStatus, Task, Session } from '@/lib/types'
 
 type EventType = 'task_started' | 'task_completed' | 'message_sent' | 'error' | 'deployment' | 'info' | 'warning' | 'analysis'
 
@@ -33,6 +33,7 @@ interface AgentDetailData {
   activity: ActivityItem[]
   tasks: Task[]
   weeklyStats: DailyTokenStat[]
+  sessions: Session[]
 }
 
 function detectEventType(action: string): EventType {
@@ -56,6 +57,12 @@ const EVENT_CONFIG: Record<EventType, { color: string; bg: string; border: strin
   warning: { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)', label: 'Warning' },
   analysis: { color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', label: 'Analysis' },
   info: { color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.25)', label: 'Info' },
+}
+
+const SESSION_STATUS_CONFIG = {
+  active: { color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', label: 'Active' },
+  completed: { color: '#22d3ee', bg: 'rgba(34,211,238,0.08)', border: 'rgba(34,211,238,0.2)', label: 'Completed' },
+  failed: { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', label: 'Failed' },
 }
 
 const TASK_STATUS_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
@@ -101,6 +108,11 @@ function formatTimestamp(iso: string): string {
   return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
+function formatSessionDate(iso: string): string {
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 function StatusBadge({ status }: { status: AgentStatus }) {
   const cfg = {
     working: { dot: '#34d399', text: 'Working', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)', pulse: true },
@@ -144,10 +156,10 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
         border: '1px solid rgba(109,40,217,0.14)',
         backdropFilter: 'blur(12px)',
       }}
-      className="rounded-xl p-5"
+      className="rounded-xl p-4 sm:p-5"
     >
       <div style={{ color: '#4b5563' }} className="text-xs font-semibold uppercase tracking-wider mb-2">{label}</div>
-      <div style={{ color }} className="text-2xl font-bold tracking-tight">{value}</div>
+      <div style={{ color }} className="text-xl sm:text-2xl font-bold tracking-tight">{value}</div>
       {sub && <div style={{ color: '#4b5563' }} className="text-xs font-medium mt-1">{sub}</div>}
     </div>
   )
@@ -162,6 +174,72 @@ function buildWeeklyChart(stats: DailyTokenStat[]): DailyTokenStat[] {
     days.push(map.get(key) ?? { date: key, total_tokens: 0, total_cost: 0 })
   }
   return days
+}
+
+function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) {
+  const statusCfg = SESSION_STATUS_CONFIG[session.status] || SESSION_STATUS_CONFIG.completed
+  const heartbeatAge = session.status === 'active'
+    ? Date.now() - new Date(session.started_at).getTime()
+    : null
+  const isRecentHeartbeat = heartbeatAge !== null && heartbeatAge < 5 * 60 * 1000
+
+  return (
+    <div
+      className="px-4 sm:px-5 py-4 flex items-start gap-3"
+      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
+    >
+      {/* Timeline dot */}
+      <div className="flex flex-col items-center gap-1 flex-shrink-0 mt-1">
+        <div
+          style={{ background: statusCfg.color }}
+          className={`w-2 h-2 rounded-full ${isRecentHeartbeat ? 'status-glow-working' : ''}`}
+        />
+        {!isLast && <div style={{ background: 'rgba(255,255,255,0.06)', width: '1px', height: '24px' }} />}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2 flex-wrap mb-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              style={{ background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}`, fontSize: '10px' }}
+              className="px-2 py-0.5 rounded-full font-bold whitespace-nowrap"
+            >
+              {statusCfg.label}
+            </span>
+            {isRecentHeartbeat && (
+              <span style={{ color: '#34d399', fontSize: '10px' }} className="font-semibold">● live</span>
+            )}
+          </div>
+          <span style={{ color: '#374151', fontSize: '11px' }} className="font-mono flex-shrink-0">
+            {formatSessionDate(session.started_at)}
+          </span>
+        </div>
+
+        {session.summary && (
+          <p style={{ color: '#9ca3af', fontSize: '13px', lineHeight: '1.5' }} className="mb-2">{session.summary}</p>
+        )}
+
+        <div className="flex items-center gap-3 flex-wrap">
+          {session.duration_minutes != null && (
+            <span style={{ color: '#6b7280' }} className="text-xs font-medium">
+              <span style={{ color: '#4b5563' }}>Duration</span> {session.duration_minutes}m
+            </span>
+          )}
+          {session.tokens_used > 0 && (
+            <span style={{ color: '#8b5cf6' }} className="text-xs font-semibold">
+              {formatTokens(session.tokens_used)} tokens
+            </span>
+          )}
+          {session.cost_usd > 0 && (
+            <span style={{ color: '#4b5563' }} className="text-xs">
+              {formatCost(Number(session.cost_usd))}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function AgentDetailClient({ id }: { id: string }) {
@@ -183,6 +261,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
         activityRes,
         tasksRes,
         liveRes,
+        sessionsData,
       ] = await Promise.all([
         supabase.from('agents').select('mission').eq('id', agentId).single(),
         supabase.from('token_usage').select('total_tokens, cost_usd').eq('agent_id', agentId),
@@ -201,6 +280,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
           .eq('assigned_agent', agentId)
           .order('updated_at', { ascending: false }),
         fetch('/api/agents').then(r => r.ok ? r.json() : []).catch(() => []),
+        fetchSessions(agentId, 20),
       ])
 
       const allTokenRows = tokenAllRes.data || []
@@ -223,7 +303,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
       const liveAgents = Array.isArray(liveRes) ? liveRes : []
       const live = liveAgents.find((a: { dir: string }) => a.dir === agentDir)
       const status: AgentStatus = live?.status ?? 'offline'
-      const sessionCount: number = live?.sessionCount ?? allTokenRows.length
+      const sessionCount: number = live?.sessionCount ?? (sessionsData.length || allTokenRows.length)
 
       setData({
         mission: missionRes.data?.mission ?? null,
@@ -235,6 +315,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
         activity: (activityRes.data || []) as ActivityItem[],
         tasks,
         weeklyStats: Array.from(weekMap.values()),
+        sessions: sessionsData as Session[],
       })
       setLoading(false)
     }
@@ -244,7 +325,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
 
   if (!agent) {
     return (
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
         <Link href="/agents" style={{ color: '#6b7280' }} className="text-sm font-medium flex items-center gap-1.5 mb-6 hover:text-purple-400 transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 5l-7 7 7 7" />
@@ -260,8 +341,16 @@ export default function AgentDetailClient({ id }: { id: string }) {
   const weeklyChart = data ? buildWeeklyChart(data.weeklyStats) : buildWeeklyChart([])
   const maxWeekTokens = Math.max(...weeklyChart.map(d => d.total_tokens), 1)
 
+  // Session stats
+  const sessions = data?.sessions ?? []
+  const completedSessions = sessions.filter(s => s.status === 'completed')
+  const avgDuration = completedSessions.length > 0
+    ? Math.round(completedSessions.reduce((s, r) => s + (r.duration_minutes ?? 0), 0) / completedSessions.length)
+    : 0
+  const sessionTokens = sessions.reduce((s, r) => s + (r.tokens_used ?? 0), 0)
+
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Back link */}
       <Link
         href="/agents"
@@ -282,9 +371,9 @@ export default function AgentDetailClient({ id }: { id: string }) {
           backdropFilter: 'blur(12px)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
         }}
-        className="rounded-2xl p-6 mb-6"
+        className="rounded-2xl p-4 sm:p-6 mb-6"
       >
-        <div className="flex items-start gap-5 flex-wrap">
+        <div className="flex items-start gap-4 sm:gap-5 flex-wrap">
           {/* Avatar */}
           <div
             style={{
@@ -294,9 +383,9 @@ export default function AgentDetailClient({ id }: { id: string }) {
               color: '#c4b5fd',
               fontSize: '28px',
               fontWeight: 700,
-              width: '80px',
-              height: '80px',
-              minWidth: '80px',
+              width: '72px',
+              height: '72px',
+              minWidth: '72px',
             }}
             className="rounded-2xl flex items-center justify-center flex-shrink-0"
           >
@@ -306,10 +395,10 @@ export default function AgentDetailClient({ id }: { id: string }) {
           {/* Name + role + badges */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <h1 style={{ color: '#f8f4ff' }} className="text-2xl font-bold tracking-tight">{agent.name}</h1>
+              <h1 style={{ color: '#f8f4ff' }} className="text-xl sm:text-2xl font-bold tracking-tight">{agent.name}</h1>
               {data && <StatusBadge status={data.status} />}
             </div>
-            <div style={{ color: '#9ca3af' }} className="text-base font-medium mb-3">{agent.role}</div>
+            <div style={{ color: '#9ca3af' }} className="text-sm sm:text-base font-medium mb-3">{agent.role}</div>
             <div className="flex items-center gap-2 flex-wrap">
               <ModelBadge model={agent.model} />
               <span
@@ -338,7 +427,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <StatCard
           label="Sessions"
           value={loading ? '—' : String(data?.sessionCount ?? 0)}
@@ -367,14 +456,60 @@ export default function AgentDetailClient({ id }: { id: string }) {
 
       {/* Main content */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left: Activity feed + chart */}
+        {/* Left: Session history + chart + activity */}
         <div className="xl:col-span-2 space-y-6">
+          {/* Session History */}
+          <div
+            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
+            className="rounded-xl overflow-hidden"
+          >
+            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Session History</h2>
+                  <p style={{ color: '#4b5563' }} className="text-xs mt-0.5">
+                    {loading ? '—' : `${sessions.length} sessions`}
+                  </p>
+                </div>
+                {/* Session stats */}
+                {!loading && sessions.length > 0 && (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {avgDuration > 0 && (
+                      <div className="text-right">
+                        <div style={{ color: '#4b5563' }} className="text-xs">Avg duration</div>
+                        <div style={{ color: '#8b5cf6' }} className="text-sm font-bold">{avgDuration}m</div>
+                      </div>
+                    )}
+                    {sessionTokens > 0 && (
+                      <div className="text-right">
+                        <div style={{ color: '#4b5563' }} className="text-xs">Session tokens</div>
+                        <div style={{ color: '#22d3ee' }} className="text-sm font-bold">{formatTokens(sessionTokens)}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {loading ? (
+              <div style={{ color: '#4b5563' }} className="text-sm text-center py-10">Loading…</div>
+            ) : sessions.length === 0 ? (
+              <div style={{ color: '#4b5563' }} className="text-sm text-center py-10">No sessions recorded yet</div>
+            ) : (
+              <div>
+                {sessions.map((session, i) => (
+                  <SessionRow key={session.id} session={session} isLast={i === sessions.length - 1} />
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* 7-day token chart */}
           <div
             style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
-            className="rounded-xl p-5"
+            className="rounded-xl p-4 sm:p-5"
           >
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
               <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">7-Day Token Usage</h2>
               {data && data.weeklyStats.length > 0 && (
                 <span style={{ color: '#4b5563' }} className="text-xs font-medium">
@@ -394,10 +529,10 @@ export default function AgentDetailClient({ id }: { id: string }) {
                   return (
                     <div key={day.date}>
                       <div className="flex items-center mb-1">
-                        <span style={{ color: '#6b7280' }} className="text-xs font-medium w-16 flex-shrink-0">
+                        <span style={{ color: '#6b7280' }} className="text-xs font-medium w-14 sm:w-16 flex-shrink-0">
                           {formatDate(day.date)}
                         </span>
-                        <div className="flex-1 mx-3" style={{ background: 'rgba(255,255,255,0.05)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}>
+                        <div className="flex-1 mx-2 sm:mx-3" style={{ background: 'rgba(255,255,255,0.05)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}>
                           <div
                             style={{
                               width: `${pct}%`,
@@ -408,7 +543,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                             }}
                           />
                         </div>
-                        <div className="text-right flex-shrink-0" style={{ minWidth: '88px' }}>
+                        <div className="text-right flex-shrink-0" style={{ minWidth: '72px' }}>
                           <span style={{ color: '#e9e2ff' }} className="text-xs font-bold">
                             {day.total_tokens > 0 ? formatTokens(day.total_tokens) : '—'}
                           </span>
@@ -429,7 +564,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
             style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl overflow-hidden"
           >
-            <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
               <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Recent Activity</h2>
               <p style={{ color: '#4b5563' }} className="text-xs mt-0.5">Last 50 events</p>
             </div>
@@ -447,7 +582,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                   return (
                     <div
                       key={event.id}
-                      className="px-5 py-3.5 flex items-start gap-3"
+                      className="px-4 sm:px-5 py-3.5 flex items-start gap-3"
                       style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
                     >
                       <span
@@ -481,7 +616,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
             style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl overflow-hidden"
           >
-            <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
               <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base">Assigned Tasks</h2>
               <p style={{ color: '#4b5563' }} className="text-xs mt-0.5">
                 {loading ? '—' : `${data?.tasks.length ?? 0} tasks`}
@@ -501,7 +636,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                   return (
                     <div
                       key={task.id}
-                      className="px-5 py-3.5"
+                      className="px-4 sm:px-5 py-3.5"
                       style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1">
@@ -529,7 +664,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
           {agent.slack_channels.length > 0 && (
             <div
               style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
-              className="rounded-xl p-5"
+              className="rounded-xl p-4 sm:p-5"
             >
               <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base mb-4">Slack Channels</h2>
               <div className="space-y-2">
@@ -553,7 +688,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
           {agent.spawn_permissions.length > 0 && (
             <div
               style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(109,40,217,0.14)', backdropFilter: 'blur(12px)' }}
-              className="rounded-xl p-5"
+              className="rounded-xl p-4 sm:p-5"
             >
               <h2 style={{ color: '#f0ebff' }} className="font-semibold text-base mb-4">Can Spawn</h2>
               <div className="flex flex-wrap gap-2">
@@ -564,7 +699,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                       key={spawnId}
                       href={`/agents/${spawnId}`}
                       style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.22)' }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-purple-500/20 transition-colors"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-purple-500/20 transition-colors min-h-[36px] flex items-center"
                     >
                       {target?.name ?? spawnId}
                     </Link>

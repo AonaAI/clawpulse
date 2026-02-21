@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { AGENTS } from '@/lib/data'
 
 const navItems = [
@@ -108,19 +109,11 @@ const navItems = [
   },
 ]
 
-export default function Sidebar() {
+function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const pathname = usePathname()
 
   return (
-    <aside
-      style={{
-        background: 'linear-gradient(180deg, #0e0120 0%, #080112 100%)',
-        borderRight: '1px solid rgba(109, 40, 217, 0.18)',
-        width: '240px',
-        minWidth: '240px',
-      }}
-      className="flex flex-col h-screen sticky top-0"
-    >
+    <div className="flex flex-col h-full">
       {/* Logo */}
       <div style={{ borderBottom: '1px solid rgba(109, 40, 217, 0.12)' }} className="px-5 py-5">
         <div className="flex items-center gap-3">
@@ -148,7 +141,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         <div style={{ color: '#3b1d6e' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
           Navigation
         </div>
@@ -158,6 +151,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavClick}
               style={
                 isActive
                   ? {
@@ -168,7 +162,7 @@ export default function Sidebar() {
                     }
                   : { color: '#7c5fa0', borderLeft: '2px solid transparent' }
               }
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 min-h-[44px]"
               onMouseEnter={e => {
                 if (!isActive) {
                   const el = e.currentTarget as HTMLElement
@@ -218,6 +212,98 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-    </aside>
+    </div>
+  )
+}
+
+export default function Sidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Close on route change
+  const pathname = usePathname()
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside
+        style={{
+          background: 'linear-gradient(180deg, #0e0120 0%, #080112 100%)',
+          borderRight: '1px solid rgba(109, 40, 217, 0.18)',
+          width: '240px',
+          minWidth: '240px',
+        }}
+        className="hidden md:flex flex-col h-screen sticky top-0"
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile: hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open navigation"
+        style={{
+          background: 'rgba(109, 40, 217, 0.15)',
+          border: '1px solid rgba(139, 92, 246, 0.25)',
+          backdropFilter: 'blur(12px)',
+        }}
+        className="md:hidden fixed top-4 left-4 z-40 w-11 h-11 rounded-xl flex items-center justify-center"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+
+      {/* Mobile: backdrop */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)' }}
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Mobile: drawer */}
+      <aside
+        style={{
+          background: 'linear-gradient(180deg, #0e0120 0%, #080112 100%)',
+          borderRight: '1px solid rgba(109, 40, 217, 0.25)',
+          width: '280px',
+          transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: mobileOpen ? '4px 0 32px rgba(0,0,0,0.6)' : 'none',
+        }}
+        className="md:hidden fixed left-0 top-0 h-full z-50"
+      >
+        {/* Close button */}
+        <button
+          onClick={() => setMobileOpen(false)}
+          aria-label="Close navigation"
+          style={{ color: '#6b7280' }}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+        <SidebarContent onNavClick={() => setMobileOpen(false)} />
+      </aside>
+    </>
   )
 }

@@ -338,7 +338,7 @@ export default function AgentsPage() {
   const offline = agents.filter(a => a.status === 'offline').length
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 style={{ color: '#f8f4ff' }} className="text-3xl font-bold tracking-tight">Agent Registry</h1>

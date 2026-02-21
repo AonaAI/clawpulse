@@ -351,6 +351,23 @@ export async function updateAgentMission(agentId: string, mission: string): Prom
   return true
 }
 
+// ── Sessions ─────────────────────────────────────────────────────────────────
+
+export async function fetchSessions(agentId: string, limit = 20) {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('started_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('Error fetching sessions:', error)
+    return []
+  }
+  return data || []
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(date: Date): string {

@@ -85,3 +85,18 @@ export interface DailyTokenStats {
   total_tokens: number
   total_cost: number
 }
+
+export type SessionStatus = 'active' | 'completed' | 'failed'
+
+export interface Session {
+  id: string
+  agent_id: string
+  started_at: string
+  ended_at: string | null
+  duration_minutes: number | null
+  tokens_used: number
+  cost_usd: number
+  summary: string | null
+  status: SessionStatus
+  created_at: string
+}
