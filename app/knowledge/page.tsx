@@ -279,6 +279,290 @@ function DeleteConfirm({ entry, onClose, onConfirm }: { entry: KnowledgeEntry | 
   )
 }
 
+// ── Webhook API Docs ───────────────────────────────────────────────────────
+
+const FUNCTION_URL = 'https://<project-ref>.supabase.co/functions/v1/update-agent-status'
+
+const CODE_EXAMPLES = [
+  {
+    label: 'Set status',
+    code: `curl -X POST ${FUNCTION_URL} \\
+  -H "Authorization: Bearer <WEBHOOK_API_KEY>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "agent_id": "main",
+    "status": "working",
+    "current_task": "Refactoring auth module"
+  }'`,
+  },
+  {
+    label: 'With metadata',
+    code: `curl -X POST ${FUNCTION_URL} \\
+  -H "Authorization: Bearer <WEBHOOK_API_KEY>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "agent_id": "coder",
+    "status": "idle",
+    "current_task": null,
+    "metadata": {
+      "last_repo": "clawpulse",
+      "exit_code": 0
+    }
+  }'`,
+  },
+  {
+    label: 'Task only (no status change)',
+    code: `curl -X POST ${FUNCTION_URL} \\
+  -H "Authorization: Bearer <WEBHOOK_API_KEY>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "agent_id": "researcher",
+    "current_task": "Summarising weekly reports"
+  }'`,
+  },
+]
+
+function WebhookApiDocs() {
+  const [open, setOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState(0)
+  const [copied, setCopied] = useState<number | null>(null)
+
+  const copy = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(idx)
+      setTimeout(() => setCopied(null), 2000)
+    })
+  }
+
+  return (
+    <div
+      style={{
+        background: 'var(--cp-card-bg)',
+        border: '1px solid rgba(109,40,217,0.18)',
+        backdropFilter: 'blur(12px)',
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginTop: 40,
+      }}
+    >
+      {/* Collapsible header */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-6 py-5 text-left"
+        style={{ background: 'transparent' }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(139,92,246,0.2)', width: 34, height: 34 }}
+            className="rounded-lg flex items-center justify-center flex-shrink-0"
+          >
+            <svg width="16" height="16" fill="none" stroke="#8b5cf6" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <div>
+            <h2 style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-base">Webhook API</h2>
+            <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium mt-0.5">
+              Update agent status from external scripts via Supabase Edge Function
+            </p>
+          </div>
+        </div>
+        <svg
+          width="16" height="16" fill="none" stroke="#6b7280" strokeWidth="2" viewBox="0 0 24 24"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{ borderTop: '1px solid rgba(109,40,217,0.12)' }}>
+          {/* Endpoint */}
+          <div className="px-6 py-5 space-y-5">
+            <div>
+              <p style={{ color: 'var(--cp-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                Endpoint
+              </p>
+              <div
+                style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(109,40,217,0.16)',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  fontFamily: 'monospace',
+                  fontSize: 13,
+                  color: '#a78bfa',
+                  wordBreak: 'break-all',
+                }}
+              >
+                <span style={{ color: '#34d399', fontWeight: 700, marginRight: 8 }}>POST</span>
+                {FUNCTION_URL}
+              </div>
+            </div>
+
+            {/* Auth */}
+            <div>
+              <p style={{ color: 'var(--cp-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                Authentication
+              </p>
+              <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(109,40,217,0.12)', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
+                <span style={{ color: '#9ca3af' }}>Header: </span>
+                <span style={{ color: '#fbbf24', fontFamily: 'monospace' }}>Authorization: Bearer {'<WEBHOOK_API_KEY>'}</span>
+              </div>
+              <p style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
+                Set <code style={{ fontFamily: 'monospace', color: '#a78bfa' }}>WEBHOOK_API_KEY</code> as a Supabase secret:
+                {' '}<code style={{ fontFamily: 'monospace', color: '#9ca3af' }}>supabase secrets set WEBHOOK_API_KEY=your-key</code>
+              </p>
+            </div>
+
+            {/* Fields table */}
+            <div>
+              <p style={{ color: 'var(--cp-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                Request body (JSON)
+              </p>
+              <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(109,40,217,0.12)', borderRadius: 8, overflow: 'hidden' }}>
+                <table style={{ width: '100%', fontSize: 12.5, borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+                      {['Field', 'Type', 'Required', 'Description'].map(h => (
+                        <th key={h} style={{ color: '#6b7280', fontWeight: 700, textAlign: 'left', padding: '8px 14px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { field: 'agent_id', type: 'string', req: true, desc: 'ID of the agent to update (must exist in agents table)' },
+                      { field: 'status', type: 'string', req: false, desc: 'idle | working | offline | waiting' },
+                      { field: 'current_task', type: 'string', req: false, desc: 'Human-readable description of what the agent is doing' },
+                      { field: 'metadata', type: 'object', req: false, desc: 'Arbitrary JSON stored on the agent row and logged to activity_log' },
+                    ].map((row, i) => (
+                      <tr key={row.field} style={{ borderTop: i > 0 ? '1px solid rgba(109,40,217,0.08)' : undefined }}>
+                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: '#a78bfa', fontWeight: 600 }}>{row.field}</td>
+                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: '#9ca3af' }}>{row.type}</td>
+                        <td style={{ padding: '8px 14px' }}>
+                          <span style={{
+                            background: row.req ? 'rgba(52,211,153,0.08)' : 'rgba(107,114,128,0.08)',
+                            color: row.req ? '#34d399' : '#6b7280',
+                            border: `1px solid ${row.req ? 'rgba(52,211,153,0.2)' : 'rgba(107,114,128,0.15)'}`,
+                            borderRadius: 99, padding: '1px 8px', fontSize: 11, fontWeight: 700,
+                          }}>
+                            {row.req ? 'required' : 'optional'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '8px 14px', color: '#9ca3af' }}>{row.desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Response codes */}
+            <div>
+              <p style={{ color: 'var(--cp-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                Response codes
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { code: '200', label: 'OK', color: '#34d399' },
+                  { code: '400', label: 'Bad request / missing fields', color: '#fbbf24' },
+                  { code: '401', label: 'Invalid API key', color: '#f87171' },
+                  { code: '404', label: 'Agent not found', color: '#f87171' },
+                ].map(r => (
+                  <div
+                    key={r.code}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid rgba(109,40,217,0.12)`, borderRadius: 8, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <span style={{ fontFamily: 'monospace', color: r.color, fontWeight: 700, fontSize: 13 }}>{r.code}</span>
+                    <span style={{ color: '#9ca3af', fontSize: 12 }}>{r.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Code examples with tabs */}
+            <div>
+              <p style={{ color: 'var(--cp-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                Examples
+              </p>
+              {/* Tabs */}
+              <div className="flex gap-1 mb-3 flex-wrap">
+                {CODE_EXAMPLES.map((ex, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveTab(i)}
+                    style={{
+                      background: activeTab === i ? 'rgba(124,58,237,0.16)' : 'rgba(0,0,0,0.2)',
+                      border: `1px solid ${activeTab === i ? 'rgba(139,92,246,0.35)' : 'rgba(109,40,217,0.12)'}`,
+                      color: activeTab === i ? '#a78bfa' : '#6b7280',
+                      borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600,
+                    }}
+                  >
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
+              {/* Code block */}
+              <div style={{ position: 'relative' }}>
+                <pre
+                  style={{
+                    background: 'rgba(0,0,0,0.4)',
+                    border: '1px solid rgba(109,40,217,0.16)',
+                    borderRadius: 10,
+                    padding: '16px 18px',
+                    fontFamily: 'monospace',
+                    fontSize: 12.5,
+                    color: '#d1d5db',
+                    overflowX: 'auto',
+                    lineHeight: 1.7,
+                    margin: 0,
+                    whiteSpace: 'pre',
+                  }}
+                >
+                  {CODE_EXAMPLES[activeTab].code}
+                </pre>
+                <button
+                  onClick={() => copy(CODE_EXAMPLES[activeTab].code, activeTab)}
+                  style={{
+                    position: 'absolute', top: 10, right: 10,
+                    background: 'rgba(109,40,217,0.2)', border: '1px solid rgba(139,92,246,0.25)',
+                    color: copied === activeTab ? '#34d399' : '#a78bfa',
+                    borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  {copied === activeTab ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            {/* Deploy note */}
+            <div
+              style={{
+                background: 'rgba(251,191,36,0.05)',
+                border: '1px solid rgba(251,191,36,0.15)',
+                borderRadius: 10,
+                padding: '12px 16px',
+                fontSize: 12.5,
+                color: '#9ca3af',
+              }}
+            >
+              <span style={{ color: '#fbbf24', fontWeight: 700 }}>Deploy: </span>
+              Run{' '}
+              <code style={{ fontFamily: 'monospace', color: '#a78bfa' }}>
+                supabase functions deploy update-agent-status
+              </code>{' '}
+              then set your secret with{' '}
+              <code style={{ fontFamily: 'monospace', color: '#a78bfa' }}>
+                supabase secrets set WEBHOOK_API_KEY=your-secret-key
+              </code>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────
 
 export default function KnowledgePage() {
@@ -534,6 +818,8 @@ export default function KnowledgePage() {
 
       <KnowledgeModal open={modalOpen} entry={editingEntry} onClose={() => { setModalOpen(false); setEditingEntry(null) }} onSave={handleSave} />
       <DeleteConfirm entry={deletingEntry} onClose={() => setDeletingEntry(null)} onConfirm={handleDelete} />
+
+      <WebhookApiDocs />
     </div>
   )
 }
