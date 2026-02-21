@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
-import { fetchTokenStatsByAgent } from '@/lib/supabase-client'
+import { fetchTokenStatsByAgent, fetchAgentLiveStatus } from '@/lib/supabase-client'
 import { supabase } from '@/lib/supabase-client'
 import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
 
-const POLL_INTERVAL = 30_000
+const POLL_INTERVAL = 10_000
 
 function formatLastActive(ms: number | null): string {
   if (ms === null) return 'Never'
@@ -304,9 +304,7 @@ export default function AgentsPage() {
   useEffect(() => {
     async function fetchAgentsLive() {
       try {
-        const res = await fetch('/api/agents')
-        if (!res.ok) throw new Error('non-ok response')
-        const live = await res.json()
+        const live = await fetchAgentLiveStatus()
         setAgents(mergeLiveData(live))
         setApiError(false)
       } catch {

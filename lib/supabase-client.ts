@@ -368,6 +368,39 @@ export async function fetchSessions(agentId: string, limit = 20) {
   return data || []
 }
 
+// ── Live Agent Status ──────────────────────────────────────────────────────
+
+export async function fetchAgentLiveStatus() {
+  const { data, error } = await supabase
+    .from('agents')
+    .select('id, status, last_activity, current_task')
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching agent live status:', error)
+    return []
+  }
+
+  return (data || []).map(a => {
+    // current_task stores JSON metadata: { sessionCount, totalTokens }
+    let sessionCount = 0
+    let totalTokens = 0
+    try {
+      const meta = JSON.parse(a.current_task || '{}')
+      sessionCount = meta.sessionCount || 0
+      totalTokens = meta.totalTokens || 0
+    } catch { /* not JSON, ignore */ }
+
+    return {
+      dir: a.id,
+      status: a.status || 'offline',
+      sessionCount,
+      lastActive: a.last_activity ? new Date(a.last_activity).getTime() : null,
+      totalTokens,
+    }
+  })
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(date: Date): string {

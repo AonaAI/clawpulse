@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ai.clawpulse.status-pusher</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/npx</string>
+        <string>tsx</string>
+        <string>/Users/bastien/Documents/Code/clawpulse/scripts/push-agent-status.ts</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/bastien/Documents/Code/clawpulse</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StartInterval</key>
+    <integer>30</integer>
+    <key>KeepAlive</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/tmp/clawpulse-status-pusher.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/clawpulse-status-pusher.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
