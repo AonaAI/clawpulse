@@ -489,6 +489,36 @@ export async function createSpawnRequest(req: { agent_id: string; task: string; 
   return data
 }
 
+// ── Agent Sparklines ────────────────────────────────────────────────────────
+
+/**
+ * Returns 24-bucket hourly activity counts per agent for the last 24 hours.
+ * Index 0 = 23 hours ago, index 23 = the current (most recent) hour.
+ */
+export async function fetchAgentSparklines(): Promise<Record<string, number[]>> {
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('agent_id, created_at')
+    .gte('created_at', since)
+
+  if (error || !data) return {}
+
+  const now = Date.now()
+  const result: Record<string, number[]> = {}
+
+  for (const row of data) {
+    const agentId = row.agent_id
+    if (!result[agentId]) result[agentId] = new Array(24).fill(0)
+    const msSince = now - new Date(row.created_at).getTime()
+    const hoursAgo = Math.floor(msSince / 3_600_000)
+    const bucket = 23 - hoursAgo // 0 = oldest hour, 23 = most recent
+    if (bucket >= 0 && bucket < 24) result[agentId][bucket]++
+  }
+
+  return result
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatTimeAgo(date: Date): string {

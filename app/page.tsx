@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
-import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus } from '@/lib/supabase-client'
+import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
 import CustomizePanel from '@/components/widgets/CustomizePanel'
 import SpawnModal from '@/components/SpawnModal'
+import Sparkline from '@/components/Sparkline'
 import QuickActionsWidget from '@/components/widgets/QuickActionsWidget'
 import CostSummaryWidget from '@/components/widgets/CostSummaryWidget'
 import RecentDeploymentsWidget from '@/components/widgets/RecentDeploymentsWidget'
@@ -61,7 +62,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
   )
 }
 
-function AgentCard({ agent, compact, onSpawn }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void }) {
+function AgentCard({ agent, compact, onSpawn, sparkline }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void; sparkline?: number[] }) {
   const initials = agent.name.slice(0, 2).toUpperCase()
   const isWorking = agent.status === 'working'
 
@@ -129,8 +130,11 @@ function AgentCard({ agent, compact, onSpawn }: { agent: MergedAgent; compact?: 
           <StatusBadge status={agent.status} />
         </div>
       </div>
-      <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">
-        {agent.sessionCount > 0 ? `${agent.sessionCount} sessions · last ${formatLastActive(agent.lastActive)}` : 'No sessions'}
+      <div className="flex items-end justify-between gap-2">
+        <div style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">
+          {agent.sessionCount > 0 ? `${agent.sessionCount} sessions · last ${formatLastActive(agent.lastActive)}` : 'No sessions'}
+        </div>
+        {sparkline && <Sparkline data={sparkline} />}
       </div>
     </div>
   )
@@ -183,6 +187,7 @@ export default function OverviewPage() {
   const [spawnAgent, setSpawnAgent] = useState<MergedAgent | null>(null)
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [sparklines, setSparklines] = useState<Record<string, number[]>>({})
 
   // Load widget layout from localStorage
   useEffect(() => {
@@ -212,14 +217,16 @@ export default function OverviewPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [tasksData, activityData, missionValue] = await Promise.all([
+      const [tasksData, activityData, missionValue, sparklinesData] = await Promise.all([
         fetchTasks(),
         fetchActivityLog(8),
         fetchSetting('company_mission'),
+        fetchAgentSparklines(),
       ])
       setTasks(tasksData)
       setActivity(activityData)
       if (missionValue) setCompanyMission(missionValue)
+      setSparklines(sparklinesData)
     }
     loadData()
   }, [])
@@ -338,7 +345,7 @@ export default function OverviewPage() {
               </div>
             </div>
             <div className={`grid ${compact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}`}>
-              {agents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} />)}
+              {agents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} sparkline={sparklines[agent.id]} />)}
             </div>
           </div>
         )
