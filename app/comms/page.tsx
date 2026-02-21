@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { AGENTS } from '@/lib/data'
 import { fetchHandoffs } from '@/lib/supabase-client'
 import type { Task } from '@/lib/types'
+import AgentCommGraph from './AgentCommGraph'
 
 // ── Static cron job data ──────────────────────────────────────────────────
 
@@ -131,6 +132,15 @@ export default function CommsPage() {
       </div>
 
       <div className="space-y-10">
+        {/* ── 0. Agent Communication Graph ─────────────────────────── */}
+        <section>
+          <SectionHeader
+            title="Agent Communication Graph"
+            subtitle="Spawn permissions and shared Slack channels between agents"
+          />
+          <AgentCommGraph />
+        </section>
+
         {/* ── 1. Slack Channel Map ─────────────────────────────────── */}
         <section>
           <SectionHeader
