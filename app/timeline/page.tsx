@@ -115,7 +115,9 @@ export default function TimelinePage() {
 
   // Filters
   const [selectedAgents, setSelectedAgents] = useState<string[]>([])
-  const [selectedTypes, setSelectedTypes] = useState<ActionType[]>([])
+  const [selectedTypes, setSelectedTypes] = useState<ActionType[]>(
+    ALL_ACTION_TYPES.filter(t => t !== 'tool_call')
+  )
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
 

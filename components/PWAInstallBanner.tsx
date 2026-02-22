@@ -53,9 +53,8 @@ export default function PWAInstallBanner() {
       style={{
         position: 'fixed',
         bottom: '1.25rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 9999,
+        right: '1.25rem',
+        zIndex: 50,
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem',

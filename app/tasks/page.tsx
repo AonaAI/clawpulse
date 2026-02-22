@@ -390,11 +390,10 @@ export default function TasksPage() {
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       style={{
-                        background: snapshot.isDraggingOver ? `${col.color}08` : 'rgba(10, 1, 24, 0.55)',
+                        background: snapshot.isDraggingOver ? `${col.color}08` : 'rgba(10, 1, 24, 0.85)',
                         border: `1px solid ${snapshot.isDraggingOver ? col.color + '30' : col.border}`,
                         borderTop: '1px solid rgba(255, 255, 255, 0.04)',
                         borderRadius: '0 0 12px 12px',
-                        backdropFilter: 'blur(12px)',
                         transition: 'background 0.2s, border-color 0.2s',
                       }}
                       className="flex-1 p-3 space-y-2.5 min-h-[400px]"
@@ -414,7 +413,6 @@ export default function TasksPage() {
                                 style={{
                                   ...dragProvided.draggableProps.style,
                                   opacity: dragSnapshot.isDragging ? 0.85 : 1,
-                                  transform: dragProvided.draggableProps.style?.transform,
                                 }}
                               >
                                 <TaskCard

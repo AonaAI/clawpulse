@@ -145,7 +145,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
   const { user, signOut } = useAuth()
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Logo */}
       <div style={{ borderBottom: '1px solid var(--cp-divider-accent)' }} className="px-5 py-5">
         <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto min-h-0">
         <div style={{ color: 'var(--cp-text-nav-label)' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
           Navigation
         </div>

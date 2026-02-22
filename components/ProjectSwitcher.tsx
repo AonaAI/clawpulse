@@ -51,9 +51,9 @@ export default function ProjectSwitcher() {
       {open && (
         <div
           style={{
-            background: 'var(--cp-card-bg)',
-            border: '1px solid rgba(109, 40, 217, 0.25)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+            background: '#1a0533',
+            border: '1px solid rgba(109, 40, 217, 0.35)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
           }}
           className="absolute top-full left-0 mt-1 rounded-xl py-1 z-50 min-w-[200px] overflow-hidden"
         >

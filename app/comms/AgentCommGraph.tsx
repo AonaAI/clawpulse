@@ -37,24 +37,22 @@ const STATUS_COLORS: Record<string, { fill: string; stroke: string; glow: string
 
 // ── Force-directed layout ───────────────────────────────────────────────────
 
-function runForceLayout(nodes: AgentNode[], edges: Edge[], width: number, height: number, iterations = 120) {
+function runForceLayout(nodes: AgentNode[], edges: Edge[], width: number, height: number, iterations = 200) {
   const cx = width / 2
   const cy = height / 2
   // Place nodes in a circle initially
   const angleStep = (2 * Math.PI) / nodes.length
   nodes.forEach((n, i) => {
-    n.x = cx + Math.cos(angleStep * i) * Math.min(width, height) * 0.3
-    n.y = cy + Math.sin(angleStep * i) * Math.min(width, height) * 0.3
+    n.x = cx + Math.cos(angleStep * i) * Math.min(width, height) * 0.38
+    n.y = cy + Math.sin(angleStep * i) * Math.min(width, height) * 0.38
     n.vx = 0
     n.vy = 0
   })
 
-  const edgeSet = new Set(edges.map(e => `${e.source}-${e.target}`))
-
   for (let iter = 0; iter < iterations; iter++) {
     const alpha = 1 - iter / iterations
-    const repulsion = 8000 * alpha
-    const attraction = 0.005 * alpha
+    const repulsion = Math.max(2000, 12000 * alpha)
+    const attraction = 0.004 * alpha
 
     // Repulsion between all pairs
     for (let i = 0; i < nodes.length; i++) {
@@ -76,9 +74,10 @@ function runForceLayout(nodes: AgentNode[], edges: Edge[], width: number, height
     for (const edge of edges) {
       const a = nodes.find(n => n.id === edge.source)!
       const b = nodes.find(n => n.id === edge.target)!
+      if (!a || !b) continue
       const dx = b.x - a.x
       const dy = b.y - a.y
-      const dist = Math.sqrt(dx * dx + dy * dy)
+      const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1)
       const force = dist * attraction * edge.weight
       a.vx += (dx / dist) * force
       a.vy += (dy / dist) * force
@@ -86,21 +85,21 @@ function runForceLayout(nodes: AgentNode[], edges: Edge[], width: number, height
       b.vy -= (dy / dist) * force
     }
 
-    // Center gravity
+    // Center gravity — scale with alpha so it doesn't dominate at end
     for (const n of nodes) {
-      n.vx += (cx - n.x) * 0.01
-      n.vy += (cy - n.y) * 0.01
+      n.vx += (cx - n.x) * 0.004 * alpha
+      n.vy += (cy - n.y) * 0.004 * alpha
     }
 
     // Apply velocity with damping
     for (const n of nodes) {
-      n.vx *= 0.8
-      n.vy *= 0.8
+      n.vx *= 0.75
+      n.vy *= 0.75
       n.x += n.vx
       n.y += n.vy
-      // Keep in bounds
-      n.x = Math.max(40, Math.min(width - 40, n.x))
-      n.y = Math.max(40, Math.min(height - 40, n.y))
+      // Keep in bounds with padding for labels
+      n.x = Math.max(60, Math.min(width - 60, n.x))
+      n.y = Math.max(60, Math.min(height - 60, n.y))
     }
   }
 }
@@ -114,7 +113,7 @@ export default function AgentCommGraph() {
   const [hoveredEdge, setHoveredEdge] = useState<string | null>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 900, height: 500 })
+  const [dimensions, setDimensions] = useState({ width: 900, height: 600 })
 
   // Resize observer — guard against zero-width measurements during layout
   useEffect(() => {
@@ -124,7 +123,7 @@ export default function AgentCommGraph() {
     const measure = () => {
       const { width } = el.getBoundingClientRect()
       if (width > 0) {
-        setDimensions({ width, height: Math.max(400, Math.min(550, width * 0.55)) })
+        setDimensions({ width, height: Math.max(520, Math.min(700, width * 0.65)) })
       }
     }
 
@@ -314,7 +313,7 @@ export default function AgentCommGraph() {
               y1={src.y + offsetY}
               x2={tgt.x - offsetX}
               y2={tgt.y - offsetY}
-              stroke={edge.type === 'spawn' ? 'rgba(139,92,246,0.5)' : 'rgba(107,114,128,0.3)'}
+              stroke={edge.type === 'spawn' ? 'rgba(139,92,246,0.75)' : 'rgba(156,163,175,0.5)'}
               strokeWidth={isHovered ? strokeWidth + 1.5 : strokeWidth}
               strokeDasharray={edge.type === 'channel' ? '4,4' : undefined}
               markerEnd={edge.type === 'spawn' ? 'url(#arrow-spawn)' : undefined}
