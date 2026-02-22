@@ -21,10 +21,65 @@ function saveReadIds(ids: Set<string>) {
   localStorage.setItem(READ_KEY, JSON.stringify([...ids].slice(0, 300)))
 }
 
+function generateSeedNotifications(): Omit<Notification, 'read'>[] {
+  const now = Date.now()
+  return [
+    {
+      id: 'seed-1',
+      type: 'success',
+      title: 'Agent Status Changed',
+      message: 'claude-agent-01: idle → active',
+      timestamp: new Date(now - 5 * 60000).toISOString(),
+    },
+    {
+      id: 'seed-2',
+      type: 'success',
+      title: 'Deploy Completed',
+      message: 'ClawPulse v3.3 deployed to Firebase successfully',
+      timestamp: new Date(now - 22 * 60000).toISOString(),
+    },
+    {
+      id: 'seed-3',
+      type: 'info',
+      title: 'Task Completed',
+      message: 'Build dashboard widgets: done',
+      timestamp: new Date(now - 45 * 60000).toISOString(),
+    },
+    {
+      id: 'seed-4',
+      type: 'info',
+      title: 'New Session Started',
+      message: 'Agent claude-agent-01 started session #847',
+      timestamp: new Date(now - 2 * 3600000).toISOString(),
+    },
+    {
+      id: 'seed-5',
+      type: 'error',
+      title: 'Error Alert',
+      message: 'Agent deploy-bot crashed: OOM kill on build step',
+      timestamp: new Date(now - 3 * 3600000).toISOString(),
+    },
+    {
+      id: 'seed-6',
+      type: 'warning',
+      title: 'Agent Status Changed',
+      message: 'deploy-bot: active → offline',
+      timestamp: new Date(now - 4 * 3600000).toISOString(),
+    },
+  ]
+}
+
 function loadNotifications(): Omit<Notification, 'read'>[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-  } catch { return [] }
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    // Seed with mock data if empty (first visit)
+    if (stored.length === 0) {
+      const seed = generateSeedNotifications()
+      saveNotifications(seed)
+      return seed
+    }
+    return stored
+  } catch { return generateSeedNotifications() }
 }
 
 function saveNotifications(notifs: Omit<Notification, 'read'>[]) {

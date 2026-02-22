@@ -4,8 +4,15 @@ import type { Notification } from '@/lib/useNotifications'
 
 const typeColors: Record<string, string> = {
   error: '#ef4444',
+  warning: '#f59e0b',
+  success: '#10b981',
+  info: '#8b5cf6',
   agent_status: '#8b5cf6',
+  deploy: '#10b981',
+  task: '#3b82f6',
   task_complete: '#10b981',
+  session: '#6366f1',
+  system: '#8b5cf6',
   slack_message: '#3b82f6',
 }
 
