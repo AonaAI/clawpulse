@@ -500,16 +500,31 @@ export async function fetchAgentLiveStatus() {
 // ── Slack Messages ──────────────────────────────────────────────────────────
 
 export async function fetchSlackMessages(limit = 100) {
+  // Fetch messages without FK join to avoid PGRST200 error
   const { data, error } = await supabase
     .from('slack_messages')
-    .select('*, agent:agents(name)')
+    .select('*')
     .order('sent_at', { ascending: false })
     .limit(limit)
   if (error) { console.error('Error fetching slack messages:', error); return [] }
-  return (data || []).map((r: Record<string, unknown> & { agent?: { name: string } | null }) => ({
+
+  // Fetch agent names separately
+  const agentIds = [...new Set((data || []).map((r: Record<string, unknown>) => r.agent_id as string).filter(Boolean))]
+  let agentMap: Record<string, string> = {}
+  if (agentIds.length > 0) {
+    const { data: agents } = await supabase
+      .from('agents')
+      .select('id, name')
+      .in('id', agentIds)
+    if (agents) {
+      agentMap = Object.fromEntries(agents.map((a: { id: string; name: string }) => [a.id, a.name]))
+    }
+  }
+
+  return (data || []).map((r: Record<string, unknown>) => ({
     id: r.id as string,
     agent_id: r.agent_id as string,
-    agent_name: r.agent?.name || (r.agent_id as string),
+    agent_name: agentMap[r.agent_id as string] || (r.agent_id as string),
     channel: r.channel as string,
     message: r.message as string,
     sent_at: r.sent_at as string,
