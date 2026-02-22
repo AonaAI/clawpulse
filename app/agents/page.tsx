@@ -395,10 +395,22 @@ export default function AgentsPage() {
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">All agents in the ClawPulse network</p>
         </div>
         <div className="flex items-center gap-2">
-          <ExportButton onExportCSV={() => exportToCSV('clawpulse-agents',
-            ['Agent', 'Role', 'Status', 'Total Tokens', 'Total Cost'],
-            visibleAgents.map(a => [a.name, a.role || '', a.status || '', tokenMap[a.id]?.total_tokens || 0, tokenMap[a.id]?.total_cost || 0])
-          )} />
+          <ExportButton onExportCSV={() => {
+            const date = new Date().toISOString().slice(0, 10)
+            exportToCSV(`clawpulse-agents-${date}`,
+              ['Agent Name', 'Role', 'Model', 'Status', 'Sessions (7d)', 'Tokens (7d)', 'Cost (7d)', 'Last Seen'],
+              visibleAgents.map(a => [
+                a.name,
+                a.role || '',
+                a.model || '',
+                a.status || '',
+                a.sessionCount,
+                tokenMap[a.id]?.total_tokens || 0,
+                tokenMap[a.id]?.total_cost ? `$${tokenMap[a.id].total_cost.toFixed(3)}` : '$0.000',
+                a.lastActive ? new Date(a.lastActive).toISOString() : 'Never',
+              ])
+            )
+          }} />
           <LiveBadge connectionStatus={connectionStatus} />
         </div>
       </div>

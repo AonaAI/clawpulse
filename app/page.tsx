@@ -3,12 +3,12 @@
 import { useEffect, useState, useCallback, memo, useRef } from 'react'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
-import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines } from '@/lib/supabase-client'
+import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines, fetchTokenStatsByAgent } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
 import dynamic from 'next/dynamic'
-import ExportButton from '@/components/ExportButton'
+import ExportButton, { exportToCSV, exportToJSON } from '@/components/ExportButton'
 import Sparkline from '@/components/Sparkline'
 import { useProject } from '@/components/ProjectProvider'
 
@@ -196,6 +196,7 @@ export default function OverviewPage() {
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [sparklines, setSparklines] = useState<Record<string, number[]>>({})
+  const [tokenMap, setTokenMap] = useState<Record<string, { total_tokens: number; total_cost: number }>>({})
   const [dragSourceId, setDragSourceId] = useState<string | null>(null)
   const [dragTargetId, setDragTargetId] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -264,16 +265,20 @@ export default function OverviewPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [tasksData, activityData, missionValue, sparklinesData] = await Promise.all([
+      const [tasksData, activityData, missionValue, sparklinesData, tokenStats] = await Promise.all([
         fetchTasks(),
         fetchActivityLog(8),
         fetchSetting('company_mission'),
         fetchAgentSparklines(),
+        fetchTokenStatsByAgent(),
       ])
       setTasks(tasksData)
       setActivity(activityData)
       if (missionValue) setCompanyMission(missionValue)
       setSparklines(sparklinesData)
+      const tMap: Record<string, { total_tokens: number; total_cost: number }> = {}
+      for (const s of tokenStats) tMap[s.agent_id] = { total_tokens: s.total_tokens, total_cost: s.total_cost }
+      setTokenMap(tMap)
     }
     loadData()
   }, [])
@@ -523,7 +528,51 @@ export default function OverviewPage() {
             <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
           </div>
           <div className="flex items-center gap-2">
-          <ExportButton onPrintPDF={() => window.print()} />
+          <ExportButton
+            onExportCSV={() => {
+              const date = new Date().toISOString().slice(0, 10)
+              exportToCSV(`clawpulse-agents-${date}`,
+                ['Agent Name', 'Role', 'Model', 'Status', 'Sessions (7d)', 'Tokens (7d)', 'Cost (7d)', 'Last Seen'],
+                filteredAgents.map(a => [
+                  a.name,
+                  a.role || '',
+                  a.model || '',
+                  a.status || '',
+                  a.sessionCount,
+                  tokenMap[a.id]?.total_tokens || 0,
+                  tokenMap[a.id]?.total_cost ? `$${tokenMap[a.id].total_cost.toFixed(3)}` : '$0.000',
+                  a.lastActive ? new Date(a.lastActive).toISOString() : 'Never',
+                ])
+              )
+            }}
+            onExportJSON={() => {
+              const date = new Date().toISOString().slice(0, 10)
+              const totalTokens7d = Object.values(tokenMap).reduce((s, t) => s + t.total_tokens, 0)
+              const totalCost7d = Object.values(tokenMap).reduce((s, t) => s + t.total_cost, 0)
+              exportToJSON(`clawpulse-export-${date}`, {
+                agents: filteredAgents.map(a => ({
+                  id: a.id,
+                  name: a.name,
+                  role: a.role,
+                  model: a.model,
+                  status: a.status,
+                  sessionCount: a.sessionCount,
+                  lastActive: a.lastActive ? new Date(a.lastActive).toISOString() : null,
+                  totalTokens: tokenMap[a.id]?.total_tokens || 0,
+                  totalCost: tokenMap[a.id]?.total_cost || 0,
+                  workspace: a.workspace,
+                })),
+                summary: {
+                  totalAgents: filteredAgents.length,
+                  activeNow: workingAgents.length,
+                  totalTokens7d,
+                  totalCost7d,
+                },
+                exportedAt: new Date().toISOString(),
+              })
+            }}
+            onPrintPDF={() => window.print()}
+          />
           <button
             onClick={() => setShowCustomize(true)}
             style={{
