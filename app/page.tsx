@@ -10,6 +10,7 @@ import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-c
 import dynamic from 'next/dynamic'
 import ExportButton from '@/components/ExportButton'
 import Sparkline from '@/components/Sparkline'
+import { useProject } from '@/components/ProjectProvider'
 
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), { ssr: false })
 const SpawnModal = dynamic(() => import('@/components/SpawnModal'), { ssr: false })
@@ -297,13 +298,20 @@ export default function OverviewPage() {
     { table: 'tasks', event: 'DELETE', onDelete: handleTaskDelete },
   ], { onFallbackRefresh: fetchAgentsData })
 
-  const activeTasks = tasks.filter(t => t.status === 'in_progress')
-  const doneTasks = tasks.filter(t => t.status === 'done')
-  const workingAgents = agents.filter(a => a.status === 'working')
-  const idleAgents = agents.filter(a => a.status === 'idle')
+  const { selectedProjectId, agentIdsForProject } = useProject()
+
+  // Filter by selected project
+  const projectAgentIds = selectedProjectId ? new Set(agentIdsForProject(selectedProjectId)) : null
+  const filteredAgents = projectAgentIds ? agents.filter(a => projectAgentIds.has(a.id)) : agents
+  const filteredTasks = projectAgentIds ? tasks.filter(t => t.assigned_agent && projectAgentIds.has(t.assigned_agent)) : tasks
+
+  const activeTasks = filteredTasks.filter(t => t.status === 'in_progress')
+  const doneTasks = filteredTasks.filter(t => t.status === 'done')
+  const workingAgents = filteredAgents.filter(a => a.status === 'working')
+  const idleAgents = filteredAgents.filter(a => a.status === 'idle')
 
   const stats = [
-    { label: 'Total Agents', value: agents.length, color: '#a78bfa', iconColor: 'rgba(167, 139, 250, 0.7)', gradient: 'linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(109, 40, 217, 0.04) 100%)', border: 'rgba(139, 92, 246, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0-3-3.85" /></svg> },
+    { label: 'Total Agents', value: filteredAgents.length, color: '#a78bfa', iconColor: 'rgba(167, 139, 250, 0.7)', gradient: 'linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(109, 40, 217, 0.04) 100%)', border: 'rgba(139, 92, 246, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0-3-3.85" /></svg> },
     { label: 'Active Now', value: workingAgents.length, color: '#34d399', iconColor: 'rgba(52, 211, 153, 0.7)', gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%)', border: 'rgba(52, 211, 153, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg> },
     { label: 'Idle', value: idleAgents.length, color: 'var(--cp-text-secondary)', iconColor: 'rgba(156, 163, 175, 0.7)', gradient: 'linear-gradient(135deg, rgba(75, 85, 99, 0.1) 0%, rgba(55, 65, 81, 0.04) 100%)', border: 'rgba(75, 85, 99, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
     { label: 'Tasks Done', value: doneTasks.length, color: '#22d3ee', iconColor: 'rgba(34, 211, 238, 0.7)', gradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(8, 145, 178, 0.04) 100%)', border: 'rgba(34, 211, 238, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg> },
@@ -384,11 +392,11 @@ export default function OverviewPage() {
                     <path d="M8 16H3v5" />
                   </svg>
                 </button>
-                <span style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-2.5 py-0.5 rounded-full font-medium">{agents.length} agents</span>
+                <span style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-2.5 py-0.5 rounded-full font-medium">{filteredAgents.length} agents</span>
               </div>
             </div>
             <div className={`grid ${compact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}`}>
-              {agents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} sparkline={sparklines[agent.id]} />)}
+              {filteredAgents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} sparkline={sparklines[agent.id]} />)}
             </div>
           </div>
         )
@@ -420,7 +428,7 @@ export default function OverviewPage() {
               {activeTasks.length === 0 ? (
                 <div className="py-6 text-center text-sm" style={{ color: 'var(--cp-text-dim)' }}>No active tasks</div>
               ) : activeTasks.map((task, i) => {
-                const agent = agents.find(a => a.id === task.assigned_agent)
+                const agent = filteredAgents.find(a => a.id === task.assigned_agent)
                 const pColor = priorityConfig[task.priority].color
                 return (
                   <div key={task.id} className={`px-4 ${compact ? 'py-2.5' : 'py-3.5'} flex items-start gap-3`} style={{ borderBottom: i < activeTasks.length - 1 ? '1px solid rgba(255, 255, 255, 0.04)' : 'none' }}>

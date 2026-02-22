@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { fetchSettings, upsertSetting } from '@/lib/supabase-client'
+import { fetchSettings, upsertSetting, updateProject } from '@/lib/supabase-client'
 import { supabase } from '@/lib/supabase-client'
+import { useProject } from '@/components/ProjectProvider'
 
 interface AgentMission {
   id: string
@@ -266,6 +267,7 @@ export default function MissionPage() {
   const [vision, setVision] = useState('')
   const [agents, setAgents] = useState<AgentMission[]>([])
   const [loading, setLoading] = useState(true)
+  const { projects, selectedProjectId, selectedProject, agentIdsForProject, refresh: refreshProjects } = useProject()
 
   useEffect(() => {
     async function load() {
@@ -291,6 +293,16 @@ export default function MissionPage() {
     setVision(value)
   }
 
+  async function saveProjectMission(projectId: string, value: string) {
+    await updateProject(projectId, { mission: value })
+    await refreshProjects()
+  }
+
+  async function saveProjectVision(projectId: string, value: string) {
+    await updateProject(projectId, { vision: value })
+    await refreshProjects()
+  }
+
   async function saveAgentMission(agentId: string, agentMission: string) {
     const { error } = await supabase.from('agents').update({ mission: agentMission }).eq('id', agentId)
     if (!error) {
@@ -311,6 +323,18 @@ export default function MissionPage() {
     border: 'rgba(34,211,238,0.2)',
     glow: 'rgba(34,211,238,0.15)',
   }
+
+  const projectAccent = {
+    color: '#f59e0b',
+    bg: 'rgba(245,158,11,0.06)',
+    border: 'rgba(245,158,11,0.2)',
+    glow: 'rgba(245,158,11,0.15)',
+  }
+
+  // Filter agents by project
+  const projectAgentIds = selectedProjectId ? new Set(agentIdsForProject(selectedProjectId)) : null
+  const visibleAgents = projectAgentIds ? agents.filter(a => projectAgentIds.has(a.id)) : agents
+  const visibleProjects = selectedProjectId ? projects.filter(p => p.id === selectedProjectId) : projects
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
@@ -342,6 +366,45 @@ export default function MissionPage() {
             />
           </div>
 
+          {/* Project Missions */}
+          {visibleProjects.length > 0 && (
+            <>
+              <div className="flex items-center gap-4 mb-8">
+                <div style={{ flex: 1, height: '1px', background: 'rgba(109,40,217,0.14)' }} />
+                <span style={{ color: 'var(--cp-text-nav-label)' }} className="text-xs font-bold uppercase tracking-widest">Project Missions</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(109,40,217,0.14)' }} />
+              </div>
+
+              <div className="space-y-6 mb-12">
+                {visibleProjects.map(project => (
+                  <div key={project.id} className="space-y-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">{project.icon}</span>
+                      <span style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-lg">{project.name}</span>
+                      {project.description && (
+                        <span style={{ color: 'var(--cp-text-muted)' }} className="text-sm ml-2">— {project.description}</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <EditableStatement
+                        label={`${project.name} Mission`}
+                        value={project.mission || ''}
+                        onSave={(v) => saveProjectMission(project.id, v)}
+                        accent={projectAccent}
+                      />
+                      <EditableStatement
+                        label={`${project.name} Vision`}
+                        value={project.vision || ''}
+                        onSave={(v) => saveProjectVision(project.id, v)}
+                        accent={visionAccent}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Divider */}
           <div className="flex items-center gap-4 mb-8">
             <div style={{ flex: 1, height: '1px', background: 'rgba(109,40,217,0.14)' }} />
@@ -355,7 +418,7 @@ export default function MissionPage() {
 
           {/* Agent missions grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {agents.map(agent => (
+            {visibleAgents.map(agent => (
               <AgentMissionCard key={agent.id} agent={agent} onSave={saveAgentMission} />
             ))}
           </div>

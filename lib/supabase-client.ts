@@ -598,6 +598,78 @@ function formatTimeAgo(date: Date): string {
   return `${Math.floor(diffMs / 86_400_000)}d ago`
 }
 
+// ── Projects ──
+
+export interface Project {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  mission: string | null
+  vision: string | null
+  color: string
+  icon: string
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ProjectAgent {
+  project_id: string
+  agent_id: string
+  role: string
+}
+
+export async function fetchProjects(): Promise<Project[]> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('name', { ascending: true })
+  if (error) {
+    console.error('Error fetching projects:', error)
+    return []
+  }
+  return (data || []) as Project[]
+}
+
+export async function createProject(project: Partial<Project>): Promise<Project | null> {
+  const { data, error } = await supabase
+    .from('projects')
+    .insert(project)
+    .select()
+    .single()
+  if (error) {
+    console.error('Error creating project:', error)
+    return null
+  }
+  return data as Project
+}
+
+export async function updateProject(id: string, updates: Partial<Project>): Promise<Project | null> {
+  const { data, error } = await supabase
+    .from('projects')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) {
+    console.error('Error updating project:', error)
+    return null
+  }
+  return data as Project
+}
+
+export async function fetchProjectAgents(): Promise<ProjectAgent[]> {
+  const { data, error } = await supabase
+    .from('project_agents')
+    .select('*')
+  if (error) {
+    console.error('Error fetching project agents:', error)
+    return []
+  }
+  return (data || []) as ProjectAgent[]
+}
+
 // ── Audit Log ──
 
 export interface AuditLogEntry {

@@ -9,6 +9,7 @@ import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import ExportButton, { exportToCSV } from '@/components/ExportButton'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
+import { useProject } from '@/components/ProjectProvider'
 
 function formatLastActive(ms: number | null): string {
   if (ms === null) return 'Never'
@@ -358,9 +359,13 @@ export default function AgentsPage() {
     { table: 'agents', event: 'UPDATE', onUpdate: handleAgentUpdate },
   ], { onFallbackRefresh: fetchAgentsLive })
 
-  const working = agents.filter(a => a.status === 'working').length
-  const idle = agents.filter(a => a.status === 'idle').length
-  const offline = agents.filter(a => a.status === 'offline').length
+  const { selectedProjectId, agentIdsForProject } = useProject()
+  const projectAgentIds = selectedProjectId ? new Set(agentIdsForProject(selectedProjectId)) : null
+  const visibleAgents = projectAgentIds ? agents.filter(a => projectAgentIds.has(a.id)) : agents
+
+  const working = visibleAgents.filter(a => a.status === 'working').length
+  const idle = visibleAgents.filter(a => a.status === 'idle').length
+  const offline = visibleAgents.filter(a => a.status === 'offline').length
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
@@ -373,7 +378,7 @@ export default function AgentsPage() {
         <div className="flex items-center gap-2">
           <ExportButton onExportCSV={() => exportToCSV('clawpulse-agents',
             ['Agent', 'Role', 'Status', 'Total Tokens', 'Total Cost'],
-            agents.map(a => [a.name, a.role || '', a.status || '', tokenMap[a.id]?.total_tokens || 0, tokenMap[a.id]?.total_cost || 0])
+            visibleAgents.map(a => [a.name, a.role || '', a.status || '', tokenMap[a.id]?.total_tokens || 0, tokenMap[a.id]?.total_cost || 0])
           )} />
           <LiveBadge connectionStatus={connectionStatus} />
         </div>
@@ -390,7 +395,7 @@ export default function AgentsPage() {
           className="rounded-xl px-4 py-2 flex items-center gap-2.5"
         >
           <span style={{ color: 'var(--cp-text-muted)' }} className="text-sm font-medium">Total</span>
-          <span style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-bold">{agents.length}</span>
+          <span style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-bold">{visibleAgents.length}</span>
         </div>
         <div
           style={{
@@ -445,7 +450,7 @@ export default function AgentsPage() {
 
       {/* Agent cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {agents.map((agent) => (
+        {visibleAgents.map((agent) => (
           <Link key={agent.id} href={`/agents/${agent.id}`} className="block group">
             <AgentCard agent={agent} tokenStats={tokenMap[agent.id] || null} mission={missionMap[agent.id] || null} />
           </Link>

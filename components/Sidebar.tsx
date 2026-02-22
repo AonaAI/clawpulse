@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { AGENTS } from '@/lib/data'
 import SearchModal from './SearchModal'
+import ProjectSwitcher from './ProjectSwitcher'
 import { useAuth } from './AuthProvider'
 
 const navItems = [
@@ -171,8 +172,13 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
         </div>
       </div>
 
-      {/* Search button */}
+      {/* Project switcher */}
       <div className="px-3 pt-3">
+        <ProjectSwitcher />
+      </div>
+
+      {/* Search button */}
+      <div className="px-3 pt-2">
         <button
           onClick={() => { onNavClick?.(); onSearchClick?.() }}
           style={{

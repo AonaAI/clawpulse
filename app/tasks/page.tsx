@@ -6,6 +6,7 @@ import { AGENTS } from '@/lib/data'
 import { fetchTasks, createTask, updateTask, deleteTask } from '@/lib/supabase-client'
 import { useTableSubscription } from '@/lib/useRealtimeSubscription'
 import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
+import { useProject } from '@/components/ProjectProvider'
 
 const COLUMNS: { status: TaskStatus; label: string; color: string; bg: string; border: string }[] = [
   { status: 'todo',        label: 'To Do',        color: 'var(--cp-text-secondary)', bg: 'rgba(107, 114, 128, 0.06)', border: 'rgba(107, 114, 128, 0.18)' },
@@ -321,10 +322,14 @@ export default function TasksPage() {
     setDeletingTask(null)
   }, [deletingTask])
 
-  const totalTasks = tasks.length
-  const doneTasks = tasks.filter(t => t.status === 'done').length
-  const blockedTasks = tasks.filter(t => t.status === 'blocked').length
-  const criticalTasks = tasks.filter(t => t.priority === 'critical').length
+  const { selectedProjectId, agentIdsForProject } = useProject()
+  const projectAgentIds = selectedProjectId ? new Set(agentIdsForProject(selectedProjectId)) : null
+  const visibleTasks = projectAgentIds ? tasks.filter(t => t.assigned_agent && projectAgentIds.has(t.assigned_agent)) : tasks
+
+  const totalTasks = visibleTasks.length
+  const doneTasks = visibleTasks.filter(t => t.status === 'done').length
+  const blockedTasks = visibleTasks.filter(t => t.status === 'blocked').length
+  const criticalTasks = visibleTasks.filter(t => t.priority === 'critical').length
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
@@ -363,7 +368,7 @@ export default function TasksPage() {
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {COLUMNS.map((col) => {
-            const colTasks = tasks.filter(t => t.status === col.status)
+            const colTasks = visibleTasks.filter(t => t.status === col.status)
             return (
               <div key={col.status} className="flex flex-col min-w-0">
                 {/* Column header */}
