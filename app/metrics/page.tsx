@@ -184,7 +184,8 @@ export default function MetricsPage() {
 
   const loadData = useCallback(async () => {
     const { from, to } = dateRangeRef.current
-    const [t, a] = await Promise.all([fetchTasks(from, to), fetchActivityLog(20, from, to)])
+    // Tasks show all-time data; activity feed is date-filtered
+    const [t, a] = await Promise.all([fetchTasks(), fetchActivityLog(20, from, to)])
     setTasks(t as Task[])
     setActivity(a as ActivityItem[])
     setLoading(false)
@@ -276,7 +277,7 @@ export default function MetricsPage() {
       <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
-          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity</p>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity · date range filters activity feed only</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportButton onExportCSV={() => exportToCSV('clawpulse-metrics',

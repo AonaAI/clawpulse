@@ -17,7 +17,7 @@ export default function PWAInstallBanner() {
     // Don't show if already installed or previously dismissed
     if (
       window.matchMedia('(display-mode: standalone)').matches ||
-      sessionStorage.getItem(DISMISSED_KEY)
+      localStorage.getItem(DISMISSED_KEY)
     ) return;
 
     const handler = (e: Event) => {
@@ -38,7 +38,7 @@ export default function PWAInstallBanner() {
   };
 
   const handleDismiss = () => {
-    sessionStorage.setItem(DISMISSED_KEY, '1');
+    localStorage.setItem(DISMISSED_KEY, '1');
     setVisible(false);
   };
 

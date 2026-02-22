@@ -147,6 +147,64 @@ function SlackIcon() {
   )
 }
 
+// ── Consecutive-event grouping ────────────────────────────────────────────────
+
+interface CollapsedGroup {
+  _type: 'group'
+  id: string
+  action: string
+  agent_id: string
+  agent_name: string
+  count: number
+  sample: ActivityItem
+  created_at: string
+}
+
+type DisplayItem = { _type: 'single'; item: FeedItem } | CollapsedGroup
+
+const COLLAPSE_THRESHOLD = 3
+
+function collapseConsecutive(items: FeedItem[]): DisplayItem[] {
+  const result: DisplayItem[] = []
+  let i = 0
+  while (i < items.length) {
+    const item = items[i]
+    if (item._type !== 'event') {
+      result.push({ _type: 'single', item })
+      i++
+      continue
+    }
+    let j = i + 1
+    while (
+      j < items.length &&
+      items[j]._type === 'event' &&
+      (items[j] as ActivityItem).action === item.action &&
+      (items[j] as ActivityItem).agent_id === item.agent_id
+    ) {
+      j++
+    }
+    const count = j - i
+    if (count > COLLAPSE_THRESHOLD) {
+      result.push({
+        _type: 'group',
+        id: item.id,
+        action: item.action,
+        agent_id: item.agent_id,
+        agent_name: item.agent_name,
+        count,
+        sample: item as ActivityItem,
+        created_at: item.created_at,
+      })
+    } else {
+      for (let k = i; k < j; k++) {
+        result.push({ _type: 'single', item: items[k] })
+      }
+    }
+    i = j
+  }
+  return result
+}
+
 export default function ActivityPage() {
   const PAGE_SIZE = 50
   const [events, setEvents] = useState<ActivityItem[]>([])
@@ -453,8 +511,63 @@ export default function ActivityPage() {
                 }}
                 className="rounded-xl overflow-hidden"
               >
-                {group.items.map((item, i) => {
-                  const isLast = i === group.items.length - 1
+                {collapseConsecutive(group.items).map((entry, i, arr) => {
+                  const isLast = i === arr.length - 1
+
+                  // Render collapsed group
+                  if (entry._type === 'group') {
+                    const cfg = EVENT_CONFIG[detectEventType(entry.action)]
+                    return (
+                      <div
+                        key={entry.id}
+                        style={{
+                          borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                          background: 'rgba(109,40,217,0.04)',
+                        }}
+                      >
+                        <div className="px-5 py-3 flex items-center gap-4">
+                          <div
+                            style={{
+                              background: 'rgba(109,40,217,0.12)',
+                              border: '1px solid rgba(109,40,217,0.25)',
+                              color: '#8b5cf6',
+                              width: '28px',
+                              height: '28px',
+                              minWidth: '28px',
+                              fontSize: 10,
+                              fontWeight: 700,
+                            }}
+                            className="rounded-lg flex items-center justify-center flex-shrink-0"
+                          >
+                            {entry.agent_name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold">{entry.agent_name}</span>
+                              <span
+                                style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
+                                className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                              >
+                                {cfg.label}
+                              </span>
+                              <span
+                                style={{ background: 'rgba(109,40,217,0.12)', color: '#a78bfa', border: '1px solid rgba(109,40,217,0.25)' }}
+                                className="text-xs px-2 py-0.5 rounded-full font-bold"
+                              >
+                                × {entry.count} similar
+                              </span>
+                            </div>
+                            <div style={{ color: '#8b5cf6' }} className="text-xs mt-0.5 truncate">{entry.action}</div>
+                          </div>
+                          <span style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
+                            {formatTimestamp(entry.created_at)}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  const item = entry.item
                   const isNew = newIds.has(item.id)
 
                   if (item._type === 'slack_message') {

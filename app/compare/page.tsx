@@ -146,14 +146,14 @@ function CompletionRings({ items }: { items: { label: string; done: number; tota
                 strokeDasharray={`${pct * circ} ${circ}`}
                 strokeLinecap="round"
                 transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                opacity={0.85}
+                opacity={item.total > 0 ? 0.85 : 0.2}
               />
               <text x={size / 2} y={size / 2 + 1} textAnchor="middle" dominantBaseline="middle" fill={item.color} fontSize={14} fontWeight={700}>
-                {Math.round(pct * 100)}%
+                {item.total > 0 ? `${Math.round(pct * 100)}%` : '—'}
               </text>
             </svg>
             <span style={{ color: item.color, fontSize: 12, fontWeight: 600 }}>{item.label}</span>
-            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{item.done}/{item.total} done</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{item.total > 0 ? `${item.done}/${item.total} done` : 'no tasks assigned'}</span>
           </div>
         )
       })}

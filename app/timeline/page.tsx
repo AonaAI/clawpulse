@@ -249,9 +249,13 @@ export default function TimelinePage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
       <style jsx global>{`
         .timeline-event {
-          opacity: 0;
-          transform: translateY(16px);
+          opacity: 1;
+          transform: translateY(0);
           transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .timeline-event-anim {
+          opacity: 0;
+          transform: translateY(12px);
         }
         .timeline-visible {
           opacity: 1;
@@ -379,8 +383,47 @@ export default function TimelinePage() {
           ))}
         </div>
       ) : events.length === 0 ? (
-        <div style={{ color: 'var(--cp-text-muted)' }} className="text-center py-20 text-sm">
-          No events found for the selected filters.
+        <div
+          style={{
+            background: 'rgba(17, 2, 29, 0.6)',
+            border: '1px solid rgba(109, 40, 217, 0.14)',
+            borderRadius: 12,
+          }}
+          className="text-center py-16 px-6"
+        >
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(109,40,217,0.4)" strokeWidth="1.5" style={{ margin: '0 auto 12px' }}>
+            <line x1="12" y1="2" x2="12" y2="22" />
+            <circle cx="12" cy="6" r="2" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="12" cy="18" r="2" />
+            <line x1="14" y1="6" x2="20" y2="6" />
+            <line x1="14" y1="12" x2="20" y2="12" />
+            <line x1="14" y1="18" x2="20" y2="18" />
+          </svg>
+          <div style={{ color: 'var(--cp-text-muted)', fontSize: 14, fontWeight: 600 }}>No events found</div>
+          <div style={{ color: 'var(--cp-text-dim)', fontSize: 12, marginTop: 6, maxWidth: 320, margin: '6px auto 0' }}>
+            {selectedAgents.length > 0 || selectedTypes.length > 0 || dateFrom || dateTo
+              ? 'Try clearing some filters to see more events.'
+              : 'Agent activity events will appear here as agents run tasks and log actions.'}
+          </div>
+          {(selectedAgents.length > 0 || selectedTypes.length > 0) && (
+            <button
+              onClick={() => { setSelectedAgents([]); setSelectedTypes([]) }}
+              style={{
+                marginTop: 12,
+                background: 'rgba(109,40,217,0.15)',
+                border: '1px solid rgba(109,40,217,0.3)',
+                color: '#c4b5fd',
+                borderRadius: 8,
+                padding: '6px 16px',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="relative">
@@ -429,7 +472,7 @@ export default function TimelinePage() {
                       key={event.id}
                       ref={(el) => { if (el) eventRefs.current.set(event.id, el) }}
                       className="timeline-event flex items-start gap-0 relative"
-                      style={{ minHeight: 56, paddingBottom: 4 }}
+                      style={{ minHeight: 56, paddingBottom: 4, opacity: 1 }}
                     >
                       {/* Timestamp */}
                       <div
