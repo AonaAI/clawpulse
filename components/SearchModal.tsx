@@ -266,7 +266,7 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
 
   const modal = (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] transition-all duration-200"
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] sm:pt-[15vh] px-3 sm:px-0 transition-all duration-200"
       style={{
         background: visible ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0)',
         backdropFilter: visible ? 'blur(8px)' : 'blur(0px)',

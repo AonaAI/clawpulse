@@ -521,10 +521,10 @@ export default function OverviewPage() {
         <p style={{ fontSize: 12, color: '#666' }}>Generated: {new Date().toLocaleString()}</p>
       </div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Overview</h1>
+            <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Overview</h1>
             <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Real-time status of your agent network</p>
           </div>
           <div className="flex items-center gap-2">

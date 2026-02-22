@@ -683,7 +683,7 @@ export default function KnowledgePage() {
       {/* Header */}
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Knowledge Base</h1>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Knowledge Base</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Shared lessons, skills, and documents across all agents</p>
         </div>
         <div className="flex items-center gap-2">

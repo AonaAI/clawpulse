@@ -389,9 +389,9 @@ export default function AgentsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
+      <div className="mb-6 sm:mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Agent Registry</h1>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Agent Registry</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">All agents in the ClawPulse network</p>
         </div>
         <div className="flex items-center gap-2">

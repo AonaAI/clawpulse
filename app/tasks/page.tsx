@@ -46,7 +46,7 @@ function IconButton({ onClick, title, children, danger }: { onClick: () => void;
     <button
       onClick={(e) => { e.stopPropagation(); onClick() }}
       title={title}
-      className="p-1 rounded-md transition-colors"
+      className="p-2 sm:p-1 rounded-md transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
       style={{
         color: danger ? '#f87171' : '#6b7280',
         background: 'transparent',
@@ -80,7 +80,7 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onDelete }: { task: Task
       {/* Title + actions */}
       <div className="flex items-start justify-between gap-2">
         <p style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-medium leading-snug flex-1">{task.title}</p>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+        <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
           <IconButton onClick={() => onEdit(task)} title="Edit">
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </IconButton>
@@ -334,9 +334,9 @@ export default function TasksPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+      <div className="mb-6 sm:mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Work Board</h1>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Work Board</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Kanban board across all agents and projects</p>
         </div>
         <button

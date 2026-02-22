@@ -276,7 +276,7 @@ export default function MetricsPage() {
       {/* Header */}
       <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Metrics</h1>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Metrics</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">Task throughput, agent workload, and system activity · date range filters activity feed only</p>
         </div>
         <div className="flex items-center gap-2">

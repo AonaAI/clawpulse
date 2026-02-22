@@ -417,7 +417,8 @@ function UsersTab() {
             <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm">No users found</p>
           </div>
         ) : (
-          <div>
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: '480px' }}>
             {/* Table header */}
             <div
               style={{
@@ -510,6 +511,7 @@ function UsersTab() {
                 </div>
               )
             })}
+            </div>
           </div>
         )}
       </div>
@@ -520,7 +522,7 @@ function UsersTab() {
           background: 'rgba(109,40,217,0.04)',
           border: '1px solid var(--cp-border)',
         }}
-        className="mt-4 rounded-xl p-4 grid grid-cols-3 gap-4"
+        className="mt-4 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4"
       >
         {([
           { role: 'admin' as Role, desc: 'Full access — manage users, settings, all data' },
@@ -768,9 +770,9 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('general')
 
   return (
-    <div className="min-h-screen p-6 md:p-8 max-w-4xl mx-auto">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8 max-w-4xl mx-auto">
       {/* Page header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center gap-3 mb-1">
           <div
             style={{
@@ -784,7 +786,7 @@ export default function SettingsPage() {
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14M12 2v2m0 16v2M2 12h2m16 0h2" />
             </svg>
           </div>
-          <h1 style={{ color: 'var(--cp-text-heading)' }} className="text-2xl font-bold tracking-tight">
+          <h1 style={{ color: 'var(--cp-text-heading)' }} className="text-xl sm:text-2xl font-bold tracking-tight">
             Settings
           </h1>
         </div>
@@ -800,7 +802,7 @@ export default function SettingsPage() {
           border: '1px solid var(--cp-border-strong)',
           backdropFilter: 'blur(12px)',
         }}
-        className="rounded-2xl p-1.5 flex gap-1 mb-6 w-fit"
+        className="rounded-2xl p-1.5 flex gap-1 mb-6 overflow-x-auto"
       >
         {TABS.map(tab => {
           const isActive = activeTab === tab.id
@@ -821,7 +823,7 @@ export default function SettingsPage() {
                       border: '1px solid transparent',
                     }
               }
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px]"
             >
               <span style={{ opacity: isActive ? 1 : 0.6 }}>{tab.icon}</span>
               {tab.label}

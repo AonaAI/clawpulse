@@ -341,6 +341,22 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
   )
 }
 
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Overview',
+  '/agents': 'Agents',
+  '/tasks': 'Tasks',
+  '/knowledge': 'Knowledge',
+  '/comms': 'Comms',
+  '/metrics': 'Metrics',
+  '/compare': 'Compare',
+  '/activity': 'Activity',
+  '/timeline': 'Timeline',
+  '/usage': 'Usage',
+  '/mission': 'Mission',
+  '/audit': 'Audit Log',
+  '/settings': 'Settings',
+}
+
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -373,6 +389,11 @@ export default function Sidebar() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
+  // Derive page title from current path
+  const pageTitle = Object.entries(PAGE_TITLES).find(([key]) =>
+    key === '/' ? pathname === '/' : pathname.startsWith(key)
+  )?.[1] ?? 'ClawPulse'
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -388,28 +409,66 @@ export default function Sidebar() {
         <SidebarContent onSearchClick={() => setSearchOpen(true)} />
       </aside>
 
-      {/* Mobile: hamburger button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        aria-label="Open navigation"
+      {/* Mobile: full-width header bar */}
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 h-16 z-40 flex items-center px-3 gap-3"
         style={{
-          background: 'rgba(109, 40, 217, 0.15)',
-          border: '1px solid rgba(139, 92, 246, 0.25)',
+          background: 'linear-gradient(180deg, var(--cp-sidebar-bg) 0%, var(--cp-sidebar-bg-bottom) 100%)',
+          borderBottom: '1px solid rgba(109, 40, 217, 0.2)',
           backdropFilter: 'blur(12px)',
         }}
-        className="md:hidden fixed top-4 left-4 z-40 w-11 h-11 rounded-xl flex items-center justify-center"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
+        {/* Hamburger */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open navigation"
+          style={{
+            background: 'rgba(109, 40, 217, 0.15)',
+            border: '1px solid rgba(139, 92, 246, 0.25)',
+          }}
+          className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+
+        {/* Logo + page title */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)',
+              border: '1px solid rgba(139, 92, 246, 0.5)',
+              boxShadow: '0 0 16px rgba(124, 58, 237, 0.3)',
+              flexShrink: 0,
+            }}
+            className="w-8 h-8 rounded-xl flex items-center justify-center"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <div style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-sm leading-none truncate">
+              {pageTitle}
+            </div>
+            <div style={{ color: '#6d28d9' }} className="text-xs leading-none mt-0.5 font-medium">
+              ClawPulse
+            </div>
+          </div>
+        </div>
+
+        {/* Right side — spacer so notification bell (from NotificationProvider, fixed right-4) has room */}
+        <div className="flex-1" />
+        <div className="w-20 flex-shrink-0" />
+      </div>
 
       {/* Mobile: backdrop */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40"
+          className="md:hidden fixed inset-0 z-[45]"
           style={{ background: 'var(--cp-overlay)', backdropFilter: 'blur(2px)' }}
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
@@ -433,7 +492,7 @@ export default function Sidebar() {
           onClick={() => setMobileOpen(false)}
           aria-label="Close navigation"
           style={{ color: 'var(--cp-text-muted)' }}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
+          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />

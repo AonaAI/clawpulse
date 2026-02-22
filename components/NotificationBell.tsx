@@ -84,10 +84,9 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
             background: 'var(--cp-panel-bg)',
             border: '1px solid var(--cp-border-stronger)',
             boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
-            width: '360px',
             maxHeight: '480px',
           }}
-          className="absolute right-0 top-12 rounded-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="absolute right-0 top-12 w-[360px] max-w-[calc(100vw-2rem)] rounded-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
         >
           {/* Header */}
           <div

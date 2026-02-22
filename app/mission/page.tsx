@@ -340,7 +340,7 @@ export default function MissionPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-10">
-        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Mission & Vision</h1>
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Mission & Vision</h1>
         <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">The purpose and direction of our agent network</p>
       </div>
 

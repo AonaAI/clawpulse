@@ -147,7 +147,7 @@ export default function AuditPage() {
       {/* Header */}
       <div className="mb-6 flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-3xl font-bold tracking-tight">Audit Log</h1>
+          <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Audit Log</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1 font-medium">
             Track all mutations across the system
             {total > 0 && <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">· {total.toLocaleString()} entries</span>}
