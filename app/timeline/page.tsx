@@ -435,7 +435,7 @@ export default function TimelinePage() {
               top: 0,
               bottom: 0,
               width: 2,
-              background: '#2d1054',
+              background: 'var(--cp-badge-bg)',
               zIndex: 0,
             }}
           />

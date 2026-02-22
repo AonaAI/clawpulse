@@ -15,10 +15,13 @@ export default function PWAInstallBanner() {
 
   useEffect(() => {
     // Don't show if already installed or previously dismissed
-    if (
-      window.matchMedia('(display-mode: standalone)').matches ||
-      localStorage.getItem(DISMISSED_KEY)
-    ) return;
+    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    const dismissedAt = localStorage.getItem(DISMISSED_KEY);
+    if (dismissedAt) {
+      const elapsed = Date.now() - Number(dismissedAt);
+      if (elapsed < 30 * 24 * 60 * 60 * 1000) return;
+      localStorage.removeItem(DISMISSED_KEY);
+    }
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -38,7 +41,7 @@ export default function PWAInstallBanner() {
   };
 
   const handleDismiss = () => {
-    localStorage.setItem(DISMISSED_KEY, '1');
+    localStorage.setItem(DISMISSED_KEY, String(Date.now()));
     setVisible(false);
   };
 

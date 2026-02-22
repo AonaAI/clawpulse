@@ -52,6 +52,12 @@
   --cp-scrollbar-track: #0a0118;
   --cp-scrollbar-thumb: #2d1054;
   --cp-scrollbar-thumb-hover: #7c3aed;
+
+  /* Page / skeleton backgrounds */
+  --cp-page-gradient: linear-gradient(135deg, #11021d 0%, #1a0533 100%);
+  --cp-deep-bg: #11021d;
+  --cp-card-solid-bg: #1a0533;
+  --cp-badge-bg: #2d1054;
 }
 
 /* ── Light theme ─────────────────────────────────────────────────── */
@@ -106,6 +112,12 @@
   --cp-scrollbar-track: #f7f5fb;
   --cp-scrollbar-thumb: #d4c8e8;
   --cp-scrollbar-thumb-hover: #6412A6;
+
+  /* Page / skeleton backgrounds */
+  --cp-page-gradient: linear-gradient(135deg, #f3f0fa 0%, #e8e4f3 100%);
+  --cp-deep-bg: #f7f5fb;
+  --cp-card-solid-bg: #ffffff;
+  --cp-badge-bg: #e8e0f5;
 }
 
 @theme inline {
@@ -233,13 +245,13 @@ body {
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    #11021d 0%,
-    #1a0533 20%,
-    #2d1054 40%,
+    var(--cp-deep-bg) 0%,
+    var(--cp-card-solid-bg) 20%,
+    var(--cp-badge-bg) 40%,
     rgba(100, 18, 166, 0.35) 50%,
-    #2d1054 60%,
-    #1a0533 80%,
-    #11021d 100%
+    var(--cp-badge-bg) 60%,
+    var(--cp-card-solid-bg) 80%,
+    var(--cp-deep-bg) 100%
   );
   background-size: 400% 100%;
   animation: shimmer 2s ease-in-out infinite;
@@ -285,7 +297,7 @@ body {
   top: 100%;
   margin-top: 4px;
   min-width: 150px;
-  background: #1a0a2e;
+  background: var(--cp-card-solid-bg);
   border: 1px solid rgba(139,92,246,0.25);
   border-radius: 10px;
   padding: 4px;

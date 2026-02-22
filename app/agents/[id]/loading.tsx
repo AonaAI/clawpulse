@@ -11,7 +11,7 @@ export default function AgentDetailLoading() {
       {/* Agent header card */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+          background: 'var(--cp-page-gradient)',
           border: '1px solid rgba(109, 40, 217, 0.18)',
           backdropFilter: 'blur(12px)',
         }}

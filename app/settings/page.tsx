@@ -102,7 +102,7 @@ function InviteModal({
       <div
         className="w-full max-w-md rounded-2xl p-6"
         style={{
-          background: 'linear-gradient(180deg, #150228 0%, #0e0120 100%)',
+          background: 'var(--cp-panel-bg)',
           border: '1px solid rgba(109,40,217,0.35)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
         }}
@@ -246,7 +246,7 @@ function DeleteModal({
       <div
         className="w-full max-w-sm rounded-2xl p-6"
         style={{
-          background: 'linear-gradient(180deg, #150228 0%, #0e0120 100%)',
+          background: 'var(--cp-panel-bg)',
           border: '1px solid rgba(248,113,113,0.3)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
         }}

@@ -102,7 +102,7 @@ export function ErrorFallback({
     <div className="flex items-center justify-center min-h-[400px] p-8">
       <div
         style={{
-          background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+          background: 'var(--cp-page-gradient)',
           border: '1px solid rgba(100, 18, 166, 0.3)',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(100, 18, 166, 0.1)',
           backdropFilter: 'blur(20px)',

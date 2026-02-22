@@ -42,8 +42,8 @@ const PRESETS = [
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
-const BG_DEEP   = '#11021d'
-const BG_CARD   = '#1a0533'
+const BG_DEEP   = 'var(--cp-deep-bg)'
+const BG_CARD   = 'var(--cp-card-solid-bg)'
 const ACCENT    = '#6412A6'
 const ACCENT_HI = '#8b35e8'
 const BORDER    = 'rgba(100,18,166,0.35)'

@@ -12,7 +12,7 @@ export default function CommsLoading() {
       {/* Agent communication graph */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+          background: 'var(--cp-page-gradient)',
           border: '1px solid rgba(100, 18, 166, 0.2)',
           backdropFilter: 'blur(12px)',
           height: 400,

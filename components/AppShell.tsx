@@ -23,7 +23,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div
         className="flex items-center justify-center min-h-screen"
-        style={{ background: '#0a0118' }}
+        style={{ background: 'var(--background)' }}
       >
         <div className="flex flex-col items-center gap-4">
           <div

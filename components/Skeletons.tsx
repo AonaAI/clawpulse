@@ -23,7 +23,7 @@ export function StatCardSkeleton({ accent }: { accent?: string }) {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+        background: 'var(--cp-page-gradient)',
         border: `1px solid ${borderColor}`,
         backdropFilter: 'blur(12px)',
       }}
@@ -56,7 +56,7 @@ export function AgentCardSkeleton({ compact = false }: { compact?: boolean }) {
     return (
       <div
         style={{
-          background: '#11021d',
+          background: 'var(--cp-deep-bg)',
           border: '1px solid rgba(109, 40, 217, 0.14)',
         }}
         className="rounded-lg p-2.5 flex items-center gap-2"
@@ -73,7 +73,7 @@ export function AgentCardSkeleton({ compact = false }: { compact?: boolean }) {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+        background: 'var(--cp-page-gradient)',
         border: '1px solid rgba(109, 40, 217, 0.14)',
         backdropFilter: 'blur(12px)',
       }}
@@ -178,7 +178,7 @@ export function CostCardSkeleton() {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+        background: 'var(--cp-page-gradient)',
         border: '1px solid rgba(109, 40, 217, 0.18)',
         backdropFilter: 'blur(12px)',
       }}
@@ -200,7 +200,7 @@ export function TaskCardSkeleton() {
   return (
     <div
       style={{
-        background: '#11021d',
+        background: 'var(--cp-deep-bg)',
         border: '1px solid rgba(109, 40, 217, 0.14)',
         borderLeft: '2px solid rgba(100, 18, 166, 0.4)',
       }}
@@ -229,7 +229,7 @@ export function KanbanColumnSkeleton({ count = 3 }: { count?: number }) {
       {/* Column header */}
       <div
         style={{
-          background: '#11021d',
+          background: 'var(--cp-deep-bg)',
           border: '1px solid rgba(109, 40, 217, 0.18)',
           borderBottom: 'none',
           borderRadius: '12px 12px 0 0',
@@ -363,7 +363,7 @@ export function KnowledgeCardSkeleton() {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+        background: 'var(--cp-page-gradient)',
         border: '1px solid rgba(109, 40, 217, 0.14)',
         borderTop: '2px solid rgba(100, 18, 166, 0.35)',
       }}
@@ -402,7 +402,7 @@ export function MissionCardSkeleton() {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #11021d 0%, #1a0533 100%)',
+        background: 'var(--cp-page-gradient)',
         border: '1px solid rgba(100, 18, 166, 0.2)',
         backdropFilter: 'blur(12px)',
       }}
