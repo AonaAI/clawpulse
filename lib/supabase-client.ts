@@ -3,7 +3,39 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Adaptive storage: when 'cp_no_persist' is set in sessionStorage (login without
+// "Remember me"), Supabase tokens are stored in sessionStorage so they're cleared
+// when the browser tab is closed. Otherwise uses localStorage (survives restarts).
+const adaptiveStorage = typeof window !== 'undefined'
+  ? {
+      getItem: (key: string): string | null => {
+        if (sessionStorage.getItem('cp_no_persist') === '1') {
+          return sessionStorage.getItem(key)
+        }
+        return localStorage.getItem(key)
+      },
+      setItem: (key: string, value: string): void => {
+        if (sessionStorage.getItem('cp_no_persist') === '1') {
+          sessionStorage.setItem(key, value)
+          localStorage.removeItem(key)
+        } else {
+          localStorage.setItem(key, value)
+        }
+      },
+      removeItem: (key: string): void => {
+        localStorage.removeItem(key)
+        sessionStorage.removeItem(key)
+      },
+    }
+  : undefined
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: adaptiveStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+})
 
 // Fetch functions for client-side use
 export async function fetchAgents() {

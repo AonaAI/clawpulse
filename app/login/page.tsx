@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase-client'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -15,6 +16,14 @@ export default function LoginPage() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    // Set the persistence mode BEFORE signing in so the adaptive storage
+    // in supabase-client.ts routes tokens to the right store.
+    if (rememberMe) {
+      sessionStorage.removeItem('cp_no_persist')
+    } else {
+      sessionStorage.setItem('cp_no_persist', '1')
+    }
 
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -179,6 +188,43 @@ export default function LoginPage() {
                 }}
               />
             </div>
+
+            {/* Remember me */}
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <div
+                onClick={() => setRememberMe(v => !v)}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '4px',
+                  border: rememberMe
+                    ? '1.5px solid rgba(139, 92, 246, 0.8)'
+                    : '1.5px solid rgba(109, 40, 217, 0.35)',
+                  background: rememberMe
+                    ? 'linear-gradient(135deg, #6412A6 0%, #4c1d95 100%)'
+                    : 'rgba(255,255,255,0.03)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.15s',
+                  boxShadow: rememberMe ? '0 0 8px rgba(100,18,166,0.35)' : 'none',
+                }}
+              >
+                {rememberMe && (
+                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                    <polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+              <span
+                className="text-xs font-medium"
+                style={{ color: '#9ca3af' }}
+                onClick={() => setRememberMe(v => !v)}
+              >
+                Remember me
+              </span>
+            </label>
 
             {/* Error */}
             {error && (
