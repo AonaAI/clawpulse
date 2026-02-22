@@ -67,7 +67,8 @@ function StatusBadge({ status }: { status: AgentStatus }) {
   )
 }
 
-const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void; sparkline?: number[] }) {
+const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline, pulseType }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void; sparkline?: number[]; pulseType?: 'online' | 'offline' | null }) {
+  const pulseClass = pulseType === 'online' ? 'agent-pulse-online' : pulseType === 'offline' ? 'agent-pulse-offline' : ''
   const initials = agent.name.slice(0, 2).toUpperCase()
   const isWorking = agent.status === 'working'
 
@@ -78,7 +79,7 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline }
           background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'rgba(255, 255, 255, 0.02)',
           border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'rgba(109, 40, 217, 0.14)'}`,
         }}
-        className="rounded-lg p-2.5 flex items-center gap-2"
+        className={`rounded-lg p-2.5 flex items-center gap-2 ${pulseClass}`}
       >
         <div
           style={{
@@ -105,7 +106,7 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline }
         boxShadow: isWorking ? '0 0 0 1px rgba(139, 92, 246, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4)' : '0 4px 24px rgba(0, 0, 0, 0.3)',
         transition: 'border-color 0.2s, box-shadow 0.2s',
       }}
-      className="rounded-xl p-4 flex flex-col gap-3 cursor-default hover:border-[rgba(139,92,246,0.4)]"
+      className={`rounded-xl p-4 flex flex-col gap-3 cursor-default hover:border-[rgba(139,92,246,0.4)] ${pulseClass}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
@@ -185,6 +186,8 @@ export default function OverviewPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [activity, setActivity] = useState<any[]>([])
   const [newActivityIds, setNewActivityIds] = useState<Set<string>>(new Set())
+  const [agentPulses, setAgentPulses] = useState<Map<string, 'online' | 'offline'>>(new Map())
+  const pulseTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const [apiError, setApiError] = useState(false)
   const [companyMission, setCompanyMission] = useState('')
   const [widgetLayout, setWidgetLayout] = useState<WidgetConfig[]>([])
@@ -283,7 +286,26 @@ export default function OverviewPage() {
   }, [])
 
   const handleAgentUpdate = useCallback((record: any) => {
-    setAgents(prev => prev.map(a => (a.id === record.id || a.dir === record.id) ? { ...a, status: record.status || a.status } : a))
+    setAgents(prev => {
+      const agent = prev.find(a => a.id === record.id || a.dir === record.id)
+      if (agent && record.status && agent.status !== record.status) {
+        const isOnline = record.status === 'working' || record.status === 'idle'
+        const isOffline = record.status === 'offline'
+        if (isOnline || isOffline) {
+          const pulseType = isOnline ? 'online' as const : 'offline' as const
+          setAgentPulses(prev => new Map(prev).set(agent.id, pulseType))
+          // Clear existing timer
+          const existing = pulseTimersRef.current.get(agent.id)
+          if (existing) clearTimeout(existing)
+          const timer = setTimeout(() => {
+            setAgentPulses(prev => { const next = new Map(prev); next.delete(agent.id); return next })
+            pulseTimersRef.current.delete(agent.id)
+          }, 2000)
+          pulseTimersRef.current.set(agent.id, timer)
+        }
+      }
+      return prev.map(a => (a.id === record.id || a.dir === record.id) ? { ...a, status: record.status || a.status } : a)
+    })
   }, [])
 
   const handleTaskInsert = useCallback((record: any) => { setTasks(prev => [record, ...prev]) }, [])
@@ -396,7 +418,7 @@ export default function OverviewPage() {
               </div>
             </div>
             <div className={`grid ${compact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}`}>
-              {filteredAgents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} sparkline={sparklines[agent.id]} />)}
+              {filteredAgents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} sparkline={sparklines[agent.id]} pulseType={agentPulses.get(agent.id)} />)}
             </div>
           </div>
         )

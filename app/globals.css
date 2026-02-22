@@ -187,6 +187,39 @@ body {
   animation: realtime-fade-in 0.6s ease-out;
 }
 
+/* Agent status change pulse animations */
+@keyframes pulse-online {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(52, 211, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+@keyframes pulse-offline {
+  0% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(248, 113, 113, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+  }
+}
+
+.agent-pulse-online {
+  animation: pulse-online 1s ease-out 2;
+}
+
+.agent-pulse-offline {
+  animation: pulse-offline 1s ease-out 2;
+}
+
 @keyframes live-badge-glow {
   0%, 100% {
     box-shadow: 0 0 4px rgba(52, 211, 153, 0.3), 0 0 8px rgba(52, 211, 153, 0.1);

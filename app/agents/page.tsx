@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, memo } from 'react'
+import { useEffect, useState, useCallback, memo, useRef } from 'react'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
 import { fetchTokenStatsByAgent, fetchAgentLiveStatus } from '@/lib/supabase-client'
@@ -123,9 +123,10 @@ function formatTokensShort(n: number): string {
   return String(n)
 }
 
-const AgentCard = memo(function AgentCard({ agent, tokenStats, mission }: { agent: MergedAgent; tokenStats?: { total_tokens: number; total_cost: number } | null; mission?: string | null }) {
+const AgentCard = memo(function AgentCard({ agent, tokenStats, mission, pulseType }: { agent: MergedAgent; tokenStats?: { total_tokens: number; total_cost: number } | null; mission?: string | null; pulseType?: 'online' | 'offline' | null }) {
   const isWorking = agent.status === 'working'
   const initials = agent.name.slice(0, 2).toUpperCase()
+  const pulseClass = pulseType === 'online' ? 'agent-pulse-online' : pulseType === 'offline' ? 'agent-pulse-offline' : ''
 
   return (
     <div
@@ -138,7 +139,7 @@ const AgentCard = memo(function AgentCard({ agent, tokenStats, mission }: { agen
           : '0 4px 24px rgba(0, 0, 0, 0.3)',
         transition: 'border-color 0.2s, box-shadow 0.2s',
       }}
-      className="rounded-xl overflow-hidden hover:border-[rgba(139,92,246,0.4)] cursor-pointer group-hover:border-[rgba(139,92,246,0.45)]"
+      className={`rounded-xl overflow-hidden hover:border-[rgba(139,92,246,0.4)] cursor-pointer group-hover:border-[rgba(139,92,246,0.45)] ${pulseClass}`}
     >
       {/* Card header */}
       <div
@@ -319,6 +320,8 @@ export default function AgentsPage() {
   const [apiError, setApiError] = useState(false)
   const [tokenMap, setTokenMap] = useState<Record<string, { total_tokens: number; total_cost: number }>>({})
   const [missionMap, setMissionMap] = useState<Record<string, string | null>>({})
+  const [agentPulses, setAgentPulses] = useState<Map<string, 'online' | 'offline'>>(new Map())
+  const pulseTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   const fetchAgentsLive = useCallback(async () => {
     try {
@@ -348,11 +351,27 @@ export default function AgentsPage() {
   }, [])
 
   const handleAgentUpdate = useCallback((record: Record<string, unknown>) => {
-    setAgents(prev => prev.map(a =>
-      (a.id === record.id || a.dir === record.id)
-        ? { ...a, status: (record.status as AgentStatus) || a.status }
-        : a,
-    ))
+    const id = record.id as string
+    const newStatus = record.status as AgentStatus
+    setAgents(prev => {
+      const agent = prev.find(a => a.id === id || a.dir === id)
+      if (agent && newStatus && agent.status !== newStatus) {
+        const isOnline = newStatus === 'working' || newStatus === 'idle'
+        const isOffline = newStatus === 'offline'
+        if (isOnline || isOffline) {
+          const pulseType = isOnline ? 'online' as const : 'offline' as const
+          setAgentPulses(prev => new Map(prev).set(agent.id, pulseType))
+          const existing = pulseTimersRef.current.get(agent.id)
+          if (existing) clearTimeout(existing)
+          const timer = setTimeout(() => {
+            setAgentPulses(prev => { const next = new Map(prev); next.delete(agent.id); return next })
+            pulseTimersRef.current.delete(agent.id)
+          }, 2000)
+          pulseTimersRef.current.set(agent.id, timer)
+        }
+      }
+      return prev.map(a => (a.id === id || a.dir === id) ? { ...a, status: newStatus || a.status } : a)
+    })
   }, [])
 
   const { connectionStatus } = useRealtimeSubscription([
@@ -452,7 +471,7 @@ export default function AgentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {visibleAgents.map((agent) => (
           <Link key={agent.id} href={`/agents/${agent.id}`} className="block group">
-            <AgentCard agent={agent} tokenStats={tokenMap[agent.id] || null} mission={missionMap[agent.id] || null} />
+            <AgentCard agent={agent} tokenStats={tokenMap[agent.id] || null} mission={missionMap[agent.id] || null} pulseType={agentPulses.get(agent.id)} />
           </Link>
         ))}
       </div>
