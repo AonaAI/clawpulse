@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { AGENTS } from '@/lib/data'
 import SearchModal from './SearchModal'
+import { useAuth } from './AuthProvider'
 
 const navItems = [
   {
@@ -140,6 +141,7 @@ const navItems = [
 
 function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void; onSearchClick?: () => void }) {
   const pathname = usePathname()
+  const { user, signOut } = useAuth()
 
   return (
     <div className="flex flex-col h-full">
@@ -273,6 +275,49 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
             <span style={{ color: 'var(--cp-text-primary)' }} className="text-xs font-semibold">{AGENTS.length}</span>
           </div>
         </div>
+
+        {/* User info + logout */}
+        {user && (
+          <div
+            style={{
+              background: 'rgba(109,40,217,0.06)',
+              border: '1px solid rgba(109,40,217,0.18)',
+            }}
+            className="rounded-xl p-3 flex items-center gap-2.5"
+          >
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #6412A6 0%, #4c1d95 100%)',
+                border: '1px solid rgba(139, 92, 246, 0.35)',
+                flexShrink: 0,
+              }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white uppercase"
+            >
+              {user.email?.[0] ?? '?'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div
+                style={{ color: 'var(--cp-text-primary)' }}
+                className="text-xs font-semibold truncate"
+              >
+                {user.email}
+              </div>
+              <div style={{ color: '#6d28d9' }} className="text-xs">Admin</div>
+            </div>
+            <button
+              onClick={signOut}
+              title="Sign out"
+              style={{ color: '#6b7280' }}
+              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors flex-shrink-0"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import NotificationProvider from "@/components/NotificationProvider";
 import ThemeProvider from "@/components/ThemeProvider";
-import KeyboardShortcuts from "@/components/KeyboardShortcuts";
-import PWAInstallBanner from "@/components/PWAInstallBanner";
+import AuthProvider from "@/components/AuthProvider";
+import AppShell from "@/components/AppShell";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -51,15 +49,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
         <ThemeProvider>
-          <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
-            <Sidebar />
-            <NotificationProvider />
-            <KeyboardShortcuts />
-            <PWAInstallBanner />
-            <main className="flex-1 overflow-auto pt-16 md:pt-0 page-transition" style={{ background: 'var(--background)' }}>
-              {children}
-            </main>
-          </div>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
