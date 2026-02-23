@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { APP_NAME } from '@/lib/config'
 
@@ -76,30 +76,6 @@ const FEATURES = [
     path: '/workflows',
   },
 ]
-
-export function useOnboarding() {
-  const [show, setShow] = useState(false)
-
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY) !== 'true') {
-        setShow(true)
-      }
-    } catch {}
-  }, [])
-
-  const restart = useCallback(() => {
-    try { localStorage.removeItem(STORAGE_KEY) } catch {}
-    setShow(true)
-  }, [])
-
-  const dismiss = useCallback(() => {
-    try { localStorage.setItem(STORAGE_KEY, 'true') } catch {}
-    setShow(false)
-  }, [])
-
-  return { show, restart, dismiss }
-}
 
 export default function OnboardingWizard({ onClose }: { onClose: () => void }) {
   const router = useRouter()

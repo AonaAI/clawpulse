@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { AGENTS } from '@/lib/data'
 import { APP_NAME } from '@/lib/config'
-import SearchModal from './SearchModal'
 import ProjectSwitcher from './ProjectSwitcher'
 import { useAuth } from './AuthProvider'
+
+const SearchModal = dynamic(() => import('./SearchModal'), { ssr: false })
 
 const navItems = [
   {

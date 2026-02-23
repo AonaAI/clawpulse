@@ -1,12 +1,15 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import Sidebar from '@/components/Sidebar'
 import NotificationProvider from '@/components/NotificationProvider'
-import KeyboardShortcuts from '@/components/KeyboardShortcuts'
-import PWAInstallBanner from '@/components/PWAInstallBanner'
-import OnboardingWizard, { useOnboarding } from '@/components/OnboardingWizard'
+import { useOnboarding } from '@/components/useOnboarding'
 import { useAuth } from '@/components/AuthProvider'
+
+const KeyboardShortcuts = dynamic(() => import('@/components/KeyboardShortcuts'), { ssr: false })
+const PWAInstallBanner = dynamic(() => import('@/components/PWAInstallBanner'), { ssr: false })
+const OnboardingWizard = dynamic(() => import('@/components/OnboardingWizard'), { ssr: false })
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth()
