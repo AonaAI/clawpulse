@@ -296,6 +296,18 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
         </div>
 
         <Link
+          href="/cron"
+          style={{ color: 'var(--cp-text-nav)' }}
+          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          Cron Jobs
+        </Link>
+
+        <Link
           href="/audit"
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
@@ -430,6 +442,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/usage': 'Usage',
   '/mission': 'Mission',
   '/playground': 'Playground',
+  '/cron': 'Cron Jobs',
   '/audit': 'Audit Log',
   '/errors': 'Errors',
   '/alerts': 'Alerts',
