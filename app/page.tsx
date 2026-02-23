@@ -19,6 +19,7 @@ import DraggableWidget from '@/components/widgets/DraggableWidget'
 import QuickActionsWidget from '@/components/widgets/QuickActionsWidget'
 import CostSummaryWidget from '@/components/widgets/CostSummaryWidget'
 import RecentDeploymentsWidget from '@/components/widgets/RecentDeploymentsWidget'
+import LiveActivityPanel from '@/components/LiveActivityPanel'
 
 function formatLastActive(ms: number | null): string {
   if (ms === null) return 'Never'
@@ -979,6 +980,9 @@ export default function OverviewPage() {
           onClose={() => setSelectedAgentId(null)}
         />
       )}
+
+      {/* Global Live Activity Side Panel */}
+      <LiveActivityPanel />
     </div>
   )
 }
