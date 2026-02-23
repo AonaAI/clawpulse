@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { fetchAllSessions, fetchSessionTrace } from '@/lib/supabase-client'
 import { supabase } from '@/lib/supabase-client'
 
@@ -637,13 +638,28 @@ export default function SessionsPage() {
                             <span style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}`, color: statusCfg.color }} className="text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
                               {statusCfg.label}
                             </span>
-                            <svg
-                              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                              style={{ color: isSelected ? '#a78bfa' : 'var(--cp-text-dim)', transform: isSelected ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s, opacity 0.15s', opacity: isSelected ? 1 : 0, flexShrink: 0 }}
-                              className="group-hover:opacity-60"
-                            >
-                              <polyline points="9 18 15 12 9 6" />
-                            </svg>
+                            <div className="flex items-center gap-1.5">
+                              <Link
+                                href={`/sessions/${session.id}`}
+                                onClick={e => e.stopPropagation()}
+                                title="View session details"
+                                style={{ color: 'var(--cp-text-dim)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 6 }}
+                                className="group-hover:opacity-80 hover:!opacity-100 hover:bg-white/[0.06] transition-all flex-shrink-0"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                  <polyline points="15 3 21 3 21 9" />
+                                  <line x1="10" y1="14" x2="21" y2="3" />
+                                </svg>
+                              </Link>
+                              <svg
+                                width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                                style={{ color: isSelected ? '#a78bfa' : 'var(--cp-text-dim)', transform: isSelected ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s, opacity 0.15s', opacity: isSelected ? 1 : 0, flexShrink: 0 }}
+                                className="group-hover:opacity-60"
+                              >
+                                <polyline points="9 18 15 12 9 6" />
+                              </svg>
+                            </div>
                           </div>
                         </td>
                       </tr>

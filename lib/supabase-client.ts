@@ -518,6 +518,50 @@ export async function fetchAllSessions(opts: {
   return { items, total: count ?? 0 }
 }
 
+export async function fetchSessionWithMetadata(sessionId: string): Promise<{
+  id: string
+  agent_id: string
+  agent_name: string
+  session_key: string
+  kind: string
+  status: string
+  started_at: string
+  last_active: string | null
+  model: string | null
+  token_count: number
+  duration_minutes: number | null
+  cost_usd: number
+  metadata: Record<string, unknown> | null
+} | null> {
+  const { data, error } = await supabase
+    .from('agent_sessions')
+    .select('*, agent:agents(name)')
+    .eq('id', sessionId)
+    .single()
+
+  if (error || !data) { console.error('Error fetching session:', error); return null }
+
+  const durationMs = data.last_active && data.started_at
+    ? new Date(data.last_active).getTime() - new Date(data.started_at).getTime()
+    : null
+  const agentRow = data.agent as unknown as { name: string } | null
+  return {
+    id: data.id,
+    agent_id: data.agent_id,
+    agent_name: agentRow?.name || data.agent_id,
+    session_key: data.session_key,
+    kind: data.kind || 'unknown',
+    status: data.status || 'completed',
+    started_at: data.started_at,
+    last_active: data.last_active,
+    model: data.model,
+    token_count: data.token_count ?? 0,
+    duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
+    cost_usd: 0,
+    metadata: (data.metadata as Record<string, unknown>) ?? null,
+  }
+}
+
 export async function fetchSessionById(sessionId: string): Promise<{
   id: string
   agent_id: string
