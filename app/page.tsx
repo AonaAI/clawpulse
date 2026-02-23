@@ -4,23 +4,23 @@ import { useEffect, useState, useCallback, memo, useRef } from 'react'
 import Link from 'next/link'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
-import { supabase, fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines, fetchTokenStatsByAgent, fetchAgentActivity, fetchAgentTodayTokens, fetchSessions } from '@/lib/supabase-client'
+import { supabase, fetchTasks, fetchActivityLog, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines, fetchTokenStatsByAgent, fetchAgentActivity, fetchAgentTodayTokens, fetchSessions } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
 import { APP_NAME } from '@/lib/config'
 import dynamic from 'next/dynamic'
 import ExportButton, { exportToCSV, exportToJSON } from '@/components/ExportButton'
-import Sparkline from '@/components/Sparkline'
 import { useProject } from '@/components/ProjectProvider'
+import DraggableWidget from '@/components/widgets/DraggableWidget'
 
 const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel'), { ssr: false })
 const SpawnModal = dynamic(() => import('@/components/SpawnModal'), { ssr: false })
-import DraggableWidget from '@/components/widgets/DraggableWidget'
-import QuickActionsWidget from '@/components/widgets/QuickActionsWidget'
-import CostSummaryWidget from '@/components/widgets/CostSummaryWidget'
-import RecentDeploymentsWidget from '@/components/widgets/RecentDeploymentsWidget'
-import LiveActivityPanel from '@/components/LiveActivityPanel'
+const QuickActionsWidget = dynamic(() => import('@/components/widgets/QuickActionsWidget'), { ssr: false })
+const CostSummaryWidget = dynamic(() => import('@/components/widgets/CostSummaryWidget'), { ssr: false })
+const RecentDeploymentsWidget = dynamic(() => import('@/components/widgets/RecentDeploymentsWidget'), { ssr: false })
+const LiveActivityPanel = dynamic(() => import('@/components/LiveActivityPanel'), { ssr: false })
+const Sparkline = dynamic(() => import('@/components/Sparkline'), { ssr: false })
 
 function formatLastActive(ms: number | null): string {
   if (ms === null) return 'Never'

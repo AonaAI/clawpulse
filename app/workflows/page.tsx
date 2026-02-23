@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase-client'
 
@@ -144,7 +144,7 @@ const STATUS_CONFIG = {
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, icon, accent }: {
+const StatCard = memo(function StatCard({ label, value, sub, icon, accent }: {
   label: string
   value: string
   sub?: string
@@ -173,11 +173,11 @@ function StatCard({ label, value, sub, icon, accent }: {
       {sub && <div style={{ color: 'var(--cp-text-dim)', fontSize: 11 }} className="mt-1">{sub}</div>}
     </div>
   )
-}
+})
 
 // ── Flow Diagram ──────────────────────────────────────────────────────────────
 
-function FlowDiagram({ sessions }: { sessions: SessionRow[] }) {
+const FlowDiagram = memo(function FlowDiagram({ sessions }: { sessions: SessionRow[] }) {
   const unique = Array.from(
     new Map(sessions.map(s => [s.agent_id, s])).values()
   )
@@ -222,11 +222,11 @@ function FlowDiagram({ sessions }: { sessions: SessionRow[] }) {
       })}
     </div>
   )
-}
+})
 
 // ── Pipeline Card ─────────────────────────────────────────────────────────────
 
-function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
+const PipelineCard = memo(function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
   const [expanded, setExpanded] = useState(false)
   const cfg = STATUS_CONFIG[pipeline.status]
 
@@ -398,7 +398,7 @@ function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
       )}
     </div>
   )
-}
+})
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 

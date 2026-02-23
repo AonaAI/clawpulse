@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, memo } from 'react'
 import { AGENTS } from '@/lib/data'
 import { fetchAllSessions } from '@/lib/supabase-client'
 
@@ -74,7 +74,7 @@ function computeMetrics(sessions: SessionRow[], periodStart: Date, periodEnd: Da
   return result
 }
 
-function TrendArrow({ current, previous }: { current: number; previous: number }) {
+const TrendArrow = memo(function TrendArrow({ current, previous }: { current: number; previous: number }) {
   if (previous === 0 && current === 0) return <span className="text-xs opacity-40">—</span>
   const better = current >= previous
   return (
@@ -82,10 +82,10 @@ function TrendArrow({ current, previous }: { current: number; previous: number }
       {better ? '▲' : '▼'}
     </span>
   )
-}
+})
 
 // ── CSS Radar Chart ──────────────────────────────────────────────────────
-function RadarChart({ metrics, color, label }: { metrics: AgentMetrics; color: string; label: string }) {
+const RadarChart = memo(function RadarChart({ metrics, color, label }: { metrics: AgentMetrics; color: string; label: string }) {
   // Normalize each dimension to 0-100 scale
   const dims = [
     { name: 'Speed', value: Math.min(metrics.completionSpeed / 50, 1) * 100 },
@@ -144,10 +144,10 @@ function RadarChart({ metrics, color, label }: { metrics: AgentMetrics; color: s
       <span className="text-xs font-semibold" style={{ color }}>{label}</span>
     </div>
   )
-}
+})
 
 // ── Card ─────────────────────────────────────────────────────────────────
-function Card({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+const Card = memo(function Card({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div
       style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
@@ -157,7 +157,7 @@ function Card({ title, children, className = '' }: { title: string; children: Re
       {children}
     </div>
   )
-}
+})
 
 // ── Main Page ────────────────────────────────────────────────────────────
 export default function BenchmarksPage() {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, memo } from 'react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -175,7 +175,7 @@ function buildCurl(endpoint: Endpoint): string {
 
 // ─── Components ─────────────────────────────────────────────────────────────
 
-function CopyButton({ text }: { text: string }) {
+const CopyButton = memo(function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   const copy = useCallback(() => {
     navigator.clipboard.writeText(text)
@@ -206,9 +206,9 @@ function CopyButton({ text }: { text: string }) {
       )}
     </button>
   )
-}
+})
 
-function MethodBadge({ method }: { method: string }) {
+const MethodBadge = memo(function MethodBadge({ method }: { method: string }) {
   return (
     <span
       style={{
@@ -221,9 +221,9 @@ function MethodBadge({ method }: { method: string }) {
       {method}
     </span>
   )
-}
+})
 
-function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
+const EndpointCard = memo(function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
   const [expanded, setExpanded] = useState(false)
   const curl = buildCurl(endpoint)
 
@@ -294,7 +294,7 @@ function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
       )}
     </div>
   )
-}
+})
 
 function ApiKeySection() {
   return (
