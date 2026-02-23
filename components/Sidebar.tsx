@@ -102,6 +102,17 @@ const navItems = [
     ),
   },
   {
+    href: '/sessions',
+    label: 'Sessions',
+    icon: (
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 12h4M18 12h4M12 2v4M12 18v4" />
+        <rect x="8" y="8" width="8" height="8" rx="2" />
+        <path d="M6 6l2.5 2.5M17.5 6L15 8.5M6 18l2.5-2.5M17.5 18L15 15.5" />
+      </svg>
+    ),
+  },
+  {
     href: '/timeline',
     label: 'Timeline',
     icon: (
@@ -350,6 +361,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/metrics': 'Metrics',
   '/compare': 'Compare',
   '/activity': 'Activity',
+  '/sessions': 'Sessions',
   '/timeline': 'Timeline',
   '/usage': 'Usage',
   '/mission': 'Mission',

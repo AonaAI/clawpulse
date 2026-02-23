@@ -437,6 +437,132 @@ export async function updateAgentMission(agentId: string, mission: string): Prom
 
 // ── Sessions ─────────────────────────────────────────────────────────────────
 
+export async function fetchAllSessions(opts: {
+  limit?: number
+  offset?: number
+  agentId?: string
+  sortBy?: 'started_at' | 'last_active' | 'token_count'
+  sortAsc?: boolean
+}): Promise<{ items: Array<{
+  id: string
+  agent_id: string
+  agent_name: string
+  session_key: string
+  kind: string
+  status: string
+  started_at: string
+  last_active: string | null
+  model: string | null
+  token_count: number
+  duration_minutes: number | null
+  cost_usd: number
+}>; total: number }> {
+  const { limit = 50, offset = 0, agentId, sortBy = 'started_at', sortAsc = false } = opts
+
+  let query = supabase
+    .from('agent_sessions')
+    .select('*, agent:agents(name)', { count: 'exact' })
+    .order(sortBy, { ascending: sortAsc })
+    .range(offset, offset + limit - 1)
+
+  if (agentId) query = query.eq('agent_id', agentId)
+
+  const { data, error, count } = await query
+  if (error) { console.error('Error fetching all sessions:', error); return { items: [], total: 0 } }
+
+  const items = (data || []).map(r => {
+    const durationMs = r.last_active && r.started_at
+      ? new Date(r.last_active).getTime() - new Date(r.started_at).getTime()
+      : null
+    const agentRow = r.agent as unknown as { name: string } | null
+    return {
+      id: r.id,
+      agent_id: r.agent_id,
+      agent_name: agentRow?.name || r.agent_id,
+      session_key: r.session_key,
+      kind: r.kind || 'unknown',
+      status: r.status || 'completed',
+      started_at: r.started_at,
+      last_active: r.last_active,
+      model: r.model,
+      token_count: r.token_count ?? 0,
+      duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
+      cost_usd: 0,
+    }
+  })
+  return { items, total: count ?? 0 }
+}
+
+export async function fetchSessionById(sessionId: string): Promise<{
+  id: string
+  agent_id: string
+  agent_name: string
+  session_key: string
+  kind: string
+  status: string
+  started_at: string
+  last_active: string | null
+  model: string | null
+  token_count: number
+  duration_minutes: number | null
+  cost_usd: number
+} | null> {
+  const { data, error } = await supabase
+    .from('agent_sessions')
+    .select('*, agent:agents(name)')
+    .eq('id', sessionId)
+    .single()
+
+  if (error || !data) { console.error('Error fetching session:', error); return null }
+
+  const durationMs = data.last_active && data.started_at
+    ? new Date(data.last_active).getTime() - new Date(data.started_at).getTime()
+    : null
+  const agentRow = data.agent as unknown as { name: string } | null
+  return {
+    id: data.id,
+    agent_id: data.agent_id,
+    agent_name: agentRow?.name || data.agent_id,
+    session_key: data.session_key,
+    kind: data.kind || 'unknown',
+    status: data.status || 'completed',
+    started_at: data.started_at,
+    last_active: data.last_active,
+    model: data.model,
+    token_count: data.token_count ?? 0,
+    duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
+    cost_usd: 0,
+  }
+}
+
+export async function fetchSessionTrace(sessionId: string): Promise<Array<{
+  id: string
+  agent_id: string
+  agent_name: string
+  action: string
+  details: string
+  metadata: Record<string, unknown>
+  created_at: string
+}>> {
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('*, agent:agents(name)')
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: true })
+
+  if (error) { console.error('Error fetching session trace:', error); return [] }
+
+  return (data || []).map(item => ({
+    id: item.id,
+    agent_id: item.agent_id,
+    agent_name: item.agent?.name || item.agent_id,
+    action: item.action,
+    details: item.details || '',
+    metadata: item.metadata || {},
+    created_at: item.created_at,
+  }))
+}
+
 export async function fetchSessions(agentId: string, limit = 20) {
   const { data, error } = await supabase
     .from('agent_sessions')
