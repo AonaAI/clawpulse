@@ -55,13 +55,18 @@ export function hasAccess(role: Role, path: string): boolean {
   return ROLE_LEVEL[role] >= ROLE_LEVEL[minRole]
 }
 
-const STORAGE_KEY = 'clawpulse-role'
+/**
+ * DEV-ONLY: localStorage-based role override.
+ * Production roles come from the user_roles table in Supabase.
+ * These helpers are kept for the dev role switcher (gated behind DEV_MODE + admin).
+ */
+const STORAGE_KEY = 'clawpulse-role-dev'
 
 export function getStoredRole(): Role {
-  if (typeof window === 'undefined') return 'admin'
+  if (typeof window === 'undefined') return 'viewer'
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored && ROLES.includes(stored as Role)) return stored as Role
-  return 'admin'
+  return 'viewer'
 }
 
 export function setStoredRole(role: Role): void {

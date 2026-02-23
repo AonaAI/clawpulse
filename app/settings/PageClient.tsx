@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { supabase, createProject, updateProject, deleteProject } from '@/lib/supabase-client'
 import { useAuth } from '@/components/AuthProvider'
 import { useProject, Project } from '@/components/ProjectProvider'
-import { useRBAC } from '@/components/RBACProvider'
+import { useRBAC, useDevRoleSwitcherEnabled } from '@/components/RBACProvider'
 import { useRouter } from 'next/navigation'
 import { APP_NAME } from '@/lib/config'
 import type { Role as UIRole } from '@/lib/rbac'
@@ -730,6 +730,13 @@ function DevToolsSection() {
   )
 }
 
+/** Gated wrapper: only renders DevToolsSection when DEV_MODE + admin */
+function DevToolsSectionGated() {
+  const enabled = useDevRoleSwitcherEnabled()
+  if (!enabled) return null
+  return <DevToolsSection />
+}
+
 // ── General tab ───────────────────────────────────────────────────────────────
 
 function GeneralTab() {
@@ -828,8 +835,8 @@ function GeneralTab() {
         </button>
       </div>
 
-      {/* Dev Tools */}
-      <DevToolsSection />
+      {/* Dev Tools — only visible in DEV_MODE for admins */}
+      <DevToolsSectionGated />
 
       {/* Footer */}
       <div className="flex justify-center pt-2">
