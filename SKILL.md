@@ -1,3 +1,17 @@
+---
+name: clawpulse
+description: "Agent Ops Dashboard — monitor, manage, and observe AI agents in real time. Track sessions, errors, alerts, workflows, metrics, and more via a web UI backed by Supabase and hosted on Firebase."
+metadata:
+  {
+    "openclaw":
+      {
+        "emoji": "🔍",
+        "requires": { "env": ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"] },
+        "urls": { "dashboard": "https://clawpulse.web.app", "repo": "https://github.com/bastiencodes/clawpulse" },
+      },
+  }
+---
+
 # ClawPulse — Agent Ops Dashboard
 
 ## What This Skill Does
