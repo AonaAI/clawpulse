@@ -10,6 +10,17 @@ import type { AgentStatus, Task, Session } from '@/lib/types'
 import SpawnModal from '@/components/SpawnModal'
 import AgentHealthTimeline from '@/components/AgentHealthTimeline'
 import AgentUptimeCard from '@/components/AgentUptimeCard'
+import MemoryTab from './MemoryTab'
+
+type AgentTab = 'overview' | 'sessions' | 'activity' | 'config' | 'memory'
+
+const TABS: { id: AgentTab; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'sessions', label: 'Sessions' },
+  { id: 'activity', label: 'Activity' },
+  { id: 'config', label: 'Config' },
+  { id: 'memory', label: 'Memory' },
+]
 
 interface SpawnRequest {
   id: string
@@ -325,6 +336,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
   const [loading, setLoading] = useState(true)
   const [showSpawnModal, setShowSpawnModal] = useState(false)
   const [spawnRequests, setSpawnRequests] = useState<SpawnRequest[]>([])
+  const [activeTab, setActiveTab] = useState<AgentTab>('overview')
 
   // Stable callback for refreshing spawn requests (used as fallback poll)
   const loadSpawns = useCallback(async () => {

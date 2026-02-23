@@ -373,3 +373,97 @@ body {
 .print-header {
   display: none;
 }
+
+/* ── Markdown content (MemoryTab) ─────────────────────────────────── */
+.markdown-content .md-h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--cp-text-heading);
+  margin: 1.25rem 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--cp-divider-accent);
+}
+.markdown-content .md-h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--cp-text-card-title);
+  margin: 1rem 0 0.4rem;
+}
+.markdown-content .md-h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cp-text-secondary);
+  margin: 0.75rem 0 0.3rem;
+}
+.markdown-content .md-h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cp-text-muted);
+  margin: 0.5rem 0 0.25rem;
+}
+.markdown-content .md-p {
+  color: var(--cp-text-secondary);
+  margin: 0.4rem 0;
+  line-height: 1.65;
+}
+.markdown-content .md-bold {
+  color: var(--cp-text-card-title);
+  font-weight: 600;
+}
+.markdown-content .md-em {
+  font-style: italic;
+  color: var(--cp-text-muted);
+}
+.markdown-content .md-pre {
+  background: var(--cp-code-bg);
+  border: 1px solid var(--cp-border-subtle);
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.markdown-content .md-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: #c4b5fd;
+  line-height: 1.6;
+  white-space: pre;
+}
+.markdown-content .md-inline-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8em;
+  color: #a78bfa;
+  background: var(--cp-code-bg);
+  border: 1px solid var(--cp-border-subtle);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+.markdown-content .md-ul,
+.markdown-content .md-ol {
+  margin: 0.5rem 0 0.5rem 1.25rem;
+}
+.markdown-content .md-li,
+.markdown-content .md-oli {
+  color: var(--cp-text-secondary);
+  margin: 0.2rem 0;
+  line-height: 1.6;
+}
+.markdown-content .md-ul .md-li {
+  list-style-type: disc;
+}
+.markdown-content .md-ol .md-oli {
+  list-style-type: decimal;
+}
+.markdown-content .md-hr {
+  border: none;
+  border-top: 1px solid var(--cp-divider-accent);
+  margin: 1rem 0;
+}
+.markdown-content .md-link {
+  color: #8b5cf6;
+  text-decoration: underline;
+  text-decoration-color: rgba(139,92,246,0.4);
+}
+.markdown-content .md-link:hover {
+  color: #c4b5fd;
+}
