@@ -192,6 +192,7 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
   const [mounted, setMounted] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   const isCommandMode = query.startsWith('>')
@@ -353,6 +354,28 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
     if (el) (el as HTMLElement).scrollIntoView({ block: 'nearest' })
   }, [selectedIndex])
 
+  // Focus trap: keep Tab focus inside the dialog
+  useEffect(() => {
+    if (!open || !mounted) return
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [open, mounted])
+
   const navigate = useCallback((result: SearchResult) => {
     if (result.action) {
       result.action()
@@ -403,6 +426,10 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
         onClick={e => e.stopPropagation()}
         style={{
           background: 'var(--cp-panel-bg, #1a0533)',
@@ -425,6 +452,11 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isCommandMode ? 'Type a command...' : 'Search pages, agents, sessions, errors, tasks...'}
+            aria-label={isCommandMode ? 'Command input' : 'Search'}
+            aria-autocomplete="list"
+            aria-controls="search-results"
+            role="combobox"
+            aria-expanded={results.length > 0}
             style={{ color: 'var(--cp-text-primary, #f8f4ff)', background: 'transparent' }}
             className="flex-1 text-sm outline-none placeholder:text-gray-500"
           />
@@ -459,7 +491,7 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
         )}
 
         {/* Results */}
-        <div ref={resultsRef} className="max-h-[50vh] overflow-y-auto py-2">
+        <div ref={resultsRef} id="search-results" role="listbox" aria-label="Search results" className="max-h-[50vh] overflow-y-auto py-2">
           {loading && (
             <div style={{ color: 'var(--cp-text-muted, #888)' }} className="text-sm text-center py-8">
               <div className="animate-spin inline-block w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full mb-2" />

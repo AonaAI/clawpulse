@@ -12,13 +12,13 @@
   --cp-text-accent-light: #c4b5fd;
   --cp-text-secondary: #9ca3af;
   --cp-text-muted: #6b7280;
-  --cp-text-dim: #4b5563;
-  --cp-text-dimmer: #374151;
+  --cp-text-dim: #6d7a8a;
+  --cp-text-dimmer: #5e6d7d;
   --cp-text-faint: #1f2937;
-  --cp-text-nav: #7c5fa0;
-  --cp-text-nav-label: #3b1d6e;
-  --cp-text-notification-dim: #4a3660;
-  --cp-text-notification-read: #5a4478;
+  --cp-text-nav: #9070b8;
+  --cp-text-nav-label: #8b6aaf;
+  --cp-text-notification-dim: #8a70a8;
+  --cp-text-notification-read: #8a70a8;
   --cp-text-notification-unread: #ddd6fe;
 
   /* Surfaces */
@@ -72,11 +72,11 @@
   --cp-text-accent-light: #6412A6;
   --cp-text-secondary: #4b5563;
   --cp-text-muted: #6b7280;
-  --cp-text-dim: #9ca3af;
-  --cp-text-dimmer: #d1d5db;
+  --cp-text-dim: #647080;
+  --cp-text-dimmer: #9ca3af;
   --cp-text-faint: #e5e7eb;
   --cp-text-nav: #6412A6;
-  --cp-text-nav-label: #a78bfa;
+  --cp-text-nav-label: #6d28d9;
   --cp-text-notification-dim: #9ca3af;
   --cp-text-notification-read: #6b7280;
   --cp-text-notification-unread: #2d2a4a;
@@ -372,6 +372,51 @@ body {
 }
 .print-header {
   display: none;
+}
+
+/* ── Accessibility ────────────────────────────────────────────────── */
+
+/* Skip-to-content link (visible only on keyboard focus) */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  background: #7c3aed;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  text-decoration: none;
+  transition: top 0.1s;
+  white-space: nowrap;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* Global focus-visible ring — keyboard users see a clear purple outline */
+*:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+[data-theme="light"] *:focus-visible {
+  outline-color: #6412A6;
+}
+
+/* Inputs and textareas: slightly larger offset so the ring sits outside the border */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-offset: 0;
+}
+
+/* Export button focus ring override so it stays inside the button shape */
+.export-btn:focus-visible,
+.export-dropdown-item:focus-visible {
+  outline-offset: -2px;
 }
 
 /* ── Markdown content (MemoryTab) ─────────────────────────────────── */

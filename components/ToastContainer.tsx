@@ -25,7 +25,7 @@ export default function ToastContainer({ toasts, onDismiss }: Props) {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none" style={{ maxWidth: '340px' }}>
+    <div role="status" aria-live="polite" className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none" style={{ maxWidth: '340px' }}>
       {toasts.slice(-5).map((toast) => (
         <div
           key={toast.id}
@@ -51,6 +51,7 @@ export default function ToastContainer({ toasts, onDismiss }: Props) {
           </div>
           <button
             onClick={() => onDismiss(toast.id)}
+            aria-label="Dismiss notification"
             style={{ color: 'var(--cp-text-notification-dim)' }}
             className="flex-shrink-0 hover:text-white/50 transition-colors mt-0.5"
           >

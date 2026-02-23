@@ -229,6 +229,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
       <div className="px-3 pt-2">
         <button
           onClick={() => { onNavClick?.(); onSearchClick?.() }}
+          aria-label="Search (Cmd+K)"
           style={{
             color: 'var(--cp-text-nav)',
             background: 'var(--cp-card-bg)',
@@ -236,16 +237,16 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <span className="flex-1 text-left">Search...</span>
-          <kbd style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-separator-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-1.5 py-0.5 rounded font-mono hidden sm:inline">⌘K</kbd>
+          <span className="flex-1 text-left" aria-hidden="true">Search...</span>
+          <kbd style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-separator-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-1.5 py-0.5 rounded font-mono hidden sm:inline" aria-hidden="true">⌘K</kbd>
         </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto min-h-0">
+      <nav aria-label="Primary" className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto min-h-0">
         <div style={{ color: 'var(--cp-text-nav-label)' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
           Navigation
         </div>
@@ -256,6 +257,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
               key={item.href}
               href={item.href}
               onClick={onNavClick}
+              aria-current={isActive ? 'page' : undefined}
               style={
                 isActive
                   ? {
@@ -282,7 +284,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
                 }
               }}
             >
-              <span style={{ opacity: isActive ? 1 : 0.55 }}>{item.icon}</span>
+              <span style={{ opacity: isActive ? 1 : 0.55 }} aria-hidden="true">{item.icon}</span>
               {item.label}
             </Link>
           )
@@ -300,7 +302,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
@@ -312,7 +314,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
             <line x1="16" y1="13" x2="8" y2="13" />
@@ -326,7 +328,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -339,7 +341,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             <circle cx="18" cy="5" r="2.5" fill="currentColor" stroke="none" />
@@ -352,7 +354,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 17l6-6-6-6" />
             <path d="M12 19h8" />
           </svg>
@@ -364,7 +366,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5 mb-2"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14M12 2v2m0 16v2M2 12h2m16 0h2" />
           </svg>
@@ -422,11 +424,12 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
             </div>
             <button
               onClick={signOut}
+              aria-label="Sign out"
               title="Sign out"
               style={{ color: '#6b7280' }}
               className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors flex-shrink-0"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
@@ -503,6 +506,7 @@ export default function Sidebar() {
     <>
       {/* Desktop sidebar */}
       <aside
+        aria-label="Main navigation"
         style={{
           background: 'linear-gradient(180deg, var(--cp-sidebar-bg) 0%, var(--cp-sidebar-bg-bottom) 100%)',
           borderRight: '1px solid rgba(109, 40, 217, 0.18)',
@@ -527,13 +531,15 @@ export default function Sidebar() {
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open navigation"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-nav-drawer"
           style={{
             background: 'rgba(109, 40, 217, 0.15)',
             border: '1px solid rgba(139, 92, 246, 0.25)',
           }}
           className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <line x1="3" y1="6" x2="21" y2="6" />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -582,6 +588,9 @@ export default function Sidebar() {
 
       {/* Mobile: drawer */}
       <aside
+        id="mobile-nav-drawer"
+        aria-label="Navigation"
+        aria-hidden={!mobileOpen}
         style={{
           background: 'linear-gradient(180deg, var(--cp-sidebar-bg) 0%, var(--cp-sidebar-bg-bottom) 100%)',
           borderRight: '1px solid rgba(109, 40, 217, 0.25)',
@@ -599,7 +608,7 @@ export default function Sidebar() {
           style={{ color: 'var(--cp-text-muted)' }}
           className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>

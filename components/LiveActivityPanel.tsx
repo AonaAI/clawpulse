@@ -156,6 +156,7 @@ export default function LiveActivityPanel() {
       {!isOpen && (
         <button
           onClick={handleOpen}
+          aria-label="Open live activity panel"
           title="Live Activity"
           style={{
             position: 'fixed',
@@ -268,6 +269,7 @@ export default function LiveActivityPanel() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
+              aria-label="Close live activity panel"
               title="Close"
               style={{
                 color: 'var(--cp-text-dim)',

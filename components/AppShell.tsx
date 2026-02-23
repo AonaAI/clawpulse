@@ -63,7 +63,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <KeyboardShortcuts />
       <PWAInstallBanner />
       {onboarding.show && <OnboardingWizard onClose={onboarding.dismiss} />}
-      <main className="flex-1 overflow-auto pt-16 md:pt-0 page-transition" style={{ background: 'var(--background)' }}>
+      <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto pt-16 md:pt-0 page-transition" style={{ background: 'var(--background)', outline: 'none' }}>
         {children}
       </main>
     </div>

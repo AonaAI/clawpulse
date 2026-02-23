@@ -55,7 +55,7 @@ export default function ExportButton({ onExportCSV, onExportJSON, onPrintPDF }: 
   // If only one option, just make it a simple button
   if (options.length === 1) {
     return (
-      <button onClick={options[0].action} className="export-btn" title={options[0].label}>
+      <button onClick={options[0].action} className="export-btn" title={options[0].label} aria-label={options[0].label}>
         <DownloadIcon />
       </button>
     )
@@ -63,7 +63,7 @@ export default function ExportButton({ onExportCSV, onExportJSON, onPrintPDF }: 
 
   return (
     <div ref={ref} className="relative inline-block">
-      <button onClick={() => setOpen(!open)} className="export-btn" title="Export">
+      <button onClick={() => setOpen(!open)} className="export-btn" title="Export" aria-label="Export" aria-expanded={open}>
         <DownloadIcon />
         <span className="text-xs font-semibold">Export</span>
       </button>

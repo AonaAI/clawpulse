@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { APP_NAME } from '@/lib/config'
 
@@ -108,6 +108,33 @@ export default function OnboardingWizard({ onClose }: { onClose: () => void }) {
   const [budget, setBudget] = useState('')
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [animating, setAnimating] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Escape to close
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
+  }, [onClose])
+
+  // Focus trap
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+    focusable[0]?.focus()
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const els = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+      if (els.length === 0) return
+      const first = els[0]; const last = els[els.length - 1]
+      if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus() } }
+      else { if (document.activeElement === last) { e.preventDefault(); first.focus() } }
+    }
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [step])
 
   const goTo = (newStep: number) => {
     if (animating) return
@@ -151,6 +178,9 @@ export default function OnboardingWizard({ onClose }: { onClose: () => void }) {
       style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Welcome wizard"
         className="w-full max-w-lg rounded-2xl overflow-hidden"
         style={{
           background: 'var(--cp-panel-bg)',

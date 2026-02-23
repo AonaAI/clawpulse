@@ -50,6 +50,7 @@ export default function RootLayout({
         `}} />
       </head>
       <body className="antialiased" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <ThemeProvider>
           <AuthProvider>
             <ProjectProvider>

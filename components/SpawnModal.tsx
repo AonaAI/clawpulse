@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase-client'
 
 interface SpawnModalProps {
@@ -15,6 +15,28 @@ export default function SpawnModal({ agentId, agentName, onClose, onSpawned }: S
   const [model, setModel] = useState('default')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Focus trap
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+    focusable[0]?.focus()
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const els = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE))
+      if (els.length === 0) return
+      const first = els[0]; const last = els[els.length - 1]
+      if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus() } }
+      else { if (document.activeElement === last) { e.preventDefault(); first.focus() } }
+    }
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleTab)
+    document.addEventListener('keydown', handleEsc)
+    return () => { document.removeEventListener('keydown', handleTab); document.removeEventListener('keydown', handleEsc) }
+  }, [onClose])
 
   async function handleSpawn() {
     if (!task.trim()) { setError('Task description is required'); return }
@@ -40,12 +62,16 @@ export default function SpawnModal({ agentId, agentName, onClose, onSpawned }: S
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose} aria-hidden="true">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       {/* Modal */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="spawn-modal-title"
         className="relative w-full max-w-lg mx-4 rounded-2xl p-6"
         style={{
           background: 'var(--cp-card-bg, #1a1a2e)',
@@ -53,17 +79,19 @@ export default function SpawnModal({ agentId, agentName, onClose, onSpawned }: S
           boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 40px rgba(124,58,237,0.15)',
         }}
         onClick={e => e.stopPropagation()}
+        aria-hidden="false"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-bold">Spawn Task</h2>
-          <button onClick={onClose} style={{ color: 'var(--cp-text-dim)' }} className="hover:text-white transition-colors text-xl leading-none">&times;</button>
+          <h2 id="spawn-modal-title" style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-bold">Spawn Task</h2>
+          <button onClick={onClose} aria-label="Close dialog" style={{ color: 'var(--cp-text-dim)' }} className="hover:text-white transition-colors text-xl leading-none">&times;</button>
         </div>
 
         {/* Agent name */}
         <div className="mb-4">
-          <label style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Agent</label>
+          <label htmlFor="spawn-agent" style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Agent</label>
           <div
+            id="spawn-agent"
             style={{ background: 'var(--cp-input-bg, rgba(255,255,255,0.05))', border: '1px solid var(--cp-border-subtle)', color: 'var(--cp-text-muted)' }}
             className="rounded-lg px-3 py-2 text-sm font-medium"
           >
@@ -73,8 +101,9 @@ export default function SpawnModal({ agentId, agentName, onClose, onSpawned }: S
 
         {/* Task */}
         <div className="mb-4">
-          <label style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Task Description</label>
+          <label htmlFor="spawn-task" style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Task Description</label>
           <textarea
+            id="spawn-task"
             value={task}
             onChange={e => setTask(e.target.value)}
             placeholder="Describe the task for this agent..."
@@ -90,8 +119,9 @@ export default function SpawnModal({ agentId, agentName, onClose, onSpawned }: S
 
         {/* Model */}
         <div className="mb-5">
-          <label style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Model</label>
+          <label htmlFor="spawn-model" style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-1.5">Model</label>
           <select
+            id="spawn-model"
             value={model}
             onChange={e => setModel(e.target.value)}
             style={{
@@ -108,7 +138,7 @@ export default function SpawnModal({ agentId, agentName, onClose, onSpawned }: S
         </div>
 
         {/* Error */}
-        {error && <div style={{ color: '#f87171' }} className="text-xs mb-4">{error}</div>}
+        {error && <div role="alert" style={{ color: '#f87171' }} className="text-xs mb-4">{error}</div>}
 
         {/* Actions */}
         <div className="flex justify-end gap-3">

@@ -97,8 +97,9 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
             <div className="flex items-center gap-2">
               <button
                 onClick={onToggleSound}
-                style={{ color: soundEnabled ? '#8b5cf6' : '#4a3660' }}
+                style={{ color: soundEnabled ? '#8b5cf6' : 'var(--cp-text-notification-dim)' }}
                 className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/5 transition-colors"
+                aria-label={soundEnabled ? 'Mute notifications' : 'Enable notification sound'}
                 title={soundEnabled ? 'Mute notifications' : 'Enable notification sound'}
               >
                 {soundEnabled ? (
@@ -151,7 +152,7 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span
-                        style={{ color: notif.read ? '#5a4478' : '#ddd6fe' }}
+                        style={{ color: notif.read ? 'var(--cp-text-notification-read)' : 'var(--cp-text-notification-unread)' }}
                         className="text-xs font-semibold truncate"
                       >
                         {notif.title}
@@ -161,7 +162,7 @@ export default function NotificationBell({ notifications, unreadCount, soundEnab
                       </span>
                     </div>
                     <p
-                      style={{ color: notif.read ? '#3b1d6e' : '#7c5fa0' }}
+                      style={{ color: notif.read ? 'var(--cp-text-notification-read)' : 'var(--cp-text-nav)' }}
                       className="text-xs mt-0.5 truncate"
                     >
                       {notif.message}
