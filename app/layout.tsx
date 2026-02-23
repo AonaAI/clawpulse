@@ -5,6 +5,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
 import AppShell from "@/components/AppShell";
 import ProjectProvider from "@/components/ProjectProvider";
+import { APP_NAME, APP_DESCRIPTION } from "@/lib/config";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -13,8 +14,8 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "ClawPulse — Agent Operations",
-  description: "Monitor and manage your AI agent network",
+  title: `${APP_NAME} — Agent Operations`,
+  description: APP_DESCRIPTION,
   manifest: "/manifest.json",
 };
 
@@ -30,7 +31,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="ClawPulse" />
+        <meta name="apple-mobile-web-app-title" content={APP_NAME} />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){

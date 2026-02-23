@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { APP_NAME } from '@/lib/config';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -71,7 +72,7 @@ export default function PWAInstallBanner() {
       {/* Icon */}
       <img
         src="/icons/icon-192.png"
-        alt="ClawPulse"
+        alt={APP_NAME}
         width={36}
         height={36}
         style={{ borderRadius: '0.5rem', flexShrink: 0 }}
@@ -80,7 +81,7 @@ export default function PWAInstallBanner() {
       {/* Text */}
       <div style={{ lineHeight: 1.3 }}>
         <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#f8f4ff' }}>
-          Install ClawPulse
+          Install {APP_NAME}
         </div>
         <div style={{ fontSize: '0.6875rem', color: '#9ca3af', marginTop: '0.125rem' }}>
           Add to home screen for quick access

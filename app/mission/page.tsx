@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase, updateProject, updateProjectAgent } from '@/lib/supabase-client'
 import { fetchCompanySettings, updateCompanySettings } from '@/lib/company'
+import { APP_NAME, COMPANY_NAME } from '@/lib/config'
 import type { CompanySettings } from '@/lib/company'
 import { useProject } from '@/components/ProjectProvider'
 import type { Project, ProjectAgent } from '@/components/ProjectProvider'
@@ -741,7 +742,7 @@ export default function MissionPage() {
                 🏢
               </div>
               <div>
-                <div style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-lg">{company?.name || 'Aona AI'}</div>
+                <div style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-lg">{company?.name || COMPANY_NAME}</div>
                 <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">Company — Top level</div>
               </div>
             </div>

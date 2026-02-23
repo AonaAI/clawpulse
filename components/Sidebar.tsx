@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { AGENTS } from '@/lib/data'
+import { APP_NAME } from '@/lib/config'
 import SearchModal from './SearchModal'
 import ProjectSwitcher from './ProjectSwitcher'
 import { useAuth } from './AuthProvider'
@@ -186,7 +187,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           </div>
           <div>
             <div style={{ color: 'var(--cp-text-primary)' }} className="font-bold text-sm tracking-wide leading-none">
-              ClawPulse
+              {APP_NAME}
             </div>
             <div style={{ color: '#6d28d9' }} className="text-xs mt-0.5 leading-none font-medium">
               Agent Ops
@@ -445,7 +446,7 @@ export default function Sidebar() {
   // Derive page title from current path
   const pageTitle = Object.entries(PAGE_TITLES).find(([key]) =>
     key === '/' ? pathname === '/' : pathname.startsWith(key)
-  )?.[1] ?? 'ClawPulse'
+  )?.[1] ?? APP_NAME
 
   return (
     <>
@@ -508,7 +509,7 @@ export default function Sidebar() {
               {pageTitle}
             </div>
             <div style={{ color: '#6d28d9' }} className="text-xs leading-none mt-0.5 font-medium">
-              ClawPulse
+              {APP_NAME}
             </div>
           </div>
         </div>

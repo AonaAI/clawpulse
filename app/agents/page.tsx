@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, memo, useRef } from 'react'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
+import { APP_NAME } from '@/lib/config'
 import { fetchTokenStatsByAgent, fetchAgentLiveStatus } from '@/lib/supabase-client'
 import { supabase } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
@@ -392,7 +393,7 @@ export default function AgentsPage() {
       <div className="mb-6 sm:mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Agent Registry</h1>
-          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">All agents in the ClawPulse network</p>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">All agents in the {APP_NAME} network</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportButton onExportCSV={() => {

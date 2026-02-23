@@ -8,6 +8,7 @@ import { supabase, fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromD
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
+import { APP_NAME } from '@/lib/config'
 import dynamic from 'next/dynamic'
 import ExportButton, { exportToCSV, exportToJSON } from '@/components/ExportButton'
 import Sparkline from '@/components/Sparkline'
@@ -841,7 +842,7 @@ export default function OverviewPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Print Header */}
       <div className="print-header" style={{ marginBottom: 24, borderBottom: '2px solid #7c3aed', paddingBottom: 12 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>ClawPulse — Dashboard Report</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>{APP_NAME} — Dashboard Report</h1>
         <p style={{ fontSize: 12, color: '#666' }}>Generated: {new Date().toLocaleString()}</p>
       </div>
       {/* Header */}

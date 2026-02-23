@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { supabase } from '@/lib/supabase-client'
 import { useAuth } from '@/components/AuthProvider'
+import { APP_NAME } from '@/lib/config'
 
 type Role = 'admin' | 'editor' | 'viewer'
 
@@ -268,7 +269,7 @@ function DeleteModal({
         </div>
 
         <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm mb-4">
-          Remove <span style={{ color: 'var(--cp-text-primary)' }} className="font-semibold">{user.email}</span> from ClawPulse? They will lose access immediately.
+          Remove <span style={{ color: 'var(--cp-text-primary)' }} className="font-semibold">{user.email}</span> from {APP_NAME}? They will lose access immediately.
         </p>
 
         {error && (
@@ -380,7 +381,7 @@ function UsersTab() {
             Team Members
           </h2>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">
-            {users.length} {users.length === 1 ? 'user' : 'users'} with access to ClawPulse
+            {users.length} {users.length === 1 ? 'user' : 'users'} with access to {APP_NAME}
           </p>
         </div>
         <button

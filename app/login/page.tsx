@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-client'
+import { APP_NAME, APP_DESCRIPTION } from '@/lib/config'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -88,7 +89,7 @@ export default function LoginPage() {
             className="text-2xl font-bold tracking-tight"
             style={{ color: '#f8f4ff' }}
           >
-            ClawPulse
+            {APP_NAME}
           </h1>
           <p
             className="text-sm mt-1.5 font-medium tracking-wide"
@@ -274,7 +275,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-xs mt-6" style={{ color: '#4b5563' }}>
-          ClawPulse — Agent Operations Platform
+          {APP_NAME} — {APP_DESCRIPTION}
         </p>
       </div>
     </div>
