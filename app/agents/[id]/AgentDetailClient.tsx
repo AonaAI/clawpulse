@@ -1,14 +1,15 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
 import { supabase, fetchSessions } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, Task, Session } from '@/lib/types'
-import SpawnModal from '@/components/SpawnModal'
-import AgentHealthTimeline from '@/components/AgentHealthTimeline'
+const SpawnModal = dynamic(() => import('@/components/SpawnModal'), { ssr: false })
+const AgentHealthTimeline = dynamic(() => import('@/components/AgentHealthTimeline'), { ssr: false })
 import AgentUptimeCard from '@/components/AgentUptimeCard'
 import MemoryTab from './MemoryTab'
 
