@@ -32,8 +32,9 @@ async function tryReadFile(filePath: string, name: string): Promise<MemoryFile |
   }
 }
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const workspacePath = getWorkspacePath(params.id)
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const workspacePath = getWorkspacePath(id)
   if (!workspacePath) {
     return NextResponse.json({ files: [] })
   }

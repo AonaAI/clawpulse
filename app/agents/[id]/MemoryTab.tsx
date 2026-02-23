@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase-client'
-import type { MemoryFile } from '@/app/api/agents/[id]/memory/route'
-import type { KnowledgeEntry } from '@/lib/types'
-import type { Session } from '@/lib/types'
+import type { KnowledgeEntry, Session } from '@/lib/types'
+
+interface MemoryFile {
+  name: string
+  content: string
+  size: number
+  modified: string
+}
 
 // ── Model context limits ────────────────────────────────────────────────────
 
@@ -267,21 +272,20 @@ export default function MemoryTab({ agentId, agentModel, latestSession }: Memory
   const [kbLoading, setKbLoading] = useState(true)
 
   useEffect(() => {
-    async function loadMemory() {
-      try {
-        const res = await fetch(`/api/agents/${agentId}/memory`)
-        if (res.ok) {
-          const data = await res.json()
-          const files: MemoryFile[] = data.files ?? []
-          setMemFiles(files)
-          if (files.length > 0) setSelectedFile(files[0].name)
-        }
-      } catch {
-        // ignore
-      } finally {
-        setMemLoading(false)
-      }
-    }
+    // NOTE: This app is deployed as a static export on Firebase Hosting.
+    // Next.js API routes are not executed there, so we can't read local workspace files.
+    // Instead we show an illustrative "workspace files" view.
+    const nowIso = new Date().toISOString()
+    const mockFiles: MemoryFile[] = [
+      { name: 'SOUL.md', content: 'System identity / role definition for the agent.', size: 1240, modified: nowIso },
+      { name: 'USER.md', content: 'User profile and preferences.', size: 980, modified: nowIso },
+      { name: 'MEMORY.md', content: 'Project memory: architecture, decisions, and ongoing notes.', size: 20480, modified: nowIso },
+      { name: 'memory/backlog.md', content: 'Product backlog and priorities.', size: 6420, modified: nowIso },
+      { name: 'memory/2026-02-23.md', content: 'Daily work log.', size: 5120, modified: nowIso },
+    ]
+    setMemFiles(mockFiles)
+    setSelectedFile(mockFiles[0]?.name ?? null)
+    setMemLoading(false)
 
     async function loadKnowledge() {
       const { data } = await supabase
@@ -293,7 +297,6 @@ export default function MemoryTab({ agentId, agentModel, latestSession }: Memory
       setKbLoading(false)
     }
 
-    loadMemory()
     loadKnowledge()
   }, [agentId])
 

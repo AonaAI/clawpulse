@@ -657,283 +657,169 @@ export default function AgentDetailClient({ id }: { id: string }) {
         <AgentHealthTimeline sessions={data?.healthSessions ?? []} loading={loading} />
       </div>
 
-      {/* Main content */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left: Session history + chart + activity */}
-        <div className="xl:col-span-2 space-y-6">
-          {/* Session History */}
-          <div
-            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
-            className="rounded-xl overflow-hidden"
-          >
-            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Session History</h2>
-                  <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">
-                    {loading ? '—' : `${sessions.length} sessions`}
-                  </p>
-                </div>
-                {/* Session stats */}
-                {!loading && sessions.length > 0 && (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {avgDuration > 0 && (
-                      <div className="text-right">
-                        <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">Avg duration</div>
-                        <div style={{ color: '#8b5cf6' }} className="text-sm font-bold">{avgDuration}m</div>
-                      </div>
-                    )}
-                    {sessionTokens > 0 && (
-                      <div className="text-right">
-                        <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">Session tokens</div>
-                        <div style={{ color: '#22d3ee' }} className="text-sm font-bold">{formatTokens(sessionTokens)}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* Tab navigation */}
+      <div
+        className="flex gap-1 mb-6 overflow-x-auto"
+        style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}
+      >
+        {TABS.map(tab => {
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors relative flex-shrink-0"
+              style={{
+                color: isActive ? '#c4b5fd' : 'var(--cp-text-muted)',
+                background: 'transparent',
+                borderBottom: isActive ? '2px solid #8b5cf6' : '2px solid transparent',
+                marginBottom: '-1px',
+              }}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
 
-            {loading ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">Loading…</div>
-            ) : sessions.length === 0 ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">No sessions recorded yet</div>
-            ) : (
+      {/* ── Memory tab ─────────────────────────────────────────────────────── */}
+      {activeTab === 'memory' && (
+        <MemoryTab
+          agentId={id}
+          agentModel={agent.model}
+          latestSession={data?.sessions[0] ?? null}
+        />
+      )}
+
+      {/* ── Sessions tab ───────────────────────────────────────────────────── */}
+      {activeTab === 'sessions' && (
+        <div
+          style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
+          className="rounded-xl overflow-hidden"
+        >
+          <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
-                {sessions.map((session, i) => (
-                  <SessionRow key={session.id} session={session} isLast={i === sessions.length - 1} />
-                ))}
+                <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Session History</h2>
+                <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">
+                  {loading ? '—' : `${sessions.length} sessions`}
+                </p>
               </div>
-            )}
-          </div>
-
-          {/* 7-day token chart */}
-          <div
-            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
-            className="rounded-xl p-4 sm:p-5"
-          >
-            <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">7-Day Token Usage</h2>
-              {data && data.weeklyStats.length > 0 && (
-                <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium">
-                  {formatTokens(data.weeklyStats.reduce((s, d) => s + d.total_tokens, 0))} this week
-                </span>
+              {!loading && sessions.length > 0 && (
+                <div className="flex items-center gap-3 flex-wrap">
+                  {avgDuration > 0 && (
+                    <div className="text-right">
+                      <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">Avg duration</div>
+                      <div style={{ color: '#8b5cf6' }} className="text-sm font-bold">{avgDuration}m</div>
+                    </div>
+                  )}
+                  {sessionTokens > 0 && (
+                    <div className="text-right">
+                      <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">Session tokens</div>
+                      <div style={{ color: '#22d3ee' }} className="text-sm font-bold">{formatTokens(sessionTokens)}</div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-
-            {loading ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">Loading…</div>
-            ) : weeklyChart.every(d => d.total_tokens === 0) ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">No token usage in the last 7 days</div>
-            ) : (
-              <div className="space-y-2.5">
-                {weeklyChart.map(day => {
-                  const pct = (day.total_tokens / maxWeekTokens) * 100
-                  return (
-                    <div key={day.date}>
-                      <div className="flex items-center mb-1">
-                        <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium w-14 sm:w-16 flex-shrink-0">
-                          {formatDate(day.date)}
-                        </span>
-                        <div className="flex-1 mx-2 sm:mx-3" style={{ background: 'var(--cp-separator-bg)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}>
-                          <div
-                            style={{
-                              width: `${pct}%`,
-                              height: '100%',
-                              background: pct > 0 ? 'linear-gradient(90deg, #7c3aed, #8b5cf6)' : 'transparent',
-                              borderRadius: '999px',
-                              transition: 'width 0.6s ease',
-                            }}
-                          />
-                        </div>
-                        <div className="text-right flex-shrink-0" style={{ minWidth: '72px' }}>
-                          <span style={{ color: 'var(--cp-text-card-title)' }} className="text-xs font-bold">
-                            {day.total_tokens > 0 ? formatTokens(day.total_tokens) : '—'}
-                          </span>
-                          {day.total_cost > 0 && (
-                            <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs ml-1">{formatCost(day.total_cost)}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
           </div>
-
-          {/* Recent activity */}
-          <div
-            style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
-            className="rounded-xl overflow-hidden"
-          >
-            <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
-              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Recent Activity</h2>
-              <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">Last 50 events</p>
+          {loading ? (
+            <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">Loading…</div>
+          ) : sessions.length === 0 ? (
+            <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">No sessions recorded yet</div>
+          ) : (
+            <div>
+              {sessions.map((session, i) => (
+                <SessionRow key={session.id} session={session} isLast={i === sessions.length - 1} />
+              ))}
             </div>
-
-            {loading ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-12">Loading…</div>
-            ) : !data || data.activity.length === 0 ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-12">No activity yet</div>
-            ) : (
-              <div>
-                {data.activity.map((event, i) => {
-                  const type = detectEventType(event.action)
-                  const cfg = EVENT_CONFIG[type]
-                  const isLast = i === data.activity.length - 1
-                  return (
-                    <div
-                      key={event.id}
-                      className="px-4 sm:px-5 py-3.5 flex items-start gap-3"
-                      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
-                    >
-                      <span
-                        style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, fontSize: '10px' }}
-                        className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 mt-0.5 whitespace-nowrap"
-                      >
-                        {cfg.label}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold leading-tight">{event.action}</div>
-                        {event.details && (
-                          <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5 leading-relaxed truncate">{event.details}</div>
-                        )}
-                      </div>
-                      <div className="flex-shrink-0 text-right">
-                        <div style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px' }} className="font-mono">{formatTimestamp(event.created_at)}</div>
-                        <div style={{ color: 'var(--cp-text-dimmer)', fontSize: '10px' }}>{formatTimeAgo(event.created_at)}</div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          )}
         </div>
+      )}
 
-        {/* Right col */}
-        <div className="space-y-6">
-          {/* Uptime stats */}
-          <AgentUptimeCard
-            sessions={data?.healthSessions ?? []}
-            loading={loading}
-            agentStatus={data?.status ?? 'offline'}
-          />
+      {/* ── Activity tab ───────────────────────────────────────────────────── */}
+      {activeTab === 'activity' && (
+        <div
+          style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
+          className="rounded-xl overflow-hidden"
+        >
+          <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
+            <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Recent Activity</h2>
+            <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">Last 50 events</p>
+          </div>
+          {loading ? (
+            <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-12">Loading…</div>
+          ) : !data || data.activity.length === 0 ? (
+            <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-12">No activity yet</div>
+          ) : (
+            <div>
+              {data.activity.map((event, i) => {
+                const type = detectEventType(event.action)
+                const cfg = EVENT_CONFIG[type]
+                const isLast = i === data.activity.length - 1
+                return (
+                  <div
+                    key={event.id}
+                    className="px-4 sm:px-5 py-3.5 flex items-start gap-3"
+                    style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
+                  >
+                    <span
+                      style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, fontSize: '10px' }}
+                      className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 mt-0.5 whitespace-nowrap"
+                    >
+                      {cfg.label}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold leading-tight">{event.action}</div>
+                      {event.details && (
+                        <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5 leading-relaxed truncate">{event.details}</div>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <div style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px' }} className="font-mono">{formatTimestamp(event.created_at)}</div>
+                      <div style={{ color: 'var(--cp-text-dimmer)', fontSize: '10px' }}>{formatTimeAgo(event.created_at)}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
-          {/* Assigned tasks */}
+      {/* ── Config tab ─────────────────────────────────────────────────────── */}
+      {activeTab === 'config' && (
+        <div className="space-y-4">
           <div
             style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
             className="rounded-xl overflow-hidden"
           >
             <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
-              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Assigned Tasks</h2>
-              <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">
-                {loading ? '—' : `${data?.tasks.length ?? 0} tasks`}
-              </p>
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Agent Configuration</h2>
             </div>
-
-            {loading ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">Loading…</div>
-            ) : !data || data.tasks.length === 0 ? (
-              <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">No assigned tasks</div>
-            ) : (
-              <div>
-                {data.tasks.map((task, i) => {
-                  const sc = TASK_STATUS_CONFIG[task.status] || TASK_STATUS_CONFIG.todo
-                  const pc = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium
-                  const isLast = i === data.tasks.length - 1
-                  return (
-                    <div
-                      key={task.id}
-                      className="px-4 sm:px-5 py-3.5"
-                      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold leading-tight">{task.title}</span>
-                        <span
-                          style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '10px' }}
-                          className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap"
-                        >
-                          {sc.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span style={{ color: pc.color }} className="text-xs font-semibold capitalize">{task.priority}</span>
-                        <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">·</span>
-                        <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{task.project}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+            <div>
+              {([
+                { label: 'Agent ID', value: agent.id, mono: true },
+                { label: 'Role', value: agent.role, mono: false },
+                { label: 'Model', value: agent.model, mono: true },
+                { label: 'Workspace', value: agent.workspace, mono: true },
+                { label: 'Slack Channels', value: agent.slack_channels.length > 0 ? agent.slack_channels.join(', ') : '—', mono: true },
+                { label: 'Spawn Permissions', value: agent.spawn_permissions.length > 0 ? agent.spawn_permissions.join(', ') : 'None', mono: false },
+              ] as { label: string; value: string; mono: boolean }[]).map(({ label, value, mono }, i, arr) => (
+                <div
+                  key={label}
+                  className="px-4 sm:px-5 py-3.5 flex items-start gap-4"
+                  style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+                >
+                  <span style={{ color: 'var(--cp-text-dim)', fontSize: '12px', minWidth: '140px' }} className="font-semibold uppercase tracking-wide flex-shrink-0 pt-0.5">{label}</span>
+                  <span style={{ color: mono ? '#c4b5fd' : 'var(--cp-text-secondary)', fontFamily: mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : undefined, fontSize: '13px' }}>
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Slack channels */}
-          {agent.slack_channels.length > 0 && (
-            <div
-              style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
-              className="rounded-xl p-4 sm:p-5"
-            >
-              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base mb-4">Slack Channels</h2>
-              <div className="space-y-2">
-                {agent.slack_channels.map(ch => (
-                  <div
-                    key={ch}
-                    style={{ background: 'var(--cp-tag-bg)', border: '1px solid var(--cp-border-subtle)' }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                    <span style={{ color: 'var(--cp-text-muted)', fontSize: '12px' }} className="font-mono">{ch}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Spawn Requests */}
-          {spawnRequests.length > 0 && (
-            <div
-              style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
-              className="rounded-xl overflow-hidden"
-            >
-              <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
-                <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Spawn Requests</h2>
-                <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">{spawnRequests.length} request(s)</p>
-              </div>
-              <div>
-                {spawnRequests.map((req, i) => {
-                  const statusCfg = {
-                    pending: { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)', label: 'Pending' },
-                    running: { color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)', label: 'Running' },
-                    done: { color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', label: 'Done' },
-                    error: { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', label: 'Error' },
-                  }[req.status] || { color: 'var(--cp-text-muted)', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.2)', label: req.status }
-                  return (
-                    <div key={req.id} className="px-4 sm:px-5 py-3.5" style={{ borderBottom: i < spawnRequests.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold leading-tight truncate">{req.task}</span>
-                        <span style={{ background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}`, fontSize: '10px' }} className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap">
-                          {statusCfg.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{req.model}</span>
-                        <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">·</span>
-                        <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">{formatTimeAgo(req.created_at)}</span>
-                      </div>
-                      {req.result && <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-1 truncate">{req.result}</div>}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Can spawn */}
           {agent.spawn_permissions.length > 0 && (
             <div
               style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
@@ -958,7 +844,191 @@ export default function AgentDetailClient({ id }: { id: string }) {
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* ── Overview tab ───────────────────────────────────────────────────── */}
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Left: 7-day token chart */}
+          <div className="xl:col-span-2 space-y-6">
+            <div
+              style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
+              className="rounded-xl p-4 sm:p-5"
+            >
+              <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+                <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">7-Day Token Usage</h2>
+                {data && data.weeklyStats.length > 0 && (
+                  <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium">
+                    {formatTokens(data.weeklyStats.reduce((s, d) => s + d.total_tokens, 0))} this week
+                  </span>
+                )}
+              </div>
+
+              {loading ? (
+                <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">Loading…</div>
+              ) : weeklyChart.every(d => d.total_tokens === 0) ? (
+                <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-8">No token usage in the last 7 days</div>
+              ) : (
+                <div className="space-y-2.5">
+                  {weeklyChart.map(day => {
+                    const pct = (day.total_tokens / maxWeekTokens) * 100
+                    return (
+                      <div key={day.date}>
+                        <div className="flex items-center mb-1">
+                          <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium w-14 sm:w-16 flex-shrink-0">
+                            {formatDate(day.date)}
+                          </span>
+                          <div className="flex-1 mx-2 sm:mx-3" style={{ background: 'var(--cp-separator-bg)', height: '6px', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                width: `${pct}%`,
+                                height: '100%',
+                                background: pct > 0 ? 'linear-gradient(90deg, #7c3aed, #8b5cf6)' : 'transparent',
+                                borderRadius: '999px',
+                                transition: 'width 0.6s ease',
+                              }}
+                            />
+                          </div>
+                          <div className="text-right flex-shrink-0" style={{ minWidth: '72px' }}>
+                            <span style={{ color: 'var(--cp-text-card-title)' }} className="text-xs font-bold">
+                              {day.total_tokens > 0 ? formatTokens(day.total_tokens) : '—'}
+                            </span>
+                            {day.total_cost > 0 && (
+                              <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs ml-1">{formatCost(day.total_cost)}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right col */}
+          <div className="space-y-6">
+            {/* Uptime stats */}
+            <AgentUptimeCard
+              sessions={data?.healthSessions ?? []}
+              loading={loading}
+              agentStatus={data?.status ?? 'offline'}
+            />
+
+            {/* Assigned tasks */}
+            <div
+              style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
+              className="rounded-xl overflow-hidden"
+            >
+              <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
+                <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Assigned Tasks</h2>
+                <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">
+                  {loading ? '—' : `${data?.tasks.length ?? 0} tasks`}
+                </p>
+              </div>
+
+              {loading ? (
+                <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">Loading…</div>
+              ) : !data || data.tasks.length === 0 ? (
+                <div style={{ color: 'var(--cp-text-dim)' }} className="text-sm text-center py-10">No assigned tasks</div>
+              ) : (
+                <div>
+                  {data.tasks.map((task, i) => {
+                    const sc = TASK_STATUS_CONFIG[task.status] || TASK_STATUS_CONFIG.todo
+                    const pc = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium
+                    const isLast = i === data.tasks.length - 1
+                    return (
+                      <div
+                        key={task.id}
+                        className="px-4 sm:px-5 py-3.5"
+                        style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold leading-tight">{task.title}</span>
+                          <span
+                            style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, fontSize: '10px' }}
+                            className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap"
+                          >
+                            {sc.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: pc.color }} className="text-xs font-semibold capitalize">{task.priority}</span>
+                          <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">·</span>
+                          <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{task.project}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Slack channels */}
+            {agent.slack_channels.length > 0 && (
+              <div
+                style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
+                className="rounded-xl p-4 sm:p-5"
+              >
+                <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base mb-4">Slack Channels</h2>
+                <div className="space-y-2">
+                  {agent.slack_channels.map(ch => (
+                    <div
+                      key={ch}
+                      style={{ background: 'var(--cp-tag-bg)', border: '1px solid var(--cp-border-subtle)' }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                      <span style={{ color: 'var(--cp-text-muted)', fontSize: '12px' }} className="font-mono">{ch}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Spawn Requests */}
+            {spawnRequests.length > 0 && (
+              <div
+                style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
+                className="rounded-xl overflow-hidden"
+              >
+                <div className="px-4 sm:px-5 py-4" style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
+                  <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Spawn Requests</h2>
+                  <p style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5">{spawnRequests.length} request(s)</p>
+                </div>
+                <div>
+                  {spawnRequests.map((req, i) => {
+                    const statusCfg = {
+                      pending: { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)', label: 'Pending' },
+                      running: { color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)', label: 'Running' },
+                      done: { color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', label: 'Done' },
+                      error: { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', label: 'Error' },
+                    }[req.status] || { color: 'var(--cp-text-muted)', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.2)', label: req.status }
+                    return (
+                      <div key={req.id} className="px-4 sm:px-5 py-3.5" style={{ borderBottom: i < spawnRequests.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold leading-tight truncate">{req.task}</span>
+                          <span style={{ background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}`, fontSize: '10px' }} className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap">
+                            {statusCfg.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{req.model}</span>
+                          <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">·</span>
+                          <span style={{ color: 'var(--cp-text-dimmer)' }} className="text-xs">{formatTimeAgo(req.created_at)}</span>
+                        </div>
+                        {req.result && <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-1 truncate">{req.result}</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Spawn Modal */}
       {showSpawnModal && (
