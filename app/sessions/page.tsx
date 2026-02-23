@@ -254,7 +254,7 @@ function TraceCard({
 
 // ── Session Trace Panel ───────────────────────────────────────────────────────
 
-function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose: () => void }) {
+function SessionSidePanel({ session, onClose }: { session: SessionRow; onClose: () => void }) {
   const [trace, setTrace] = useState<TraceEvent[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -277,19 +277,24 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
   }, {})
 
   return (
-    <div
-      style={{
-        background: 'var(--cp-card-solid-bg)',
-        border: '1px solid var(--cp-border-stronger)',
-        backdropFilter: 'blur(16px)',
-        borderRadius: 14,
-        marginTop: 0,
-      }}
-    >
+    <>
+      {/* Backdrop for mobile */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+      />
+      <div
+        style={{
+          background: 'var(--cp-card-solid-bg)',
+          borderLeft: '1px solid var(--cp-border-stronger)',
+          backdropFilter: 'blur(16px)',
+        }}
+        className="fixed top-0 right-0 z-50 h-full w-full md:w-[450px] overflow-y-auto shadow-2xl animate-slide-in-right"
+      >
       {/* Panel header */}
       <div
-        style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}
-        className="px-5 py-4 flex items-start justify-between gap-3"
+        style={{ borderBottom: '1px solid var(--cp-divider-accent)', background: 'var(--cp-card-solid-bg)' }}
+        className="px-5 py-4 flex items-start justify-between gap-3 sticky top-0 z-10"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -427,7 +432,19 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
           </div>
         )}
       </div>
+
+      {/* View full details link */}
+      <div className="px-5 py-4" style={{ borderTop: '1px solid rgba(109,40,217,0.08)' }}>
+        <Link
+          href={`/sessions/${session.id}`}
+          style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--cp-text-accent-light)' }}
+          className="block text-center px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-500/20 transition-all"
+        >
+          View full session details →
+        </Link>
+      </div>
     </div>
+    </>
   )
 }
 
@@ -684,9 +701,9 @@ export default function SessionsPage() {
             )}
           </div>
 
-          {/* Inline trace panel */}
+          {/* Side panel */}
           {selectedSession && (
-            <SessionTracePanel session={selectedSession} onClose={() => setSelectedSession(null)} />
+            <SessionSidePanel session={selectedSession} onClose={() => setSelectedSession(null)} />
           )}
         </div>
       )}
