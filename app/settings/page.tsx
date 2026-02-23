@@ -556,6 +556,10 @@ function UsersTab() {
 function GeneralTab() {
   const { user } = useAuth()
 
+  const openShortcuts = () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '?' }))
+  }
+
   return (
     <div className="space-y-6">
       {/* Account section */}
@@ -597,7 +601,7 @@ function GeneralTab() {
         </h3>
         <div className="space-y-3">
           {[
-            { label: 'Version', value: 'v3.3.0' },
+            { label: 'Version', value: 'v4.1.0' },
             { label: 'Environment', value: 'Production' },
             { label: 'Hosting', value: 'Firebase · clawpulse.web.app' },
             { label: 'Database', value: 'Supabase (PostgreSQL)' },
@@ -609,6 +613,21 @@ function GeneralTab() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-center pt-2">
+        <button
+          onClick={openShortcuts}
+          style={{ color: 'var(--cp-text-dim)' }}
+          className="flex items-center gap-1.5 text-xs hover:text-violet-400 transition-colors"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+            <path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10" />
+          </svg>
+          Keyboard Shortcuts
+        </button>
       </div>
     </div>
   )

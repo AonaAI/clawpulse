@@ -5,21 +5,22 @@ import { useRouter } from 'next/navigation'
 
 const shortcuts = [
   { keys: ['⌘', 'K'], desc: 'Search' },
-  { keys: ['?'], desc: 'This panel' },
-  { keys: ['Esc'], desc: 'Close modals' },
-  { keys: ['g', 'a'], desc: 'Go to Agents' },
-  { keys: ['g', 't'], desc: 'Go to Tasks' },
-  { keys: ['g', 'h'], desc: 'Go to Overview' },
-  { keys: ['g', 'm'], desc: 'Go to Metrics' },
-  { keys: ['g', 'c'], desc: 'Go to Comms' },
+  { keys: ['?'], desc: 'This help' },
+  { keys: ['G', 'O'], desc: 'Go to Overview' },
+  { keys: ['G', 'A'], desc: 'Go to Agents' },
+  { keys: ['G', 'T'], desc: 'Go to Tasks' },
+  { keys: ['G', 'K'], desc: 'Go to Knowledge' },
+  { keys: ['G', 'S'], desc: 'Go to Settings' },
+  { keys: ['G', 'M'], desc: 'Go to Metrics' },
 ]
 
 const navMap: Record<string, string> = {
+  o: '/',
   a: '/agents',
   t: '/tasks',
-  h: '/',
+  k: '/knowledge',
+  s: '/settings',
   m: '/metrics',
-  c: '/comms',
 }
 
 export default function KeyboardShortcuts() {
