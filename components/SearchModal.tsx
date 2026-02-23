@@ -3,19 +3,18 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { fetchAgents } from '@/lib/supabase-client'
-import { fetchKnowledge, fetchFullActivityLog, fetchTasks } from '@/lib/supabase-client'
-import type { KnowledgeEntry, Task } from '@/lib/types'
-import { useDebounce } from '@/lib/useDebounce'
+import { fetchAgents, fetchFullActivityLog, fetchTasks, fetchAllSessions } from '@/lib/supabase-client'
+import type { Task } from '@/lib/types'
 
 interface SearchResult {
-  type: 'page' | 'agent' | 'task' | 'activity'
+  type: 'page' | 'agent' | 'session' | 'error' | 'task' | 'command'
   id: string
   title: string
   subtitle: string
   href: string
   status?: string
   avatar?: string
+  action?: () => void
 }
 
 const PAGES = [
@@ -27,14 +26,27 @@ const PAGES = [
   { id: 'metrics', title: 'Metrics', subtitle: 'Performance metrics', href: '/metrics', icon: '📈' },
   { id: 'compare', title: 'Compare', subtitle: 'Compare agents', href: '/compare', icon: '⚖️' },
   { id: 'activity', title: 'Activity', subtitle: 'Activity log', href: '/activity', icon: '⚡' },
+  { id: 'sessions', title: 'Sessions', subtitle: 'Agent sessions', href: '/sessions', icon: '🔗' },
+  { id: 'workflows', title: 'Workflows', subtitle: 'Automation workflows', href: '/workflows', icon: '🔀' },
   { id: 'timeline', title: 'Timeline', subtitle: 'Event timeline', href: '/timeline', icon: '🕐' },
   { id: 'usage', title: 'Usage', subtitle: 'Token usage & costs', href: '/usage', icon: '💰' },
+  { id: 'playground', title: 'Playground', subtitle: 'Test & experiment', href: '/playground', icon: '🧪' },
+  { id: 'benchmarks', title: 'Benchmarks', subtitle: 'Performance benchmarks', href: '/benchmarks', icon: '🏆' },
   { id: 'mission', title: 'Mission', subtitle: 'Agent missions', href: '/mission', icon: '🎯' },
+  { id: 'cron', title: 'Cron', subtitle: 'Scheduled jobs', href: '/cron', icon: '⏰' },
   { id: 'audit', title: 'Audit', subtitle: 'Audit log', href: '/audit', icon: '🔍' },
+  { id: 'errors', title: 'Errors', subtitle: 'Error tracking', href: '/errors', icon: '🚨' },
+  { id: 'alerts', title: 'Alerts', subtitle: 'Alert rules', href: '/alerts', icon: '🔔' },
   { id: 'settings', title: 'Settings', subtitle: 'App settings', href: '/settings', icon: '⚙️' },
 ]
 
-const TYPE_CONFIG = {
+const COMMANDS = [
+  { id: 'toggle-theme', title: 'Toggle theme', subtitle: 'Switch between light and dark mode', icon: '🌓' },
+  { id: 'export-data', title: 'Export data', subtitle: 'Export dashboard data as JSON', icon: '📤' },
+  { id: 'new-alert-rule', title: 'New alert rule', subtitle: 'Create a new alert rule', icon: '🔔' },
+]
+
+const TYPE_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   page: {
     label: 'Pages',
     color: '#c084fc',
@@ -53,6 +65,24 @@ const TYPE_CONFIG = {
       </svg>
     ),
   },
+  session: {
+    label: 'Sessions',
+    color: '#38bdf8',
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </svg>
+    ),
+  },
+  error: {
+    label: 'Errors',
+    color: '#f87171',
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+    ),
+  },
   task: {
     label: 'Tasks',
     color: '#60a5fa',
@@ -62,12 +92,12 @@ const TYPE_CONFIG = {
       </svg>
     ),
   },
-  activity: {
-    label: 'Activity',
+  command: {
+    label: 'Commands',
     color: '#fbbf24',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
       </svg>
     ),
   },
@@ -84,6 +114,21 @@ const STATUS_COLORS: Record<string, string> = {
   pending: '#eab308',
   failed: '#ef4444',
   blocked: '#ef4444',
+}
+
+const RECENT_SEARCHES_KEY = 'clawpulse-recent-searches'
+const CACHE_TTL = 30_000
+
+function getRecentSearches(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]')
+  } catch { return [] }
+}
+
+function saveRecentSearch(q: string) {
+  const recent = getRecentSearches().filter(s => s !== q)
+  recent.unshift(q)
+  localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent.slice(0, 5)))
 }
 
 function highlightMatch(text: string, query: string) {
@@ -111,19 +156,47 @@ function StatusDot({ status }: { status?: string }) {
   )
 }
 
+// Simple data cache
+let dataCache: { agents: any[]; sessions: any[]; errors: any[]; tasks: Task[]; ts: number } | null = null
+
+async function loadSearchData() {
+  if (dataCache && Date.now() - dataCache.ts < CACHE_TTL) return dataCache
+
+  const [agentsData, sessionsData, activityData, tasksData] = await Promise.all([
+    fetchAgents().catch(() => []),
+    fetchAllSessions({ limit: 100 }).catch(() => ({ items: [] })),
+    fetchFullActivityLog(100).catch(() => ({ items: [] })),
+    fetchTasks().catch(() => []),
+  ])
+
+  const agents = agentsData || []
+  const sessions = (sessionsData as any)?.items || []
+  const rawActivity = (activityData as any)?.items || activityData || []
+  const errors = (rawActivity as any[]).filter((a: any) =>
+    (a.action || '').toLowerCase().includes('error') ||
+    (a.details || '').toLowerCase().includes('error')
+  )
+  const tasks = tasksData || []
+
+  dataCache = { agents, sessions, errors, tasks, ts: Date.now() }
+  return dataCache
+}
+
 export default function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const [agents, setAgents] = useState<any[]>([])
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [activityItems, setActivityItems] = useState<any[]>([])
+  const [data, setData] = useState<{ agents: any[]; sessions: any[]; errors: any[]; tasks: Task[] } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  // Animation: mount then animate in
+  const isCommandMode = query.startsWith('>')
+
+  // Animation
   useEffect(() => {
     if (open) {
       setMounted(true)
@@ -140,54 +213,77 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
     if (!open) return
     setQuery('')
     setSelectedIndex(0)
+    setRecentSearches(getRecentSearches())
     setTimeout(() => inputRef.current?.focus(), 50)
 
-    fetchAgents().then(d => d && setAgents(d))
-    fetchTasks().then(d => d && setTasks(d))
-    fetchFullActivityLog(50).then(result => {
-      const d = result?.items || result
-      if (d) setActivityItems((d as any[]).map((item: any) => ({
-        id: item.id,
-        agent_name: item.agent_name || item.agent_id,
-        action: item.action,
-        details: item.details,
-        time: item.created_at,
-      })))
+    setLoading(true)
+    loadSearchData().then(d => {
+      setData(d)
+      setLoading(false)
     })
   }, [open])
 
-  const debouncedQuery = useDebounce(query, 300)
-
   const results = useMemo<SearchResult[]>(() => {
-    const q = debouncedQuery.trim().toLowerCase()
+    // Command mode
+    if (isCommandMode) {
+      const cmdQuery = query.slice(1).trim().toLowerCase()
+      return COMMANDS
+        .filter(c => !cmdQuery || c.title.toLowerCase().includes(cmdQuery))
+        .map(c => ({
+          type: 'command' as const,
+          id: c.id,
+          title: c.title,
+          subtitle: c.subtitle,
+          href: '',
+          action: () => {
+            if (c.id === 'toggle-theme') {
+              document.documentElement.classList.toggle('light')
+            } else if (c.id === 'export-data') {
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url; a.download = 'clawpulse-export.json'; a.click()
+              URL.revokeObjectURL(url)
+            } else if (c.id === 'new-alert-rule') {
+              router.push('/alerts')
+            }
+          },
+        }))
+    }
+
+    const q = query.trim().toLowerCase()
     const out: SearchResult[] = []
 
-    // Pages — always show if no query, or filter
+    // Pages
     const filteredPages = PAGES.filter(p =>
       !q || p.title.toLowerCase().includes(q) || p.subtitle.toLowerCase().includes(q)
     )
-    for (const p of q ? filteredPages : []) {
-      out.push({ type: 'page', id: p.id, title: p.title, subtitle: p.subtitle, href: p.href })
-    }
-
-    if (!q) {
-      // Show pages as default suggestions
+    if (q) {
+      for (const p of filteredPages) {
+        out.push({ type: 'page', id: p.id, title: p.title, subtitle: p.subtitle, href: p.href })
+      }
+    } else {
+      // No query: show first 6 pages as suggestions
       for (const p of PAGES.slice(0, 6)) {
         out.push({ type: 'page', id: p.id, title: p.title, subtitle: p.subtitle, href: p.href })
       }
       return out
     }
 
+    if (!data) return out
+
     // Agents
-    for (const a of agents) {
+    for (const a of data.agents) {
       const name = a.name || a.agent_name || ''
+      const model = a.model || ''
       const role = a.role || a.description || ''
-      if (name.toLowerCase().includes(q) || role.toLowerCase().includes(q)) {
+      const status = a.status || ''
+      if (name.toLowerCase().includes(q) || model.toLowerCase().includes(q) || role.toLowerCase().includes(q) || status.toLowerCase().includes(q)) {
         out.push({
           type: 'agent',
           id: a.id,
           title: name,
-          subtitle: role,
+          subtitle: [model, role].filter(Boolean).join(' · '),
           href: `/agents/${a.id}`,
           status: a.status,
           avatar: a.avatar,
@@ -195,9 +291,45 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
       }
     }
 
+    // Sessions
+    for (const s of data.sessions) {
+      const key = s.session_key || ''
+      const agentName = s.agent_name || ''
+      const model = s.model || ''
+      if (key.toLowerCase().includes(q) || agentName.toLowerCase().includes(q) || model.toLowerCase().includes(q)) {
+        out.push({
+          type: 'session',
+          id: s.id,
+          title: key || s.id.slice(0, 12),
+          subtitle: [agentName, model].filter(Boolean).join(' · '),
+          href: `/sessions/${s.id}`,
+          status: s.status,
+        })
+      }
+    }
+
+    // Errors
+    for (const e of data.errors) {
+      const action = e.action || ''
+      const details = e.details || ''
+      const agentName = e.agent_name || e.agent_id || ''
+      if (action.toLowerCase().includes(q) || details.toLowerCase().includes(q) || agentName.toLowerCase().includes(q)) {
+        out.push({
+          type: 'error',
+          id: e.id,
+          title: action,
+          subtitle: details.slice(0, 100),
+          href: '/errors',
+          status: 'failed',
+        })
+      }
+    }
+
     // Tasks
-    for (const t of tasks) {
-      if (t.title.toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q)) {
+    for (const t of data.tasks) {
+      const title = t.title || ''
+      const desc = t.description || ''
+      if (title.toLowerCase().includes(q) || desc.toLowerCase().includes(q)) {
         out.push({
           type: 'task',
           id: t.id,
@@ -209,21 +341,8 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
       }
     }
 
-    // Activity
-    for (const a of activityItems) {
-      if ((a.action || '').toLowerCase().includes(q) || (a.details || '').toLowerCase().includes(q)) {
-        out.push({
-          type: 'activity',
-          id: a.id,
-          title: a.action,
-          subtitle: a.details || '',
-          href: '/activity',
-        })
-      }
-    }
-
-    return out.slice(0, 25)
-  }, [debouncedQuery, agents, tasks, activityItems])
+    return out.slice(0, 30)
+  }, [query, data, isCommandMode, router])
 
   useEffect(() => { setSelectedIndex(0) }, [results])
 
@@ -235,9 +354,17 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
   }, [selectedIndex])
 
   const navigate = useCallback((result: SearchResult) => {
+    if (result.action) {
+      result.action()
+      onClose()
+      return
+    }
+    if (query.trim() && !query.startsWith('>')) {
+      saveRecentSearch(query.trim())
+    }
     onClose()
     router.push(result.href)
-  }, [onClose, router])
+  }, [onClose, router, query])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
@@ -256,11 +383,12 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
 
   if (!mounted) return null
 
-  // Group results by type
-  const grouped = results.reduce<Record<string, SearchResult[]>>((acc, r) => {
-    ;(acc[r.type] ??= []).push(r)
-    return acc
-  }, {})
+  // Group results by type, preserving order
+  const typeOrder: string[] = ['page', 'agent', 'session', 'error', 'task', 'command']
+  const grouped: Record<string, SearchResult[]> = {}
+  for (const r of results) {
+    ;(grouped[r.type] ??= []).push(r)
+  }
 
   let globalIdx = -1
 
@@ -296,10 +424,15 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search pages, agents, tasks, activity..."
+            placeholder={isCommandMode ? 'Type a command...' : 'Search pages, agents, sessions, errors, tasks...'}
             style={{ color: 'var(--cp-text-primary, #f8f4ff)', background: 'transparent' }}
             className="flex-1 text-sm outline-none placeholder:text-gray-500"
           />
+          {isCommandMode && (
+            <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: '#fbbf2420', color: '#fbbf24' }}>
+              CMD
+            </span>
+          )}
           <kbd
             style={{ color: 'var(--cp-text-muted, #888)', background: 'var(--cp-separator-bg, #1a0533)', border: '1px solid var(--cp-border-subtle, #2d1054)' }}
             className="text-xs px-1.5 py-0.5 rounded font-mono"
@@ -308,16 +441,42 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
           </kbd>
         </div>
 
+        {/* Recent searches */}
+        {!query.trim() && recentSearches.length > 0 && (
+          <div style={{ borderBottom: '1px solid var(--cp-divider-accent, #2d1054)' }} className="px-4 py-2 flex items-center gap-2 flex-wrap">
+            <span style={{ color: 'var(--cp-text-dim, #555)' }} className="text-xs">Recent:</span>
+            {recentSearches.map(s => (
+              <button
+                key={s}
+                onClick={() => setQuery(s)}
+                className="text-xs px-2 py-0.5 rounded-full transition-colors"
+                style={{ background: 'rgba(100,18,166,0.15)', color: '#c084fc' }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Results */}
         <div ref={resultsRef} className="max-h-[50vh] overflow-y-auto py-2">
-          {debouncedQuery.trim() && results.length === 0 && (
+          {loading && (
             <div style={{ color: 'var(--cp-text-muted, #888)' }} className="text-sm text-center py-8">
-              <div className="text-2xl mb-2">🔍</div>
-              No results for &ldquo;{debouncedQuery}&rdquo;
+              <div className="animate-spin inline-block w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full mb-2" />
+              <div>Loading data...</div>
             </div>
           )}
-          {Object.entries(grouped).map(([type, items]) => {
-            const cfg = TYPE_CONFIG[type as keyof typeof TYPE_CONFIG]
+          {!loading && query.trim() && results.length === 0 && (
+            <div style={{ color: 'var(--cp-text-muted, #888)' }} className="text-sm text-center py-8">
+              <div className="text-2xl mb-2">🔍</div>
+              No results for &ldquo;{query}&rdquo;
+              {!isCommandMode && <div className="text-xs mt-1">Type <span className="text-yellow-400">&gt;</span> for commands</div>}
+            </div>
+          )}
+          {typeOrder.map(type => {
+            const items = grouped[type]
+            if (!items) return null
+            const cfg = TYPE_CONFIG[type]
             if (!cfg) return null
             return (
               <div key={type}>
@@ -330,6 +489,7 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
                   const idx = globalIdx
                   const isSelected = idx === selectedIndex
                   const page = type === 'page' ? PAGES.find(p => p.id === item.id) : null
+                  const cmd = type === 'command' ? COMMANDS.find(c => c.id === item.id) : null
                   return (
                     <button
                       key={`${type}-${item.id}`}
@@ -344,6 +504,8 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
                     >
                       {page ? (
                         <span className="text-base flex-shrink-0">{page.icon}</span>
+                      ) : cmd ? (
+                        <span className="text-base flex-shrink-0">{cmd.icon}</span>
                       ) : item.avatar ? (
                         <img src={item.avatar} alt="" className="w-6 h-6 rounded-full flex-shrink-0" />
                       ) : (
@@ -351,14 +513,14 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate flex items-center gap-2">
-                          {highlightMatch(item.title, debouncedQuery)}
+                          {highlightMatch(item.title, isCommandMode ? query.slice(1).trim() : query)}
                           <StatusDot status={item.status} />
                         </div>
                         <div style={{ color: 'var(--cp-text-muted, #666)' }} className="text-xs truncate">
-                          {highlightMatch(item.subtitle, debouncedQuery)}
+                          {highlightMatch(item.subtitle, isCommandMode ? query.slice(1).trim() : query)}
                         </div>
                       </div>
-                      {item.status && (
+                      {item.status && type !== 'command' && (
                         <span
                           className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0"
                           style={{
@@ -388,6 +550,7 @@ export default function SearchModal({ open, onClose }: { open: boolean; onClose:
           <span>↑↓ navigate</span>
           <span>↵ open</span>
           <span>esc close</span>
+          <span className="ml-auto" style={{ color: '#fbbf24' }}>&gt; commands</span>
         </div>
       </div>
     </div>
