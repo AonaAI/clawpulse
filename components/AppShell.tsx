@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar'
 import NotificationProvider from '@/components/NotificationProvider'
 import KeyboardShortcuts from '@/components/KeyboardShortcuts'
 import PWAInstallBanner from '@/components/PWAInstallBanner'
+import OnboardingWizard, { useOnboarding } from '@/components/OnboardingWizard'
 import { useAuth } from '@/components/AuthProvider'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -51,6 +52,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return null
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const onboarding = useOnboarding()
+
   // Authenticated: render full dashboard shell
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
@@ -58,6 +62,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <NotificationProvider />
       <KeyboardShortcuts />
       <PWAInstallBanner />
+      {onboarding.show && <OnboardingWizard onClose={onboarding.dismiss} />}
       <main className="flex-1 overflow-auto pt-16 md:pt-0 page-transition" style={{ background: 'var(--background)' }}>
         {children}
       </main>

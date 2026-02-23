@@ -618,6 +618,37 @@ function GeneralTab() {
         </div>
       </div>
 
+      {/* Onboarding */}
+      <div
+        style={{
+          background: 'var(--cp-card-bg)',
+          border: '1px solid var(--cp-border-strong)',
+          backdropFilter: 'blur(12px)',
+        }}
+        className="rounded-2xl p-6"
+      >
+        <h3 style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-bold mb-2">
+          Onboarding
+        </h3>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mb-4">
+          Re-run the first-time setup wizard to review features and settings.
+        </p>
+        <button
+          onClick={() => {
+            try { localStorage.removeItem('onboarding_complete') } catch {}
+            window.location.reload()
+          }}
+          style={{
+            background: 'var(--cp-input-bg)',
+            border: '1px solid var(--cp-border-strong)',
+            color: 'var(--cp-text-secondary)',
+          }}
+          className="px-4 py-2 rounded-xl text-xs font-semibold transition-colors hover:border-violet-500/30 hover:text-violet-400"
+        >
+          🔄 Restart Onboarding
+        </button>
+      </div>
+
       {/* Footer */}
       <div className="flex justify-center pt-2">
         <button
