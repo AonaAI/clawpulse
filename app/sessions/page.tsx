@@ -452,6 +452,31 @@ function SessionSidePanel({ session, onClose }: { session: SessionRow; onClose: 
 
 const PAGE_SIZE = 50
 
+function useRetentionDays(): number {
+  const [days, setDays] = useState(0)
+  useEffect(() => {
+    const read = () => {
+      try {
+        const v = localStorage.getItem('data_retention_days')
+        setDays(v !== null ? Number(v) : 0)
+      } catch {}
+    }
+    read()
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'data_retention_days' || e.key === 'archive_applied_at') read()
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+  return days
+}
+
+function isArchived(startedAt: string, retentionDays: number): boolean {
+  if (retentionDays <= 0) return false
+  const cutoff = Date.now() - retentionDays * 86_400_000
+  return new Date(startedAt).getTime() < cutoff
+}
+
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [total, setTotal] = useState(0)
@@ -459,6 +484,9 @@ export default function SessionsPage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [selectedSession, setSelectedSession] = useState<SessionRow | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
+
+  const retentionDays = useRetentionDays()
 
   // Filters & sort
   const [agentFilter, setAgentFilter] = useState<string>('all')
@@ -545,9 +573,32 @@ export default function SessionsPage() {
           <option value="all">All agents</option>
           {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
         </select>
-        <div style={{ color: 'var(--cp-text-dim)', marginLeft: 'auto', fontSize: 12 }}>
-          {loading ? 'Loading…' : `${sessions.length} of ${total}`}
-        </div>
+        {retentionDays > 0 && (
+          <label className="flex items-center gap-2 cursor-pointer ml-auto" style={{ flexShrink: 0 }}>
+            <span style={{ color: 'var(--cp-text-muted)', fontSize: 12 }}>Show archived</span>
+            <button
+              onClick={() => setShowArchived(v => !v)}
+              style={{
+                background: showArchived ? 'rgba(139,92,246,0.35)' : 'var(--cp-input-bg)',
+                border: `1px solid ${showArchived ? 'rgba(139,92,246,0.5)' : 'var(--cp-border-strong)'}`,
+              }}
+              className="relative w-9 h-5 rounded-full transition-all flex-shrink-0"
+            >
+              <div
+                style={{
+                  background: showArchived ? '#a78bfa' : 'var(--cp-text-dim)',
+                  transform: showArchived ? 'translateX(18px)' : 'translateX(3px)',
+                }}
+                className="absolute top-[3px] w-[14px] h-[14px] rounded-full transition-all"
+              />
+            </button>
+          </label>
+        )}
+        {!retentionDays && (
+          <div style={{ color: 'var(--cp-text-dim)', marginLeft: 'auto', fontSize: 12 }}>
+            {loading ? 'Loading…' : `${sessions.length} of ${total}`}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -601,7 +652,33 @@ export default function SessionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sessions.map((session, idx) => {
+                  {(() => {
+                    const activeSessions = retentionDays > 0
+                      ? sessions.filter(s => !isArchived(s.started_at, retentionDays))
+                      : sessions
+                    const archivedSessions = retentionDays > 0
+                      ? sessions.filter(s => isArchived(s.started_at, retentionDays))
+                      : []
+                    const displaySessions = showArchived ? [...activeSessions, ...archivedSessions] : activeSessions
+                    const archiveStartIdx = activeSessions.length
+                    return displaySessions.map((session, idx) => {
+                    if (showArchived && archivedSessions.length > 0 && idx === archiveStartIdx) {
+                      return [
+                        <tr key="archive-separator">
+                          <td colSpan={6} className="px-5 py-2" style={{ borderBottom: '1px solid var(--cp-input-bg)' }}>
+                            <div className="flex items-center gap-2">
+                              <div style={{ flex: 1, height: 1, background: 'var(--cp-border-strong)' }} />
+                              <span style={{ color: 'var(--cp-text-dim)', fontSize: 11, fontWeight: 600 }}>📦 Archived · {archivedSessions.length} session{archivedSessions.length !== 1 ? 's' : ''}</span>
+                              <div style={{ flex: 1, height: 1, background: 'var(--cp-border-strong)' }} />
+                            </div>
+                          </td>
+                        </tr>,
+                        renderSessionRow(session, idx)
+                      ]
+                    }
+                    return renderSessionRow(session, idx)
+                    function renderSessionRow(session: SessionRow, idx: number) {
+                    const archived = isArchived(session.started_at, retentionDays)
                     const isSelected = selectedSession?.id === session.id
                     const statusCfg = STATUS_CONFIG[session.status] ?? { color: 'var(--cp-text-secondary)', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', label: session.status }
                     return (
@@ -609,10 +686,11 @@ export default function SessionsPage() {
                         key={session.id}
                         onClick={() => handleRowClick(session)}
                         style={{
-                          borderBottom: idx < sessions.length - 1 ? '1px solid var(--cp-input-bg)' : 'none',
+                          borderBottom: idx < displaySessions.length - 1 ? '1px solid var(--cp-input-bg)' : 'none',
                           cursor: 'pointer',
                           background: isSelected ? 'rgba(109,40,217,0.08)' : 'transparent',
-                          transition: 'background 0.15s',
+                          opacity: archived ? 0.45 : 1,
+                          transition: 'background 0.15s, opacity 0.15s',
                         }}
                         className="group hover:bg-white/[0.02]"
                       >
@@ -655,6 +733,11 @@ export default function SessionsPage() {
                             <span style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}`, color: statusCfg.color }} className="text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
                               {statusCfg.label}
                             </span>
+                            {archived && (
+                              <span style={{ background: 'rgba(156,163,175,0.08)', border: '1px solid rgba(156,163,175,0.2)', color: 'var(--cp-text-dim)' }} className="text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
+                                Archived
+                              </span>
+                            )}
                             <div className="flex items-center gap-1.5">
                               <Link
                                 href={`/sessions/${session.id}`}
@@ -681,7 +764,8 @@ export default function SessionsPage() {
                         </td>
                       </tr>
                     )
-                  })}
+                    }})
+                  })()}
                 </tbody>
               </table>
             </div>

@@ -554,6 +554,111 @@ function UsersTab() {
   )
 }
 
+// ── Data Retention section ─────────────────────────────────────────────────────
+
+const RETENTION_OPTIONS = [
+  { value: 30, label: '30 days' },
+  { value: 60, label: '60 days' },
+  { value: 90, label: '90 days' },
+  { value: 180, label: '180 days' },
+  { value: 365, label: '365 days' },
+  { value: 0, label: 'Never archive' },
+]
+
+function DataRetentionSection() {
+  const [retentionDays, setRetentionDays] = useState<number>(0)
+  const [archiveMsg, setArchiveMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('data_retention_days')
+      if (stored !== null) setRetentionDays(Number(stored))
+    } catch {}
+  }, [])
+
+  const handleChange = (val: number) => {
+    setRetentionDays(val)
+    try { localStorage.setItem('data_retention_days', String(val)) } catch {}
+  }
+
+  const handleArchiveNow = () => {
+    // Trigger a storage event so the sessions page can react
+    try {
+      localStorage.setItem('data_retention_days', String(retentionDays))
+      // Force a re-read by toggling a timestamp key
+      localStorage.setItem('archive_applied_at', new Date().toISOString())
+    } catch {}
+    setArchiveMsg(retentionDays === 0 ? 'No retention period set — nothing to archive.' : `Sessions older than ${retentionDays} days are now marked as archived.`)
+    setTimeout(() => setArchiveMsg(null), 4000)
+  }
+
+  return (
+    <div
+      style={{
+        background: 'var(--cp-card-bg)',
+        border: '1px solid var(--cp-border-strong)',
+        backdropFilter: 'blur(12px)',
+      }}
+      className="rounded-2xl p-6"
+    >
+      <h3 style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-bold mb-2">
+        Data Retention
+      </h3>
+      <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mb-4">
+        Sessions older than the retention period will be visually archived. No data is deleted.
+      </p>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1">
+          <label style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-semibold block mb-1.5">
+            Archive sessions older than
+          </label>
+          <select
+            value={retentionDays}
+            onChange={e => handleChange(Number(e.target.value))}
+            style={{
+              background: 'var(--cp-input-bg)',
+              border: '1px solid var(--cp-border-strong)',
+              color: 'var(--cp-text-primary)',
+            }}
+            className="w-full sm:w-auto px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-600"
+          >
+            {RETENTION_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          onClick={handleArchiveNow}
+          disabled={retentionDays === 0}
+          style={{
+            background: retentionDays === 0 ? 'var(--cp-input-bg)' : 'rgba(124,58,237,0.15)',
+            border: `1px solid ${retentionDays === 0 ? 'var(--cp-border-strong)' : 'rgba(139,92,246,0.3)'}`,
+            color: retentionDays === 0 ? 'var(--cp-text-dim)' : 'var(--cp-text-accent-light)',
+          }}
+          className="px-4 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90 disabled:cursor-not-allowed self-end"
+        >
+          📦 Archive Now
+        </button>
+      </div>
+
+      {archiveMsg && (
+        <div
+          style={{
+            background: 'rgba(52,211,153,0.08)',
+            border: '1px solid rgba(52,211,153,0.25)',
+            color: '#34d399',
+          }}
+          className="text-xs px-3 py-2.5 rounded-lg mt-3"
+        >
+          {archiveMsg}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── General tab ───────────────────────────────────────────────────────────────
 
 function GeneralTab() {
@@ -617,6 +722,9 @@ function GeneralTab() {
           ))}
         </div>
       </div>
+
+      {/* Data Retention */}
+      <DataRetentionSection />
 
       {/* Onboarding */}
       <div
