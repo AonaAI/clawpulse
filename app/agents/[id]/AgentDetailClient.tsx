@@ -8,6 +8,8 @@ import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, Task, Session } from '@/lib/types'
 import SpawnModal from '@/components/SpawnModal'
+import AgentHealthTimeline from '@/components/AgentHealthTimeline'
+import AgentUptimeCard from '@/components/AgentUptimeCard'
 
 interface SpawnRequest {
   id: string
@@ -47,6 +49,7 @@ interface AgentDetailData {
   tasks: Task[]
   weeklyStats: DailyTokenStat[]
   sessions: Session[]
+  healthSessions: Session[]
 }
 
 function detectEventType(action: string): EventType {
@@ -175,6 +178,49 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
       <div style={{ color }} className="text-xl sm:text-2xl font-bold tracking-tight">{value}</div>
       {sub && <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-medium mt-1">{sub}</div>}
     </div>
+  )
+}
+
+const SEVEN_DAYS_MS = 7 * 24 * 3600 * 1000
+
+function computeUptimePct(sessions: Session[]): number {
+  const now = Date.now()
+  const windowStart = now - SEVEN_DAYS_MS
+  let activeMs = 0
+  for (const s of sessions) {
+    const start = Math.max(new Date(s.started_at).getTime(), windowStart)
+    const rawEnd =
+      s.status === 'active'
+        ? now
+        : s.last_active
+        ? new Date(s.last_active).getTime()
+        : new Date(s.started_at).getTime()
+    const end = Math.min(rawEnd, now)
+    if (end > start) activeMs += end - start
+  }
+  return Math.min((activeMs / SEVEN_DAYS_MS) * 100, 100)
+}
+
+function HealthBadge({ sessions, loading }: { sessions: Session[]; loading: boolean }) {
+  if (loading || sessions.length === 0) return null
+
+  const pct = computeUptimePct(sessions)
+  const { emoji, label, color, bg, border } =
+    pct >= 95
+      ? { emoji: '🟢', label: 'Healthy', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)' }
+      : pct >= 80
+      ? { emoji: '🟡', label: 'Degraded', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)' }
+      : { emoji: '🔴', label: 'Unhealthy', color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)' }
+
+  return (
+    <span
+      style={{ background: bg, color, border: `1px solid ${border}` }}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+      title={`${pct.toFixed(1)}% uptime (last 7 days)`}
+    >
+      <span style={{ fontSize: 10 }}>{emoji}</span>
+      {label}
+    </span>
   )
 }
 
@@ -371,6 +417,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
         tasksRes,
         liveRes,
         sessionsData,
+        healthSessionsRes,
       ] = await Promise.all([
         supabase.from('agents').select('mission').eq('id', agentId).single(),
         supabase.from('token_usage').select('total_tokens, cost_usd').eq('agent_id', agentId),
@@ -390,6 +437,11 @@ export default function AgentDetailClient({ id }: { id: string }) {
           .order('updated_at', { ascending: false }),
         fetch('/api/agents').then(r => r.ok ? r.json() : []).catch(() => []),
         fetchSessions(agentId, 20),
+        supabase.from('agent_sessions')
+          .select('*')
+          .eq('agent_id', agentId)
+          .gte('started_at', new Date(Date.now() - 7 * 86400000).toISOString())
+          .order('started_at', { ascending: true }),
       ])
 
       const allTokenRows = tokenAllRes.data || []
@@ -414,6 +466,20 @@ export default function AgentDetailClient({ id }: { id: string }) {
       const status: AgentStatus = live?.status ?? 'offline'
       const sessionCount: number = live?.sessionCount ?? (sessionsData.length || allTokenRows.length)
 
+      const healthSessions: Session[] = (healthSessionsRes.data || []).map(r => {
+        const durationMs =
+          r.last_active && r.started_at
+            ? new Date(r.last_active).getTime() - new Date(r.started_at).getTime()
+            : null
+        return {
+          ...r,
+          tokens_used: r.token_count ?? 0,
+          duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
+          cost_usd: 0,
+          summary: null,
+        }
+      })
+
       setData({
         mission: missionRes.data?.mission ?? null,
         status,
@@ -425,6 +491,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
         tasks,
         weeklyStats: Array.from(weekMap.values()),
         sessions: sessionsData as Session[],
+        healthSessions,
       })
       setLoading(false)
     }
@@ -503,6 +570,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
             <div className="flex items-center gap-3 flex-wrap mb-1">
               <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-xl sm:text-2xl font-bold tracking-tight">{agent.name}</h1>
               {data && <StatusBadge status={data.status} />}
+              <HealthBadge sessions={data?.healthSessions ?? []} loading={loading} />
             </div>
             <div style={{ color: 'var(--cp-text-secondary)' }} className="text-sm sm:text-base font-medium mb-3">{agent.role}</div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -570,6 +638,11 @@ export default function AgentDetailClient({ id }: { id: string }) {
           sub={loading ? '' : `of ${data?.tasks.length ?? 0} assigned`}
           color="#f59e0b"
         />
+      </div>
+
+      {/* Health timeline — full width */}
+      <div className="mb-6">
+        <AgentHealthTimeline sessions={data?.healthSessions ?? []} loading={loading} />
       </div>
 
       {/* Main content */}
@@ -729,6 +802,13 @@ export default function AgentDetailClient({ id }: { id: string }) {
 
         {/* Right col */}
         <div className="space-y-6">
+          {/* Uptime stats */}
+          <AgentUptimeCard
+            sessions={data?.healthSessions ?? []}
+            loading={loading}
+            agentStatus={data?.status ?? 'offline'}
+          />
+
           {/* Assigned tasks */}
           <div
             style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
