@@ -823,6 +823,116 @@ export async function updateProjectAgent(
   return true
 }
 
+// ── Error Tracking ───────────────────────────────────────────────────────────
+
+export interface ErrorEntry {
+  id: string
+  agent_id: string
+  agent_name: string
+  action: string
+  details: string
+  metadata: Record<string, unknown>
+  created_at: string
+  session_id: string | null
+}
+
+export async function fetchErrors(opts: {
+  limit?: number
+  offset?: number
+  agentId?: string
+  from?: string
+  to?: string
+}): Promise<{ items: ErrorEntry[]; total: number }> {
+  const { limit = 50, offset = 0, agentId, from, to } = opts
+
+  let query = supabase
+    .from('activity_log')
+    .select('*, agent:agents(name)', { count: 'exact' })
+    .or(
+      'action.ilike.%error%,action.ilike.%fail%,action.ilike.%crash%,action.ilike.%exception%,' +
+      'details.ilike.%error%,details.ilike.%fail%,details.ilike.%crash%,details.ilike.%exception%'
+    )
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (agentId) query = query.eq('agent_id', agentId)
+  if (from) query = query.gte('created_at', `${from}T00:00:00.000Z`)
+  if (to) query = query.lte('created_at', `${to}T23:59:59.999Z`)
+
+  const { data, error, count } = await query
+  if (error) { console.error('Error fetching errors:', error); return { items: [], total: 0 } }
+
+  const items = (data || []).map(item => {
+    const agentRow = item.agent as unknown as { name: string } | null
+    return {
+      id: item.id,
+      agent_id: item.agent_id,
+      agent_name: agentRow?.name || item.agent_id,
+      action: item.action,
+      details: item.details || '',
+      metadata: item.metadata || {},
+      created_at: item.created_at,
+      session_id: item.session_id || null,
+    }
+  })
+  return { items, total: count ?? 0 }
+}
+
+export async function fetchErrorStats(): Promise<{
+  totalLast24h: number
+  totalSessions24h: number
+  mostAffectedAgent: string
+  mostCommonType: string
+}> {
+  const since24h = new Date(Date.now() - 24 * 3600000).toISOString()
+
+  const [errorsResult, sessionsResult] = await Promise.all([
+    supabase
+      .from('activity_log')
+      .select('agent_id, action, details, agent:agents(name)', { count: 'exact' })
+      .or(
+        'action.ilike.%error%,action.ilike.%fail%,action.ilike.%crash%,action.ilike.%exception%,' +
+        'details.ilike.%error%,details.ilike.%fail%,details.ilike.%crash%,details.ilike.%exception%'
+      )
+      .gte('created_at', since24h),
+    supabase
+      .from('activity_log')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', since24h),
+  ])
+
+  const errors = errorsResult.data || []
+  const totalLast24h = errorsResult.count ?? 0
+  const totalSessions24h = sessionsResult.count ?? 0
+
+  const agentCounts: Record<string, number> = {}
+  for (const e of errors) {
+    const agentRow = e.agent as unknown as { name: string } | null
+    const name = agentRow?.name || e.agent_id
+    agentCounts[name] = (agentCounts[name] || 0) + 1
+  }
+  const mostAffectedAgent = Object.entries(agentCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
+
+  const typeCounts: Record<string, number> = {}
+  for (const e of errors) {
+    const text = ((e.action || '') + ' ' + (e.details || '')).toLowerCase()
+    let type = 'Unknown'
+    if (text.includes('oom') || text.includes('out of memory')) type = 'OOM'
+    else if (text.includes('timeout') || text.includes('timed out')) type = 'Timeout'
+    else if (text.includes('rate limit') || text.includes('429')) type = 'Rate Limit'
+    else if (text.includes('auth') || text.includes('401') || text.includes('403')) type = 'Auth'
+    else if (text.includes('500') || text.includes('api')) type = 'API Error'
+    typeCounts[type] = (typeCounts[type] || 0) + 1
+  }
+  const mostCommonType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
+
+  const errorRate = totalSessions24h > 0
+    ? Math.round((totalLast24h / totalSessions24h) * 100)
+    : 0
+
+  return { totalLast24h, totalSessions24h: errorRate, mostAffectedAgent, mostCommonType }
+}
+
 // ── Audit Log ──
 
 export interface AuditLogEntry {
