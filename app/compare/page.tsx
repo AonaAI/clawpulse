@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { AGENTS } from '@/lib/data'
 import { fetchTasks, fetchTokenStatsByAgent, fetchActivityLog, fetchSessions } from '@/lib/supabase-client'
-import type { Task, ActivityLog } from '@/lib/types'
+import type { Task, ActivityLog, Session } from '@/lib/types'
 import ExportButton, { exportToCSV } from '@/components/ExportButton'
 
 // ── Color palette for dark purple theme ──────────────────────────────────
@@ -18,6 +18,20 @@ const PALETTE = [
 
 function agentColor(idx: number) {
   return PALETTE[idx % PALETTE.length]
+}
+
+// ── Delta indicator ──────────────────────────────────────────────────────
+function Delta({ value, suffix = '', invert = false }: { value: number; suffix?: string; invert?: boolean }) {
+  if (value === 0) return <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>—</span>
+  const positive = invert ? value < 0 : value > 0
+  const color = positive ? '#34d399' : '#f87171'
+  const arrow = value > 0 ? '▲' : '▼'
+  const display = Math.abs(value)
+  return (
+    <span style={{ color, fontSize: 11, fontWeight: 600 }}>
+      {arrow} {display >= 1000 ? `${(display / 1000).toFixed(1)}k` : display.toFixed(suffix === '$' ? 2 : 1)}{suffix}
+    </span>
+  )
 }
 
 // ── Card wrapper ─────────────────────────────────────────────────────────
@@ -76,7 +90,6 @@ function LineChart({ series }: { series: { label: string; color: string; data: n
 
   return (
     <svg width="100%" height={h + 30} viewBox={`0 0 ${w} ${h + 30}`}>
-      {/* Day labels */}
       {Array.from({ length: days }).map((_, i) => {
         const d = new Date(Date.now() - (6 - i) * 86400000)
         const label = d.toLocaleDateString('en', { weekday: 'short' })
@@ -87,7 +100,6 @@ function LineChart({ series }: { series: { label: string; color: string; data: n
           </text>
         )
       })}
-      {/* Grid lines */}
       {[0, 0.25, 0.5, 0.75, 1].map(frac => (
         <line
           key={frac}
@@ -99,7 +111,6 @@ function LineChart({ series }: { series: { label: string; color: string; data: n
           strokeWidth={1}
         />
       ))}
-      {/* Lines */}
       {series.map(s => {
         const points = s.data.map((v, i) => {
           const x = padX + (i / (days - 1)) * (w - 2 * padX)
@@ -185,6 +196,77 @@ function StatBoxes({ items }: { items: { label: string; value: string | number; 
   )
 }
 
+// ── Session Timeline ─────────────────────────────────────────────────────
+function SessionTimeline({ sessions, color, label }: { sessions: Session[]; color: string; label: string }) {
+  if (!sessions.length) {
+    return <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, padding: '12px 0' }}>No sessions</div>
+  }
+  const latest = sessions.slice(0, 8)
+  const maxTokens = Math.max(...latest.map(s => s.token_count || 0), 1)
+
+  return (
+    <div>
+      <div style={{ color, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{label}</div>
+      <div className="flex flex-col gap-1">
+        {latest.map((s, i) => {
+          const pct = maxTokens > 0 ? ((s.token_count || 0) / maxTokens) * 100 : 0
+          const duration = s.duration_minutes != null ? `${s.duration_minutes}m` : '—'
+          const time = s.started_at ? new Date(s.started_at).toLocaleString('en-AU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''
+          return (
+            <div key={s.id || i} className="flex items-center gap-2" style={{ fontSize: 11 }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', width: 90, flexShrink: 0 }}>{time}</span>
+              <div style={{ flex: 1, height: 14, background: 'rgba(255,255,255,0.04)', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ width: `${Math.max(pct, 2)}%`, height: '100%', background: color, opacity: 0.7, borderRadius: 4 }} />
+              </div>
+              <span style={{ color: 'rgba(255,255,255,0.5)', width: 50, textAlign: 'right', flexShrink: 0 }}>{duration}</span>
+              <span style={{ color, width: 55, textAlign: 'right', flexShrink: 0 }}>
+                {(s.token_count || 0) >= 1000 ? `${((s.token_count || 0) / 1000).toFixed(1)}k` : s.token_count || 0} tok
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Cost Diff Row ────────────────────────────────────────────────────────
+function CostDiffRow({ label, values, colors }: { label: string; values: number[]; colors: string[] }) {
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  const diff = max - min
+  return (
+    <div className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, width: 120, flexShrink: 0 }}>{label}</span>
+      {values.map((v, i) => (
+        <span key={i} style={{ color: colors[i], fontSize: 14, fontWeight: 700, width: 80, textAlign: 'right' }}>
+          ${v.toFixed(2)}
+        </span>
+      ))}
+      <span style={{ width: 80, textAlign: 'right' }}>
+        <Delta value={diff} suffix="$" invert />
+      </span>
+    </div>
+  )
+}
+
+// ── Model Badge ──────────────────────────────────────────────────────────
+function ModelBadge({ model, color }: { model: string; color: string }) {
+  return (
+    <span style={{
+      background: `${color}15`,
+      border: `1px solid ${color}30`,
+      color,
+      borderRadius: 6,
+      padding: '3px 10px',
+      fontSize: 12,
+      fontWeight: 600,
+    }}>
+      {model}
+    </span>
+  )
+}
+
 // ── Agent multi-select ───────────────────────────────────────────────────
 function AgentPicker({
   selected,
@@ -238,12 +320,12 @@ function AgentPicker({
 export default function ComparePage() {
   const [selected, setSelected] = useState<string[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
-  const [tokenStats, setTokenStats] = useState<{ agent_id: string; total_tokens: number }[]>([])
+  const [tokenStats, setTokenStats] = useState<{ agent_id: string; total_tokens: number; total_cost: number; model: string }[]>([])
   const [activityByAgent, setActivityByAgent] = useState<Record<string, number[]>>({})
   const [sessionCounts, setSessionCounts] = useState<Record<string, number>>({})
+  const [sessionsByAgent, setSessionsByAgent] = useState<Record<string, Session[]>>({})
   const [loading, setLoading] = useState(true)
 
-  // Default: pick 2 most active agents
   useEffect(() => {
     async function init() {
       setLoading(true)
@@ -254,7 +336,7 @@ export default function ComparePage() {
           fetchActivityLog(500),
         ])
         setTasks(taskData)
-        setTokenStats(tokenData)
+        setTokenStats(tokenData as { agent_id: string; total_tokens: number; total_cost: number; model: string }[])
 
         // Build 7-day activity per agent
         const now = Date.now()
@@ -270,15 +352,18 @@ export default function ComparePage() {
         }
         setActivityByAgent(actMap)
 
-        // Session counts
+        // Session counts + session data
         const sessCounts: Record<string, number> = {}
+        const sessData: Record<string, Session[]> = {}
         await Promise.all(
           AGENTS.map(async (a) => {
             const sessions = await fetchSessions(a.id, 100)
             sessCounts[a.id] = sessions.length
+            sessData[a.id] = sessions as Session[]
           })
         )
         setSessionCounts(sessCounts)
+        setSessionsByAgent(sessData)
 
         // Default: 2 most active (by total tokens)
         const sorted = [...tokenData].sort((a, b) => b.total_tokens - a.total_tokens)
@@ -337,6 +422,42 @@ export default function ComparePage() {
     [selected, sessionCounts]
   )
 
+  // Efficiency metrics: tokens/min, cost/min per agent
+  const efficiencyMetrics = useMemo(() => {
+    return selected.map((id, i) => {
+      const sessions = sessionsByAgent[id] || []
+      const stat = tokenStats.find(s => s.agent_id === id)
+      const totalTokens = stat?.total_tokens || 0
+      const totalCost = stat?.total_cost || 0
+      const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
+      const agent = AGENTS.find(a => a.id === id)
+      return {
+        label: agent?.name || id,
+        color: agentColor(i),
+        tokensPerMin: totalMinutes > 0 ? Math.round(totalTokens / totalMinutes) : 0,
+        costPerMin: totalMinutes > 0 ? totalCost / totalMinutes : 0,
+        totalMinutes,
+      }
+    })
+  }, [selected, sessionsByAgent, tokenStats])
+
+  // Cost data for diff panel
+  const costData = useMemo(() => {
+    return selected.map((id, i) => {
+      const stat = tokenStats.find(s => s.agent_id === id)
+      const sessions = sessionsByAgent[id] || []
+      const totalCost = stat?.total_cost || 0
+      const avgCostPerSession = sessions.length > 0 ? totalCost / sessions.length : 0
+      const agent = AGENTS.find(a => a.id === id)
+      return {
+        label: agent?.name || id,
+        color: agentColor(i),
+        totalCost,
+        avgCostPerSession,
+      }
+    })
+  }, [selected, tokenStats, sessionsByAgent])
+
   if (loading) {
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
@@ -368,14 +489,13 @@ export default function ComparePage() {
           </p>
         </div>
         <ExportButton onExportCSV={() => {
-          const agentNames = selected.map(id => AGENTS.find(a => a.id === id)?.name || id)
           const rows = selected.map(id => {
             const a = AGENTS.find(x => x.id === id)
             const ts = tokenStats.find(t => t.agent_id === id)
             const taskCount = tasks.filter(t => t.assigned_agent === id).length
-            return [a?.name || id, taskCount, ts?.total_tokens || 0, sessionCounts[id] || 0]
+            return [a?.name || id, taskCount, ts?.total_tokens || 0, sessionCounts[id] || 0, (ts?.total_cost || 0).toFixed(2)]
           })
-          exportToCSV('clawpulse-compare', ['Agent', 'Tasks', 'Total Tokens', 'Sessions'], rows)
+          exportToCSV('clawpulse-compare', ['Agent', 'Tasks', 'Total Tokens', 'Sessions', 'Cost USD'], rows)
         }} />
       </div>
 
@@ -431,15 +551,121 @@ export default function ComparePage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Model Comparison */}
+          <Card title="Model Comparison">
+            <div className="flex flex-wrap gap-6">
+              {selectedAgents.map((a, i) => {
+                const color = agentColor(i)
+                const sessionModels = (sessionsByAgent[a.id] || [])
+                  .map(s => s.model)
+                  .filter(Boolean) as string[]
+                const uniqueModels = [...new Set(sessionModels)]
+                return (
+                  <div key={a.id} className="flex flex-col gap-2">
+                    <span style={{ color, fontSize: 13, fontWeight: 700 }}>{a.name}</span>
+                    <div className="flex items-center gap-2">
+                      <ModelBadge model={a.model} color={color} />
+                      <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>primary</span>
+                    </div>
+                    {uniqueModels.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {uniqueModels.slice(0, 3).map(m => (
+                          <span key={m} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, background: 'rgba(255,255,255,0.04)', borderRadius: 4, padding: '2px 6px' }}>
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {selectedAgents.length === 2 && i === 0 && (
+                      <div style={{ marginTop: 4 }}>
+                        {a.model !== selectedAgents[1].model ? (
+                          <span style={{ color: '#fbbf24', fontSize: 10 }}>⚡ Different model</span>
+                        ) : (
+                          <span style={{ color: '#34d399', fontSize: 10 }}>✓ Same model</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             {/* Token usage */}
             <Card title="Token Usage">
               <BarChart items={tokenItems} />
+              {selected.length === 2 && (
+                <div style={{ textAlign: 'center', marginTop: 8 }}>
+                  <Delta value={tokenItems[0].value - tokenItems[1].value} suffix=" tokens" />
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, marginLeft: 4 }}>difference</span>
+                </div>
+              )}
             </Card>
 
             {/* Task completion */}
             <Card title="Task Completion Rate">
               <CompletionRings items={completionItems} />
+            </Card>
+
+            {/* Cost Diff Panel */}
+            <Card title="Cost Comparison">
+              <div className="flex flex-col gap-0">
+                <div className="flex items-center gap-3 pb-2 mb-1" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, width: 120, flexShrink: 0 }}>Metric</span>
+                  {costData.map((c, i) => (
+                    <span key={i} style={{ color: c.color, fontSize: 11, fontWeight: 700, width: 80, textAlign: 'right' }}>{c.label}</span>
+                  ))}
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, width: 80, textAlign: 'right' }}>Diff</span>
+                </div>
+                <CostDiffRow
+                  label="Total Cost"
+                  values={costData.map(c => c.totalCost)}
+                  colors={costData.map(c => c.color)}
+                />
+                <CostDiffRow
+                  label="Cost / Session"
+                  values={costData.map(c => c.avgCostPerSession)}
+                  colors={costData.map(c => c.color)}
+                />
+              </div>
+            </Card>
+
+            {/* Efficiency Metrics */}
+            <Card title="Efficiency Metrics">
+              <div className="flex flex-col gap-3">
+                {efficiencyMetrics.map((m, i) => (
+                  <div key={m.label} className="flex items-center gap-4">
+                    <span style={{ color: m.color, fontSize: 13, fontWeight: 700, width: 80, flexShrink: 0 }}>{m.label}</span>
+                    <div className="flex gap-4">
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: m.color, fontSize: 18, fontWeight: 700 }}>
+                          {m.tokensPerMin >= 1000 ? `${(m.tokensPerMin / 1000).toFixed(1)}k` : m.tokensPerMin}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>tok/min</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: m.color, fontSize: 18, fontWeight: 700 }}>
+                          ${m.costPerMin.toFixed(3)}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>$/min</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 18, fontWeight: 700 }}>
+                          {m.totalMinutes >= 60 ? `${(m.totalMinutes / 60).toFixed(1)}h` : `${m.totalMinutes}m`}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>total time</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {selected.length === 2 && efficiencyMetrics[0].tokensPerMin > 0 && efficiencyMetrics[1].tokensPerMin > 0 && (
+                  <div style={{ textAlign: 'center', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <Delta value={efficiencyMetrics[0].tokensPerMin - efficiencyMetrics[1].tokensPerMin} suffix=" tok/min" />
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, marginLeft: 4 }}>throughput diff</span>
+                  </div>
+                )}
+              </div>
             </Card>
 
             {/* Activity volume 7d */}
@@ -450,6 +676,31 @@ export default function ComparePage() {
             {/* Session count */}
             <Card title="Session Count">
               <StatBoxes items={sessionItems} />
+              {selected.length === 2 && (
+                <div style={{ textAlign: 'center', marginTop: 8 }}>
+                  <Delta value={sessionItems[0].value as number - (sessionItems[1].value as number)} suffix=" sessions" />
+                </div>
+              )}
+            </Card>
+          </div>
+
+          {/* Session Timeline Comparison - full width */}
+          <div className="mt-6">
+            <Card title="Session Timeline Comparison">
+              <div className={`grid gap-6 ${selected.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
+                {selected.map((id, i) => {
+                  const agent = AGENTS.find(a => a.id === id)
+                  const sessions = sessionsByAgent[id] || []
+                  return (
+                    <SessionTimeline
+                      key={id}
+                      sessions={sessions}
+                      color={agentColor(i)}
+                      label={agent?.name || id}
+                    />
+                  )
+                })}
+              </div>
             </Card>
           </div>
         </>
