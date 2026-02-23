@@ -1,158 +1,121 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { supabase } from '@/lib/supabase-client'
+import { useAuth } from '@/components/AuthProvider'
 import { useRealtimeSubscription } from './useRealtimeSubscription'
 import type { Notification } from './NotificationContext'
 
 export type { Notification }
 
-const STORAGE_KEY = 'clawpulse_notifications_v2'
-const READ_KEY = 'clawpulse_notifications_read_v2'
 const SOUND_KEY = 'clawpulse_notifications_sound'
-const MAX_NOTIFICATIONS = 60
+const MAX_NOTIFICATIONS = 50
 
-function loadReadIds(): Set<string> {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(READ_KEY) || '[]'))
-  } catch { return new Set() }
-}
-
-function saveReadIds(ids: Set<string>) {
-  localStorage.setItem(READ_KEY, JSON.stringify([...ids].slice(0, 300)))
-}
-
-function generateSeedNotifications(): Omit<Notification, 'read'>[] {
-  const now = Date.now()
-  return [
-    {
-      id: 'seed-1',
-      type: 'success',
-      title: 'Agent Status Changed',
-      message: 'claude-agent-01: idle → active',
-      timestamp: new Date(now - 5 * 60000).toISOString(),
-    },
-    {
-      id: 'seed-2',
-      type: 'success',
-      title: 'Deploy Completed',
-      message: 'ClawPulse v3.3 deployed to Firebase successfully',
-      timestamp: new Date(now - 22 * 60000).toISOString(),
-    },
-    {
-      id: 'seed-3',
-      type: 'info',
-      title: 'Task Completed',
-      message: 'Build dashboard widgets: done',
-      timestamp: new Date(now - 45 * 60000).toISOString(),
-    },
-    {
-      id: 'seed-4',
-      type: 'info',
-      title: 'New Session Started',
-      message: 'Agent claude-agent-01 started session #847',
-      timestamp: new Date(now - 2 * 3600000).toISOString(),
-    },
-    {
-      id: 'seed-5',
-      type: 'error',
-      title: 'Error Alert',
-      message: 'Agent deploy-bot crashed: OOM kill on build step',
-      timestamp: new Date(now - 3 * 3600000).toISOString(),
-    },
-    {
-      id: 'seed-6',
-      type: 'warning',
-      title: 'Agent Status Changed',
-      message: 'deploy-bot: active → offline',
-      timestamp: new Date(now - 4 * 3600000).toISOString(),
-    },
-  ]
-}
-
-function loadNotifications(): Omit<Notification, 'read'>[] {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-    // Seed with mock data if empty (first visit)
-    if (stored.length === 0) {
-      const seed = generateSeedNotifications()
-      saveNotifications(seed)
-      return seed
-    }
-    return stored
-  } catch { return generateSeedNotifications() }
-}
-
-function saveNotifications(notifs: Omit<Notification, 'read'>[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notifs.slice(0, MAX_NOTIFICATIONS)))
+// Map a Supabase row to our in-memory Notification shape
+function rowToNotification(row: Record<string, unknown>): Notification {
+  return {
+    id: row.id as string,
+    type: (row.type as string) || 'info',
+    title: (row.title as string) || '',
+    message: (row.description as string) || '',
+    timestamp: (row.created_at as string) || new Date().toISOString(),
+    read: Boolean(row.read),
+  }
 }
 
 export function useNotifications() {
-  const [rawNotifications, setRawNotifications] = useState<Omit<Notification, 'read'>[]>([])
-  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const { user } = useAuth()
+  // Stable ref so stale realtime callbacks can always access the current user
+  const userRef = useRef(user)
+  userRef.current = user
+
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [soundEnabled, setSoundEnabled] = useState(false)
   const [toasts, setToasts] = useState<Notification[]>([])
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Load from localStorage on mount
+  // Load sound preference
   useEffect(() => {
-    setRawNotifications(loadNotifications())
-    setReadIds(loadReadIds())
     setSoundEnabled(localStorage.getItem(SOUND_KEY) === 'true')
   }, [])
 
-  const addNotification = useCallback((notif: Omit<Notification, 'id' | 'read' | 'timestamp'>) => {
-    const newNotif: Omit<Notification, 'read'> = {
-      ...notif,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: new Date().toISOString(),
+  // ── Fetch from Supabase ────────────────────────────────────────────────────
+  const fetchNotifications = useCallback(async () => {
+    const currentUser = userRef.current
+    if (!currentUser) return
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .or(`user_id.eq.${currentUser.id},user_id.is.null`)
+      .order('created_at', { ascending: false })
+      .limit(MAX_NOTIFICATIONS)
+    if (error) {
+      console.error('Error fetching notifications:', error)
+      return
     }
-    setRawNotifications(prev => {
-      const updated = [newNotif, ...prev].slice(0, MAX_NOTIFICATIONS)
-      saveNotifications(updated)
-      return updated
-    })
-    // Show toast (with read: false for the toast type)
-    const toastNotif: Notification = { ...newNotif, read: false }
-    setToasts(prev => [...prev, toastNotif])
+    setNotifications((data || []).map(rowToNotification))
+  }, [])
+
+  useEffect(() => {
+    if (user) fetchNotifications()
+  }, [user, fetchNotifications])
+
+  // ── Sound ──────────────────────────────────────────────────────────────────
+  const playSound = useCallback(() => {
+    if (localStorage.getItem(SOUND_KEY) !== 'true') return
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio('data:audio/wav;base64,UklGRlQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAFAACAgICAgICAgICHj5eTkIuIhoiLj5OVlZKNiISBgIKGi4+Sk5GPioWBf4CDh4uOkJCOioaCgIGEiIuNjo2LiIWDgoOFh4mLi4qIhoSDg4SFh4iJiYiHhYSEhIWGh4iIh4aFhISEhYaHh4eGhYSEhIWFhoaGhoWEhISEhYWGhoaFhISEhIWFhYWFhYSEhISFhYWFhYWEhISEhYWFhYWFhISEhIWFhYWFhYSEhISEhYWFhYSEhISEhISFhYWFhISEhISEhIWFhYSEhISEhISEhYSEhISEhISEhISEhISEhISEhISEhISEhISEhA==')
+        audioRef.current.volume = 0.25
+      }
+      audioRef.current.currentTime = 0
+      audioRef.current.play().catch(() => {})
+    } catch {}
+  }, [])
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  const showToast = useCallback((notif: Notification) => {
+    setToasts(prev => [...prev, notif])
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== newNotif.id))
+      setToasts(prev => prev.filter(t => t.id !== notif.id))
     }, 5500)
-    // Play sound
-    if (localStorage.getItem(SOUND_KEY) === 'true') {
-      try {
-        if (!audioRef.current) {
-          audioRef.current = new Audio('data:audio/wav;base64,UklGRlQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAFAACAgICAgICAgICHj5eTkIuIhoiLj5OVlZKNiISBgIKGi4+Sk5GPioWBf4CDh4uOkJCOioaCgIGEiIuNjo2LiIWDgoOFh4mLi4qIhoSDg4SFh4iJiYiHhYSEhIWGh4iIh4aFhISEhYaHh4eGhYSEhIWFhoaGhoWEhISEhYWGhoaFhISEhIWFhYWFhYSEhISFhYWFhYWEhISEhYWFhYWFhISEhIWFhYWFhYSEhISEhYWFhYSEhISEhISFhYWFhISEhISEhIWFhYSEhISEhISEhYSEhISEhISEhISEhISEhISEhISEhISEhISEhA==')
-          audioRef.current.volume = 0.25
-        }
-        audioRef.current.currentTime = 0
-        audioRef.current.play().catch(() => {})
-      } catch {}
-    }
   }, [])
 
-  const markAsRead = useCallback((id: string) => {
-    setReadIds(prev => {
-      const next = new Set(prev)
-      next.add(id)
-      saveReadIds(next)
-      return next
-    })
+  // ── INSERT notification into Supabase ──────────────────────────────────────
+  // Uses ref so it's safe to call from stale realtime callbacks
+  const addNotification = useCallback(async (notif: Omit<Notification, 'id' | 'read' | 'timestamp'>) => {
+    const currentUser = userRef.current
+    if (!currentUser) return
+    await supabase.from('notifications').insert([{
+      type: notif.type,
+      title: notif.title,
+      description: notif.message,
+      read: false,
+      user_id: currentUser.id,
+    }])
+    // The realtime INSERT subscription on `notifications` will update state + toast
   }, [])
 
-  const markAllRead = useCallback(() => {
-    setReadIds(prev => {
-      const next = new Set(prev)
-      rawNotifications.forEach(n => next.add(n.id))
-      saveReadIds(next)
-      return next
-    })
-  }, [rawNotifications])
+  // ── Mark single notification read ──────────────────────────────────────────
+  const markAsRead = useCallback(async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+  }, [])
+
+  // ── Mark all read ──────────────────────────────────────────────────────────
+  const markAllRead = useCallback(async () => {
+    const currentUser = userRef.current
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    if (!currentUser) return
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', currentUser.id)
+      .eq('read', false)
+  }, [])
 
   const dismissAll = useCallback(() => {
-    setRawNotifications([])
-    saveNotifications([])
-    setReadIds(new Set())
-    saveReadIds(new Set())
+    setNotifications([])
   }, [])
 
   const toggleSound = useCallback(() => {
@@ -167,18 +130,40 @@ export function useNotifications() {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  // Subscribe to realtime changes
+  // ── Realtime: incoming notifications ───────────────────────────────────────
+  useRealtimeSubscription([
+    {
+      table: 'notifications',
+      event: 'INSERT',
+      onInsert: (record: Record<string, unknown>) => {
+        const userId = record.user_id as string | null
+        const currentUserId = userRef.current?.id
+        if (userId !== null && userId !== currentUserId) return
+        const notif = rowToNotification(record)
+        setNotifications(prev => {
+          if (prev.find(n => n.id === notif.id)) return prev
+          return [notif, ...prev].slice(0, MAX_NOTIFICATIONS)
+        })
+        showToast(notif)
+        playSound()
+      },
+    },
+  ])
+
+  // ── Realtime: write notifications from system events ───────────────────────
   useRealtimeSubscription([
     {
       table: 'activity_log',
       event: 'INSERT',
       onInsert: (record: Record<string, unknown>) => {
-        const action = record.action as string || ''
-        const details = record.details as string || ''
-        const isError = action?.toLowerCase().includes('error') || details?.toLowerCase().includes('error')
+        const action = (record.action as string) || ''
+        const details = (record.details as string) || ''
+        const isError = action.toLowerCase().includes('error') || details.toLowerCase().includes('error')
+        const isDeploy = action.toLowerCase().includes('deploy')
+        if (!isError && !isDeploy) return
         addNotification({
           type: isError ? 'error' : 'success',
-          title: isError ? 'Error Detected' : 'Activity',
+          title: isError ? 'Error Detected' : 'Deploy',
           message: `${action}${details ? ': ' + details : ''}`.slice(0, 120),
         })
       },
@@ -231,8 +216,8 @@ export function useNotifications() {
       table: 'slack_messages',
       event: 'INSERT',
       onInsert: (record: Record<string, unknown>) => {
-        const channel = record.channel as string || 'Slack'
-        const message = record.message as string || ''
+        const channel = (record.channel as string) || 'Slack'
+        const message = (record.message as string) || ''
         addNotification({
           type: 'info',
           title: `#${channel}`,
@@ -241,11 +226,6 @@ export function useNotifications() {
       },
     },
   ])
-
-  const notifications: Notification[] = rawNotifications.map(n => ({
-    ...n,
-    read: readIds.has(n.id),
-  }))
 
   const unreadCount = notifications.filter(n => !n.read).length
 

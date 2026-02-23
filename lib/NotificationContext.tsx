@@ -2,11 +2,11 @@
 
 import { createContext, useContext } from 'react'
 
-export type NotificationType = 'info' | 'success' | 'warning' | 'error'
+export type NotificationType = string
 
 export interface Notification {
   id: string
-  type: NotificationType
+  type: string
   title: string
   message: string
   timestamp: string
