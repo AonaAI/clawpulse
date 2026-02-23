@@ -434,9 +434,19 @@ function PromptInspectorSidebar({
 // ── Main Client Component ──────────────────────────────────────────────────────
 
 export default function SessionDetailClient({ id: propId }: { id: string }) {
-  // Always use the actual URL param — needed when Firebase serves the placeholder HTML
+  // For static export with Firebase rewrites, useParams may return __placeholder__.
+  // Extract the real session ID from the URL path instead.
   const params = useParams()
-  const id = (params?.id as string) || propId
+  const paramsId = params?.id as string
+  const [urlId, setUrlId] = useState(paramsId || propId)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const segments = window.location.pathname.split('/')
+      const last = segments[segments.length - 1]
+      if (last && last !== '__placeholder__') setUrlId(last)
+    }
+  }, [])
+  const id = urlId === '__placeholder__' ? '' : urlId
 
   const [session, setSession] = useState<SessionDetail | null>(null)
   const [trace, setTrace] = useState<TraceEvent[]>([])

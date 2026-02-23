@@ -5,8 +5,8 @@
     "cleanUrls": true,
     "rewrites": [
       {
-        "source": "/sessions/**",
-        "destination": "/sessions/__placeholder__"
+        "source": "/sessions/:id",
+        "destination": "/sessions/__placeholder__.html"
       }
     ]
   }
