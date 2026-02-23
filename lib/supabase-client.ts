@@ -883,6 +883,18 @@ export async function updateProject(id: string, updates: Partial<Project>): Prom
   return data as Project
 }
 
+export async function deleteProject(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+  if (error) {
+    console.error('Error deleting project:', error)
+    return false
+  }
+  return true
+}
+
 export async function fetchProjectAgents(): Promise<ProjectAgent[]> {
   const { data, error } = await supabase
     .from('project_agents')

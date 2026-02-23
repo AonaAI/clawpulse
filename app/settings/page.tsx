@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { supabase } from '@/lib/supabase-client'
+import { supabase, createProject, updateProject, deleteProject } from '@/lib/supabase-client'
 import { useAuth } from '@/components/AuthProvider'
+import { useProject, Project } from '@/components/ProjectProvider'
+import { useRouter } from 'next/navigation'
 import { APP_NAME } from '@/lib/config'
 
 type Role = 'admin' | 'editor' | 'viewer'
@@ -743,6 +745,346 @@ function AppearanceTab() {
   )
 }
 
+// ── Projects tab ──────────────────────────────────────────────────────────────
+
+const ICON_OPTIONS = ['📁', '🚀', '💼', '🎯', '🔧', '📊', '🌐', '🤖', '💡', '🎨', '📱', '🛡️', '⚡', '🧪', '📈', '🏢']
+const COLOR_OPTIONS = ['#7c3aed', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#8b5cf6', '#f97316', '#14b8a6']
+
+function ProjectFormModal({
+  project,
+  onClose,
+  onSaved,
+}: {
+  project?: Project | null
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [name, setName] = useState(project?.name ?? '')
+  const [description, setDescription] = useState(project?.description ?? '')
+  const [icon, setIcon] = useState(project?.icon ?? '📁')
+  const [color, setColor] = useState(project?.color ?? '#7c3aed')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) return
+    setSaving(true)
+    setError(null)
+
+    const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const payload = { name: name.trim(), description: description.trim() || null, icon, color, slug }
+
+    let result
+    if (project) {
+      result = await updateProject(project.id, payload)
+    } else {
+      result = await createProject({ ...payload, status: 'active', goals: [], inherit_company_mission: true })
+    }
+
+    if (!result) {
+      setError('Failed to save project')
+      setSaving(false)
+      return
+    }
+
+    setSaving(false)
+    onSaved()
+    onClose()
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-6"
+        style={{ background: 'var(--cp-panel-bg)', border: '1px solid rgba(109,40,217,0.35)', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-bold">
+            {project ? 'Edit Project' : 'New Project'}
+          </h2>
+          <button onClick={onClose} style={{ color: 'var(--cp-text-muted)' }} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-semibold block mb-1.5">Name</label>
+            <input
+              type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Project name" required
+              style={{ background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-strong)', color: 'var(--cp-text-primary)' }}
+              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-600 placeholder:text-gray-600"
+            />
+          </div>
+
+          <div>
+            <label style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-semibold block mb-1.5">Description</label>
+            <textarea
+              value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description" rows={2}
+              style={{ background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-strong)', color: 'var(--cp-text-primary)' }}
+              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-violet-600 placeholder:text-gray-600 resize-none"
+            />
+          </div>
+
+          <div>
+            <label style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-semibold block mb-1.5">Icon</label>
+            <div className="flex flex-wrap gap-1.5">
+              {ICON_OPTIONS.map(ic => (
+                <button
+                  key={ic} type="button" onClick={() => setIcon(ic)}
+                  style={{
+                    background: icon === ic ? 'rgba(109,40,217,0.2)' : 'var(--cp-input-bg)',
+                    border: `1px solid ${icon === ic ? 'rgba(139,92,246,0.5)' : 'var(--cp-border-strong)'}`,
+                  }}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-base transition-all hover:scale-105"
+                >
+                  {ic}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-semibold block mb-1.5">Color</label>
+            <div className="flex flex-wrap gap-1.5">
+              {COLOR_OPTIONS.map(c => (
+                <button
+                  key={c} type="button" onClick={() => setColor(c)}
+                  style={{
+                    background: c,
+                    border: `2px solid ${color === c ? '#fff' : 'transparent'}`,
+                    boxShadow: color === c ? `0 0 0 2px ${c}` : 'none',
+                  }}
+                  className="w-7 h-7 rounded-full transition-all hover:scale-110"
+                />
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171' }} className="text-xs px-3 py-2.5 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose}
+              style={{ background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-strong)', color: 'var(--cp-text-secondary)' }}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
+            >Cancel</button>
+            <button type="submit" disabled={saving || !name.trim()}
+              style={{ background: saving ? 'rgba(124,58,237,0.4)' : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', border: '1px solid rgba(139,92,246,0.4)', color: '#fff' }}
+              className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >{saving ? 'Saving…' : project ? 'Save Changes' : 'Create Project'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function DeleteProjectModal({
+  project,
+  onClose,
+  onDeleted,
+}: {
+  project: Project
+  onClose: () => void
+  onDeleted: () => void
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleDelete = async () => {
+    setLoading(true)
+    setError(null)
+    const ok = await deleteProject(project.id)
+    if (!ok) {
+      setError('Failed to delete project')
+      setLoading(false)
+      return
+    }
+    setLoading(false)
+    onDeleted()
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl p-6" style={{ background: 'var(--cp-panel-bg)', border: '1px solid rgba(248,113,113,0.3)', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+          <div style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }} className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+            </svg>
+          </div>
+          <div>
+            <h2 style={{ color: 'var(--cp-text-primary)' }} className="font-bold">Delete Project</h2>
+            <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">This action cannot be undone</p>
+          </div>
+        </div>
+        <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm mb-4">
+          Delete <span style={{ color: 'var(--cp-text-primary)' }} className="font-semibold">{project.icon} {project.name}</span>? All project associations will be removed.
+        </p>
+        {error && (
+          <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171' }} className="text-xs px-3 py-2.5 rounded-lg mb-3">{error}</div>
+        )}
+        <div className="flex gap-3">
+          <button onClick={onClose} style={{ background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-strong)', color: 'var(--cp-text-secondary)' }} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors">Cancel</button>
+          <button onClick={handleDelete} disabled={loading} style={{ background: loading ? 'rgba(248,113,113,0.3)' : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', border: '1px solid rgba(248,113,113,0.4)', color: '#fff' }} className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50">
+            {loading ? 'Deleting…' : 'Delete Project'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ProjectsTab() {
+  const router = useRouter()
+  const { projects, projectAgents, loading, refresh } = useProject()
+  const [formProject, setFormProject] = useState<Project | null | undefined>(undefined) // undefined=closed, null=new, Project=edit
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null)
+
+  const agentCountFor = (projectId: string) => projectAgents.filter(pa => pa.project_id === projectId).length
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-base font-bold">Projects</h2>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">
+            {projects.length} {projects.length === 1 ? 'project' : 'projects'} in your workspace
+          </p>
+        </div>
+        <button
+          onClick={() => setFormProject(null)}
+          style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', border: '1px solid rgba(139,92,246,0.4)' }}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          New Project
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="w-6 h-6 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : projects.length === 0 ? (
+        <div
+          style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-strong)' }}
+          className="rounded-2xl p-12 text-center"
+        >
+          <div className="text-4xl mb-3">📁</div>
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mb-4">No projects yet</p>
+          <button
+            onClick={() => setFormProject(null)}
+            style={{ color: 'var(--cp-text-accent-light)' }}
+            className="text-sm font-medium hover:underline"
+          >
+            Create your first project →
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {projects.map(project => (
+            <div
+              key={project.id}
+              style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-strong)', backdropFilter: 'blur(12px)' }}
+              className="rounded-2xl p-5 transition-all hover:border-violet-500/30 group cursor-pointer"
+              onClick={() => router.push(`/projects/${project.id}`)}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    style={{ background: project.color ? `${project.color}20` : 'var(--cp-divider-accent)', border: `1px solid ${project.color || 'rgba(109,40,217,0.3)'}40` }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                  >
+                    {project.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-bold truncate">{project.name}</h3>
+                    <span
+                      style={{
+                        color: project.status === 'active' ? '#34d399' : 'var(--cp-text-dim)',
+                        background: project.status === 'active' ? 'rgba(52,211,153,0.08)' : 'rgba(156,163,175,0.06)',
+                        border: `1px solid ${project.status === 'active' ? 'rgba(52,211,153,0.2)' : 'rgba(156,163,175,0.15)'}`,
+                      }}
+                      className="text-xs px-1.5 py-0.5 rounded-full font-medium inline-block mt-0.5"
+                    >
+                      {project.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={() => setFormProject(project)}
+                    style={{ color: 'var(--cp-text-muted)' }}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors"
+                    title="Edit"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(project)}
+                    style={{ color: 'var(--cp-text-muted)' }}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                    title="Delete"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              {project.description && (
+                <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs leading-relaxed mb-3 line-clamp-2">{project.description}</p>
+              )}
+              <div className="flex items-center gap-4">
+                <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs flex items-center gap-1">
+                  🤖 {agentCountFor(project.id)} agent{agentCountFor(project.id) !== 1 ? 's' : ''}
+                </span>
+                <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs">
+                  Created {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {formProject !== undefined && (
+        <ProjectFormModal
+          project={formProject}
+          onClose={() => setFormProject(undefined)}
+          onSaved={refresh}
+        />
+      )}
+      {deleteTarget && (
+        <DeleteProjectModal
+          project={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onDeleted={refresh}
+        />
+      )}
+    </div>
+  )
+}
+
 // ── Tab nav ───────────────────────────────────────────────────────────────────
 
 const TABS = [
@@ -766,6 +1108,15 @@ const TABS = [
         <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         <path d="M21 21v-2a4 4 0 0 0-3-3.85" />
+      </svg>
+    ),
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
       </svg>
     ),
   },
@@ -855,6 +1206,7 @@ export default function SettingsPage() {
       {/* Tab content */}
       {activeTab === 'general' && <GeneralTab />}
       {activeTab === 'users' && <UsersTab />}
+      {activeTab === 'projects' && <ProjectsTab />}
       {activeTab === 'appearance' && <AppearanceTab />}
     </div>
   )
