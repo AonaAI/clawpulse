@@ -393,6 +393,28 @@ export async function fetchTokenSummary(from?: string, to?: string) {
 
 // ── Activity Log (enhanced) ─────────────────────────────────────────────────
 
+export async function fetchTokenStatsByModel(from?: string, to?: string) {
+  let query = supabase
+    .from('token_usage')
+    .select('model, total_tokens, cost_usd, input_tokens, output_tokens')
+  if (from) query = query.gte('recorded_at', `${from}T00:00:00.000Z`)
+  if (to)   query = query.lte('recorded_at', `${to}T23:59:59.999Z`)
+  const { data, error } = await query
+  if (error) { console.error('Error fetching token stats by model:', error); return [] }
+
+  const map = new Map<string, { model: string; total_tokens: number; total_cost: number; input_tokens: number; output_tokens: number }>()
+  for (const r of data || []) {
+    const key = r.model || 'unknown'
+    if (!map.has(key)) map.set(key, { model: key, total_tokens: 0, total_cost: 0, input_tokens: 0, output_tokens: 0 })
+    const entry = map.get(key)!
+    entry.total_tokens += r.total_tokens || 0
+    entry.total_cost += Number(r.cost_usd) || 0
+    entry.input_tokens += r.input_tokens || 0
+    entry.output_tokens += r.output_tokens || 0
+  }
+  return Array.from(map.values()).sort((a, b) => b.total_cost - a.total_cost)
+}
+
 export async function fetchFullActivityLog(limit = 50, offset = 0) {
   const { data, error, count } = await supabase
     .from('activity_log')
