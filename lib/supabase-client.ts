@@ -607,6 +607,8 @@ export interface Project {
   description: string | null
   mission: string | null
   vision: string | null
+  goals: string[]
+  inherit_company_mission: boolean
   color: string
   icon: string
   status: string
@@ -618,6 +620,7 @@ export interface ProjectAgent {
   project_id: string
   agent_id: string
   role: string
+  kpis: string[]
 }
 
 export async function fetchProjects(): Promise<Project[]> {
@@ -629,7 +632,11 @@ export async function fetchProjects(): Promise<Project[]> {
     console.error('Error fetching projects:', error)
     return []
   }
-  return (data || []) as Project[]
+  return (data || []).map(p => ({
+    ...p,
+    goals: Array.isArray(p.goals) ? p.goals : [],
+    inherit_company_mission: p.inherit_company_mission ?? true,
+  })) as Project[]
 }
 
 export async function createProject(project: Partial<Project>): Promise<Project | null> {
@@ -667,7 +674,27 @@ export async function fetchProjectAgents(): Promise<ProjectAgent[]> {
     console.error('Error fetching project agents:', error)
     return []
   }
-  return (data || []) as ProjectAgent[]
+  return (data || []).map(pa => ({
+    ...pa,
+    kpis: Array.isArray(pa.kpis) ? pa.kpis : [],
+  })) as ProjectAgent[]
+}
+
+export async function updateProjectAgent(
+  projectId: string,
+  agentId: string,
+  updates: Partial<Pick<ProjectAgent, 'kpis' | 'role'>>
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('project_agents')
+    .update(updates)
+    .eq('project_id', projectId)
+    .eq('agent_id', agentId)
+  if (error) {
+    console.error('Error updating project agent:', error)
+    return false
+  }
+  return true
 }
 
 // ── Audit Log ──

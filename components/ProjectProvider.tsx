@@ -10,6 +10,8 @@ export interface Project {
   description: string | null
   mission: string | null
   vision: string | null
+  goals: string[]
+  inherit_company_mission: boolean
   color: string
   icon: string
   status: string
@@ -21,6 +23,7 @@ export interface ProjectAgent {
   project_id: string
   agent_id: string
   role: string
+  kpis: string[]
 }
 
 interface ProjectContextValue {
