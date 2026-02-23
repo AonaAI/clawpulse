@@ -456,6 +456,9 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
   const [activeTab, setActiveTab] = useState<'conversation' | 'trace'>('conversation')
 
   useEffect(() => {
+    if (!id) return // Wait for URL extraction to resolve
+    setLoading(true)
+    setNotFound(false)
     Promise.all([
       fetchSessionWithMetadata(id),
       fetchSessionTrace(id),
