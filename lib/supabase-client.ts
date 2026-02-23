@@ -413,6 +413,31 @@ export async function fetchFullActivityLog(limit = 50, offset = 0) {
   return { items, total: count ?? 0 }
 }
 
+// ── Agent Activity (per-agent) ────────────────────────────────────────────────
+
+export async function fetchAgentActivity(agentId: string, limit = 10) {
+  const { data, error } = await supabase
+    .from('activity_log')
+    .select('*')
+    .eq('agent_id', agentId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) { console.error('Error fetching agent activity:', error); return [] }
+  return data || []
+}
+
+export async function fetchAgentTodayTokens(agentId: string): Promise<number> {
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const { data, error } = await supabase
+    .from('token_usage')
+    .select('total_tokens')
+    .eq('agent_id', agentId)
+    .gte('recorded_at', todayStart.toISOString())
+  if (error) return 0
+  return (data || []).reduce((s: number, r: { total_tokens: number }) => s + (r.total_tokens || 0), 0)
+}
+
 // ── Cron Jobs ───────────────────────────────────────────────────────────────
 
 export async function fetchCronJobs() {

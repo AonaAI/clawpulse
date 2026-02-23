@@ -44,6 +44,8 @@ interface CronJob {
   last_duration_ms: number | null
   consecutive_errors: number
   payload_message: string | null
+  last_error?: string | null
+  session_target?: string | null
 }
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
@@ -207,6 +209,7 @@ const PRIORITY_CONFIG = {
 
 function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: string }) {
   const isError = statusKey === 'error'
+  const agent = AGENTS.find(a => a.id === job.agent_id)
 
   return (
     <div style={{
@@ -229,6 +232,23 @@ function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: str
             </svg>
             Job is in error state
           </div>
+          {job.last_error && (
+            <div style={{
+              marginBottom: 12,
+              padding: '8px 12px',
+              background: 'rgba(248,113,113,0.1)',
+              border: '1px solid rgba(248,113,113,0.3)',
+              borderRadius: 6,
+              color: '#fca5a5',
+              fontSize: 12,
+              fontFamily: 'monospace',
+              lineHeight: 1.6,
+              wordBreak: 'break-word',
+              whiteSpace: 'pre-wrap',
+            }}>
+              {job.last_error}
+            </div>
+          )}
           <div className="flex flex-wrap gap-6">
             <div>
               <div style={{ color: 'rgba(248,113,113,0.55)', fontSize: 11, marginBottom: 2 }}>Consecutive Errors</div>
@@ -252,7 +272,7 @@ function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: str
       )}
 
       {/* Detail grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Schedule */}
         <div>
           <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }} className="mb-1">Schedule</div>
@@ -270,6 +290,22 @@ function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: str
             </>
           ) : (
             <div style={{ color: 'var(--cp-text-dim)', fontSize: 13 }}>Not scheduled</div>
+          )}
+        </div>
+
+        {/* Session Target */}
+        <div>
+          <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }} className="mb-1">Session Target</div>
+          {agent ? (
+            <div className="flex items-center gap-2 mt-1">
+              <AgentAvatar agentId={job.agent_id} size={20} />
+              <div>
+                <div style={{ color: 'var(--cp-text-primary)', fontSize: 13, fontWeight: 500 }}>{agent.name}</div>
+                <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11 }}>{job.session_target ?? job.agent_id}</div>
+              </div>
+            </div>
+          ) : (
+            <code style={{ color: 'var(--cp-text-muted)', fontSize: 11 }}>{job.agent_id}</code>
           )}
         </div>
 
@@ -575,7 +611,7 @@ export default function CommsPage() {
                         transition: 'grid-template-rows 0.25s ease',
                       }}
                     >
-                      <div style={{ overflow: 'hidden' }}>
+                      <div style={{ overflow: 'hidden', minHeight: 0 }}>
                         <CronJobExpandedPanel job={job} statusKey={statusKey} />
                       </div>
                     </div>

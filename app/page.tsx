@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState, useCallback, memo, useRef } from 'react'
+import Link from 'next/link'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import { AGENTS } from '@/lib/data'
-import { fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines, fetchTokenStatsByAgent } from '@/lib/supabase-client'
+import { supabase, fetchTasks, fetchActivityLog, fetchAgents as fetchAgentsFromDB, fetchSetting, fetchAgentLiveStatus, fetchAgentSparklines, fetchTokenStatsByAgent, fetchAgentActivity, fetchAgentTodayTokens, fetchSessions } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent, Task } from '@/lib/types'
 import { WidgetConfig, loadWidgetLayout, saveWidgetLayout } from '@/lib/widget-config'
@@ -67,7 +68,7 @@ function StatusBadge({ status }: { status: AgentStatus }) {
   )
 }
 
-const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline, pulseType }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void; sparkline?: number[]; pulseType?: 'online' | 'offline' | null }) {
+const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, onSelect, sparkline, pulseType }: { agent: MergedAgent; compact?: boolean; onSpawn?: (agent: MergedAgent) => void; onSelect?: (agent: MergedAgent) => void; sparkline?: number[]; pulseType?: 'online' | 'offline' | null }) {
   const pulseClass = pulseType === 'online' ? 'agent-pulse-online' : pulseType === 'offline' ? 'agent-pulse-offline' : ''
   const initials = agent.name.slice(0, 2).toUpperCase()
   const isWorking = agent.status === 'working'
@@ -75,9 +76,11 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline, 
   if (compact) {
     return (
       <div
+        onClick={() => onSelect?.(agent)}
         style={{
           background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'rgba(255, 255, 255, 0.02)',
           border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'rgba(109, 40, 217, 0.14)'}`,
+          cursor: onSelect ? 'pointer' : 'default',
         }}
         className={`rounded-lg p-2.5 flex items-center gap-2 ${pulseClass}`}
       >
@@ -99,14 +102,16 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, sparkline, 
 
   return (
     <div
+      onClick={() => onSelect?.(agent)}
       style={{
         background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'rgba(255, 255, 255, 0.02)',
         border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'rgba(109, 40, 217, 0.14)'}`,
         backdropFilter: 'blur(12px)',
         boxShadow: isWorking ? '0 0 0 1px rgba(139, 92, 246, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4)' : '0 4px 24px rgba(0, 0, 0, 0.3)',
         transition: 'border-color 0.2s, box-shadow 0.2s',
+        cursor: onSelect ? 'pointer' : 'default',
       }}
-      className={`rounded-xl p-4 flex flex-col gap-3 cursor-default hover:border-[rgba(139,92,246,0.4)] ${pulseClass}`}
+      className={`rounded-xl p-4 flex flex-col gap-3 hover:border-[rgba(139,92,246,0.4)] ${pulseClass}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
@@ -181,6 +186,323 @@ function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus })
   )
 }
 
+// ── Event type helpers (reused from agent detail) ─────────────────────────
+
+type EventType = 'task_started' | 'task_completed' | 'message_sent' | 'error' | 'deployment' | 'info' | 'warning' | 'analysis'
+
+function detectEventType(action: string): EventType {
+  const a = action.toLowerCase()
+  if (a.includes('error') || a.includes('fail') || a.includes('crash')) return 'error'
+  if (a.includes('complet') || a.includes('done') || a.includes('finish') || a.includes('success')) return 'task_completed'
+  if (a.includes('start') || a.includes('begin') || a.includes('initiat') || a.includes('creat')) return 'task_started'
+  if (a.includes('deploy') || a.includes('publish') || a.includes('release') || a.includes('ship')) return 'deployment'
+  if (a.includes('message') || a.includes('send') || a.includes('notify') || a.includes('slack') || a.includes('comm')) return 'message_sent'
+  if (a.includes('warn') || a.includes('caution') || a.includes('alert')) return 'warning'
+  if (a.includes('analys') || a.includes('research') || a.includes('review') || a.includes('audit')) return 'analysis'
+  return 'info'
+}
+
+const EVENT_CONFIG: Record<EventType, { color: string; bg: string; border: string; label: string }> = {
+  task_completed: { color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', label: 'Completed' },
+  task_started:   { color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)', label: 'Started' },
+  error:          { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', label: 'Error' },
+  deployment:     { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.25)',  label: 'Deployed' },
+  message_sent:   { color: '#22d3ee', bg: 'rgba(34,211,238,0.1)',  border: 'rgba(34,211,238,0.25)',  label: 'Message' },
+  warning:        { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  label: 'Warning' },
+  analysis:       { color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', label: 'Analysis' },
+  info:           { color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  label: 'Info' },
+}
+
+function formatTimeAgoShort(isoStr: string): string {
+  const diffMs = Date.now() - new Date(isoStr).getTime()
+  if (diffMs < 60_000) return 'just now'
+  if (diffMs < 3_600_000) return `${Math.floor(diffMs / 60_000)}m ago`
+  if (diffMs < 86_400_000) return `${Math.floor(diffMs / 3_600_000)}h ago`
+  return `${Math.floor(diffMs / 86_400_000)}d ago`
+}
+
+// ── Agent Live Panel ───────────────────────────────────────────────────────
+
+function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents: MergedAgent[]; onClose: () => void }) {
+  const agent = agents.find(a => a.id === agentId)
+  const staticAgent = AGENTS.find(a => a.id === agentId)
+  const [panelActivity, setPanelActivity] = useState<any[]>([])
+  const [currentTaskDesc, setCurrentTaskDesc] = useState<string | null>(null)
+  const [todayTokens, setTodayTokens] = useState<number | null>(null)
+  const [latestSession, setLatestSession] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const backdropRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      fetchAgentActivity(agentId, 10),
+      fetchAgentTodayTokens(agentId),
+      fetchSessions(agentId, 1),
+      supabase.from('agents').select('current_task').eq('id', agentId).single(),
+    ]).then(([acts, tokens, sessions, agentRow]) => {
+      setPanelActivity(acts)
+      setTodayTokens(tokens)
+      setLatestSession(sessions[0] ?? null)
+      const raw = (agentRow.data as any)?.current_task ?? null
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw)
+          setCurrentTaskDesc(parsed.task ?? parsed.description ?? null)
+        } catch {
+          setCurrentTaskDesc(typeof raw === 'string' && raw.length < 500 ? raw : null)
+        }
+      }
+      setLoading(false)
+    })
+  }, [agentId])
+
+  // Realtime subscription: new activity for this agent
+  useEffect(() => {
+    const channel = supabase.channel(`agent-panel-${agentId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'activity_log',
+        filter: `agent_id=eq.${agentId}`,
+      }, (payload) => {
+        setPanelActivity(prev => [payload.new, ...prev].slice(0, 10))
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [agentId])
+
+  // Close on backdrop click
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === backdropRef.current) onClose()
+  }, [onClose])
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  const status = agent?.status ?? 'unknown'
+  const statusCfg = {
+    working: { dot: '#34d399', label: 'Working', bg: 'rgba(52,211,153,0.08)', color: '#34d399', border: 'rgba(52,211,153,0.25)' },
+    idle:    { dot: '#4b5563', label: 'Idle',    bg: 'rgba(75,85,99,0.06)',   color: 'var(--cp-text-muted)', border: 'rgba(75,85,99,0.2)' },
+    offline: { dot: '#374151', label: 'Offline', bg: 'rgba(55,65,81,0.04)',   color: 'var(--cp-text-dim)',   border: 'rgba(55,65,81,0.15)' },
+    unknown: { dot: '#6b7280', label: 'Unknown', bg: 'rgba(107,114,128,0.04)',color: 'var(--cp-text-muted)', border: 'rgba(107,114,128,0.15)' },
+  }[status] ?? { dot: '#6b7280', label: 'Unknown', bg: 'rgba(107,114,128,0.04)', color: 'var(--cp-text-muted)', border: 'rgba(107,114,128,0.15)' }
+
+  function formatRuntime(startedAt: string | null): string {
+    if (!startedAt) return '—'
+    const ms = Date.now() - new Date(startedAt).getTime()
+    const h = Math.floor(ms / 3_600_000)
+    const m = Math.floor((ms % 3_600_000) / 60_000)
+    if (h > 0) return `${h}h ${m}m`
+    return `${m}m`
+  }
+
+  function formatTokenCount(n: number): string {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
+    return `${n}`
+  }
+
+  return (
+    <div
+      ref={backdropRef}
+      onClick={handleBackdropClick}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.45)',
+        zIndex: 60,
+        display: 'flex',
+        justifyContent: 'flex-end',
+      }}
+    >
+      <div
+        style={{
+          width: 420,
+          maxWidth: '100vw',
+          height: '100%',
+          background: '#0d0621',
+          borderLeft: '1px solid rgba(109,40,217,0.28)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          animation: 'slideInRight 0.22s ease',
+        }}
+      >
+        {/* Header */}
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div style={{
+                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                background: status === 'working'
+                  ? 'linear-gradient(135deg, rgba(124,58,237,0.35) 0%, rgba(79,46,220,0.15) 100%)'
+                  : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${status === 'working' ? 'rgba(139,92,246,0.45)' : 'rgba(255,255,255,0.08)'}`,
+                color: status === 'working' ? '#c4b5fd' : '#6b7280',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 14,
+              }}>
+                {(staticAgent?.name ?? agentId).slice(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <div style={{ color: 'var(--cp-text-primary)', fontWeight: 700, fontSize: 15 }} className="truncate">
+                  {staticAgent?.name ?? agentId}
+                </div>
+                <div style={{ color: 'var(--cp-text-muted)', fontSize: 12 }} className="truncate">
+                  {staticAgent?.role ?? '—'}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span style={{ background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}` }} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold">
+                <span style={{ background: statusCfg.dot }} className="w-1.5 h-1.5 rounded-full inline-block" />
+                {statusCfg.label}
+              </span>
+              <button
+                onClick={onClose}
+                style={{ color: 'var(--cp-text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Model badge */}
+          {staticAgent?.model && (
+            <div style={{ marginTop: 10 }}>
+              <span style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>
+                {staticAgent.model}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} style={{ height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.03)' }} className="animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* Current Task */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Current Task</div>
+                {currentTaskDesc ? (
+                  <div style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 8, padding: '10px 12px', color: 'var(--cp-text-muted)', fontSize: 12, lineHeight: 1.6 }}>
+                    {currentTaskDesc}
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--cp-text-dim)', fontSize: 12, fontStyle: 'italic' }}>No active task</div>
+                )}
+              </div>
+
+              {/* Session Info */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Session Info</div>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '10px 14px' }} className="grid grid-cols-3 gap-3">
+                  <div>
+                    <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 10, marginBottom: 3 }}>Tokens Today</div>
+                    <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 15 }}>{todayTokens !== null ? formatTokenCount(todayTokens) : '—'}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 10, marginBottom: 3 }}>Runtime</div>
+                    <div style={{ color: 'var(--cp-text-primary)', fontWeight: 600, fontSize: 13 }}>
+                      {latestSession?.started_at ? formatRuntime(latestSession.started_at) : '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 10, marginBottom: 3 }}>Sessions 7d</div>
+                    <div style={{ color: 'var(--cp-text-primary)', fontWeight: 600, fontSize: 13 }}>
+                      {agent?.sessionCount ?? 0}
+                    </div>
+                  </div>
+                </div>
+                {latestSession?.session_key && (
+                  <div style={{ marginTop: 6 }}>
+                    <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 10, marginBottom: 2 }}>Session ID</div>
+                    <code style={{ color: 'var(--cp-text-dim)', fontSize: 10, wordBreak: 'break-all' }}>{latestSession.session_key}</code>
+                  </div>
+                )}
+              </div>
+
+              {/* Live Activity */}
+              <div style={{ marginBottom: 16 }}>
+                <div className="flex items-center justify-between mb-2">
+                  <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Live Activity</div>
+                  <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399' }} className="realtime-live-badge inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
+                    Live
+                  </span>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, overflow: 'hidden' }}>
+                  {panelActivity.length === 0 ? (
+                    <div style={{ color: 'var(--cp-text-dim)', fontSize: 12, padding: '16px', textAlign: 'center', fontStyle: 'italic' }}>No recent activity</div>
+                  ) : panelActivity.map((item, i) => {
+                    const evType = detectEventType(item.action || '')
+                    const evCfg = EVENT_CONFIG[evType]
+                    return (
+                      <div key={item.id ?? i} style={{ padding: '10px 14px', borderBottom: i < panelActivity.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span style={{ color: evCfg.color, background: evCfg.bg, border: `1px solid ${evCfg.border}`, fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+                            {evCfg.label}
+                          </span>
+                          <span style={{ color: 'var(--cp-text-dimmer)', fontSize: 10 }}>
+                            {item.created_at ? formatTimeAgoShort(item.created_at) : ''}
+                          </span>
+                        </div>
+                        <div style={{ color: 'var(--cp-text-card-title)', fontSize: 12, fontWeight: 500 }}>{item.action}</div>
+                        {item.details && (
+                          <div style={{ color: 'var(--cp-text-dim)', fontSize: 11, marginTop: 2, lineHeight: 1.5 }} className="truncate">{item.details}</div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer: link to full detail */}
+        <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+          <Link
+            href={`/agents/${agentId}`}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              width: '100%', padding: '9px 0', borderRadius: 10,
+              background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)',
+              color: '#a78bfa', fontWeight: 600, fontSize: 13,
+              textDecoration: 'none', transition: 'background 0.15s',
+            }}
+            onClick={onClose}
+          >
+            View Full Agent Detail
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes slideInRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 export default function OverviewPage() {
   const [agents, setAgents] = useState<MergedAgent[]>(UNKNOWN_AGENTS)
   const [tasks, setTasks] = useState<Task[]>([])
@@ -200,6 +522,7 @@ export default function OverviewPage() {
   const [dragSourceId, setDragSourceId] = useState<string | null>(null)
   const [dragTargetId, setDragTargetId] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
 
   // Detect mobile
   useEffect(() => {
@@ -423,7 +746,7 @@ export default function OverviewPage() {
               </div>
             </div>
             <div className={`grid ${compact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}`}>
-              {filteredAgents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} sparkline={sparklines[agent.id]} pulseType={agentPulses.get(agent.id)} />)}
+              {filteredAgents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} onSelect={(a) => setSelectedAgentId(a.id)} sparkline={sparklines[agent.id]} pulseType={agentPulses.get(agent.id)} />)}
             </div>
           </div>
         )
@@ -645,6 +968,15 @@ export default function OverviewPage() {
           agentId={spawnAgent.id}
           agentName={spawnAgent.name}
           onClose={() => setSpawnAgent(null)}
+        />
+      )}
+
+      {/* Agent Live Activity Panel */}
+      {selectedAgentId && (
+        <AgentLivePanel
+          agentId={selectedAgentId}
+          agents={agents}
+          onClose={() => setSelectedAgentId(null)}
         />
       )}
     </div>
