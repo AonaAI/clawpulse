@@ -12,7 +12,8 @@ import { config } from 'dotenv'
 
 config({ path: join(__dirname, '..', '.env.local') })
 
-const AGENTS_DIR = join(homedir(), '.openclaw', 'agents')
+const OPENCLAW_DIR = join(homedir(), '.openclaw')
+const AGENTS_DIR = join(OPENCLAW_DIR, 'agents')
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -720,6 +721,31 @@ async function processSpawnRequests() {
   console.log(`  Processed ${pending.length} spawn request(s)`)
 }
 
+/**
+ * Read each agent's configured primary model from openclaw.json.
+ * Returns a map of agentId -> model string (e.g. "azure-gpt52/gpt-5.2").
+ */
+async function readConfiguredModels(): Promise<Map<string, string>> {
+  const result = new Map<string, string>()
+  try {
+    const raw = await readFile(join(OPENCLAW_DIR, 'openclaw.json'), 'utf-8')
+    const config = JSON.parse(raw)
+    const agentList = config?.agents?.list
+    if (Array.isArray(agentList)) {
+      for (const agent of agentList) {
+        const id = agent.dir ?? agent.id
+        const model = typeof agent.model === 'string' ? agent.model
+          : typeof agent.model?.primary === 'string' ? agent.model.primary
+          : null
+        if (id && model) result.set(id, model)
+      }
+    }
+  } catch (e) {
+    console.warn('Could not read openclaw.json for agent models:', (e as Error).message)
+  }
+  return result
+}
+
 async function main() {
   let dirs: string[]
   try {
@@ -730,17 +756,25 @@ async function main() {
   }
 
   const agents = await Promise.all(dirs.map(readAgent))
+  const configuredModels = await readConfiguredModels()
 
   let totalSessions = 0
   for (const agent of agents) {
     try {
+      const updatePayload: Record<string, unknown> = {
+        status: agent.status,
+        last_activity: agent.last_activity,
+        current_task: agent.current_task,
+      }
+      // Push configured model from openclaw.json if available
+      const configModel = configuredModels.get(agent.id)
+      if (configModel) {
+        updatePayload.model = configModel
+      }
+
       const { error } = await supabase
         .from('agents')
-        .update({
-          status: agent.status,
-          last_activity: agent.last_activity,
-          current_task: agent.current_task,
-        })
+        .update(updatePayload)
         .eq('id', agent.id)
 
       if (error) {

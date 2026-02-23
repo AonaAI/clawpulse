@@ -686,7 +686,7 @@ export async function fetchSessions(agentId: string, limit = 20) {
 export async function fetchAgentLiveStatus() {
   const { data, error } = await supabase
     .from('agents')
-    .select('id, status, last_activity, current_task')
+    .select('id, status, last_activity, current_task, model')
     .order('created_at', { ascending: true })
 
   if (error) {
@@ -710,6 +710,7 @@ export async function fetchAgentLiveStatus() {
       sessionCount,
       lastActive: a.last_activity ? new Date(a.last_activity).getTime() : null,
       totalTokens,
+      model: a.model || null,
     }
   })
 }

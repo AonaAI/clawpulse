@@ -28,6 +28,7 @@ function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
     const data = liveMap.get(lookup)
     return {
       ...agent,
+      ...(data?.model ? { model: data.model } : {}),
       status: (data?.status ?? 'offline') as AgentStatus,
       sessionCount: data?.sessionCount ?? 0,
       lastActive: data?.lastActive ?? null,

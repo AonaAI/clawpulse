@@ -18,6 +18,7 @@ export interface AgentLive {
   sessionCount: number
   lastActive: number | null
   totalTokens: number
+  model?: string | null
 }
 
 export type MergedAgent = Agent & AgentLive

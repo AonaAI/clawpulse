@@ -38,6 +38,7 @@ function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
     const data = liveMap.get(lookup)
     return {
       ...agent,
+      ...(data?.model ? { model: data.model } : {}),
       status: (data?.status ?? 'offline') as AgentStatus,
       sessionCount: data?.sessionCount ?? 0,
       lastActive: data?.lastActive ?? null,
@@ -375,10 +376,10 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
           </div>
 
           {/* Model badge */}
-          {staticAgent?.model && (
+          {(agent?.model || staticAgent?.model) && (
             <div style={{ marginTop: 10 }}>
               <span style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>
-                {staticAgent.model}
+                {agent?.model || staticAgent?.model}
               </span>
             </div>
           )}
