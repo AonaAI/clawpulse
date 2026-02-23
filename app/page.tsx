@@ -936,23 +936,28 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* Widgets */}
-      <div className="space-y-8">
-        {sortedWidgets.map(w => w.enabled ? (
-          <DraggableWidget
+      {/* Widgets - grid layout supporting half/full width */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" style={{ transition: 'all 0.3s ease' }}>
+        {sortedWidgets.filter(w => w.enabled).map(w => (
+          <div
             key={w.id}
-            widget={w}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            onToggleCollapse={handleToggleCollapse}
-            isDragTarget={dragTargetId === w.id && dragSourceId !== w.id}
-            isDragging={dragSourceId === w.id}
-            isMobile={isMobile}
+            className={w.size === 'full' ? 'lg:col-span-2' : 'lg:col-span-1'}
+            style={{ transition: 'all 0.3s ease' }}
           >
-            {renderWidget(w.id)}
-          </DraggableWidget>
-        ) : null)}
+            <DraggableWidget
+              widget={w}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onToggleCollapse={handleToggleCollapse}
+              isDragTarget={dragTargetId === w.id && dragSourceId !== w.id}
+              isDragging={dragSourceId === w.id}
+              isMobile={isMobile}
+            >
+              {renderWidget(w.id)}
+            </DraggableWidget>
+          </div>
+        ))}
       </div>
 
       {/* Customize Panel */}

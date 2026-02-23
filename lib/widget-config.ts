@@ -1,3 +1,5 @@
+export type WidgetSize = 'full' | 'half'
+
 export interface WidgetConfig {
   id: string
   label: string
@@ -5,16 +7,17 @@ export interface WidgetConfig {
   compact: boolean
   order: number
   collapsed: boolean
+  size: WidgetSize
 }
 
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: 'stats-bar', label: 'Stats Bar', enabled: true, compact: false, order: 0, collapsed: false },
-  { id: 'quick-actions', label: 'Quick Actions', enabled: true, compact: false, order: 1, collapsed: false },
-  { id: 'agent-grid', label: 'Agent Status Grid', enabled: true, compact: false, order: 2, collapsed: false },
-  { id: 'cost-summary', label: 'Cost Summary', enabled: true, compact: false, order: 3, collapsed: false },
-  { id: 'active-tasks', label: 'Active Tasks', enabled: true, compact: false, order: 4, collapsed: false },
-  { id: 'activity-feed', label: 'Activity Feed', enabled: true, compact: false, order: 5, collapsed: false },
-  { id: 'recent-deployments', label: 'Recent Deployments', enabled: true, compact: false, order: 6, collapsed: false },
+  { id: 'stats-bar', label: 'Stats Bar', enabled: true, compact: false, order: 0, collapsed: false, size: 'full' },
+  { id: 'quick-actions', label: 'Quick Actions', enabled: true, compact: false, order: 1, collapsed: false, size: 'full' },
+  { id: 'agent-grid', label: 'Agent Status Grid', enabled: true, compact: false, order: 2, collapsed: false, size: 'full' },
+  { id: 'cost-summary', label: 'Cost Summary', enabled: true, compact: false, order: 3, collapsed: false, size: 'half' },
+  { id: 'active-tasks', label: 'Active Tasks', enabled: true, compact: false, order: 4, collapsed: false, size: 'half' },
+  { id: 'activity-feed', label: 'Activity Feed', enabled: true, compact: false, order: 5, collapsed: false, size: 'half' },
+  { id: 'recent-deployments', label: 'Recent Deployments', enabled: true, compact: false, order: 6, collapsed: false, size: 'half' },
 ]
 
 const STORAGE_KEY = 'clawpulse-widget-layout'
@@ -29,9 +32,8 @@ export function loadWidgetLayout(): WidgetConfig[] {
     const savedMap = new Map(saved.map(w => [w.id, w]))
     const merged = DEFAULT_WIDGETS.map(dw => {
       const s = savedMap.get(dw.id)
-      return s ? { ...dw, ...s, collapsed: s.collapsed ?? false } : dw
+      return s ? { ...dw, ...s, collapsed: s.collapsed ?? false, size: s.size ?? dw.size } : dw
     })
-    // Add any saved widgets not in defaults (shouldn't happen but safe)
     return merged.sort((a, b) => a.order - b.order)
   } catch {
     return DEFAULT_WIDGETS

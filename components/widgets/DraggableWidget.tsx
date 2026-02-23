@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback, ReactNode } from 'react'
+import { useRef, useCallback, ReactNode } from 'react'
 import { WidgetConfig } from '@/lib/widget-config'
 
 interface Props {
@@ -41,25 +41,25 @@ export default function DraggableWidget({
       onDragOver={handleDragOver}
       onDragEnd={onDragEnd}
       onDrop={(e) => { e.preventDefault(); onDragEnd() }}
-      className="group relative"
+      className="group relative widget-animate"
       style={{
         opacity: isDragging ? 0.4 : 1,
-        transition: 'opacity 0.2s, box-shadow 0.2s, border-color 0.2s',
+        transition: 'opacity 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease',
         borderRadius: '16px',
         border: isDragTarget ? '2px dashed rgba(139, 92, 246, 0.5)' : '2px solid transparent',
         background: isDragTarget ? 'rgba(139, 92, 246, 0.04)' : 'transparent',
         boxShadow: isDragTarget ? '0 0 0 4px rgba(139, 92, 246, 0.08)' : 'none',
         padding: '2px',
+        transform: isDragging ? 'scale(0.98)' : 'scale(1)',
       }}
     >
-      {/* Drag handle + collapse toggle */}
+      {/* Drag handle */}
       {!isMobile && (
         <div
           className="absolute -left-1 top-2 flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
           style={{ cursor: 'grab' }}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {/* Grip icon */}
           <div
             title="Drag to reorder"
             style={{
@@ -108,9 +108,9 @@ export default function DraggableWidget({
       {/* Widget content */}
       <div style={{
         overflow: 'hidden',
-        maxHeight: widget.collapsed ? '0px' : '2000px',
+        maxHeight: widget.collapsed ? '0px' : '4000px',
         opacity: widget.collapsed ? 0 : 1,
-        transition: 'max-height 0.3s ease, opacity 0.2s ease',
+        transition: 'max-height 0.35s ease, opacity 0.25s ease',
       }}>
         {children}
       </div>
