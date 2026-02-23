@@ -249,8 +249,9 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
         </button>
       </div>
 
-      {/* Nav */}
-      <nav aria-label="Primary" className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto min-h-0">
+      {/* Scrollable region: nav + system — fix: both sections scroll together so bottom items are always reachable */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+      <nav aria-label="Primary" className="px-3 py-4 space-y-0.5">
         <div style={{ color: 'var(--cp-text-nav-label)' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
           Navigation
         </div>
@@ -454,6 +455,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           </div>
         )}
       </div>
+      </div>{/* end scrollable region */}
     </div>
   )
 }
