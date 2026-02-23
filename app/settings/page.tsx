@@ -776,6 +776,218 @@ function AppearanceTab() {
   )
 }
 
+// ── Notifications tab ─────────────────────────────────────────────────────────
+
+interface NotificationPreferences {
+  eventTypes: {
+    agent_status: boolean
+    session_completed: boolean
+    error_detected: boolean
+    task_completed: boolean
+    budget_threshold: boolean
+    deployment_completed: boolean
+  }
+  soundEnabled: boolean
+  desktopEnabled: boolean
+  quietHours: {
+    enabled: boolean
+    start: string
+    end: string
+  }
+}
+
+const DEFAULT_PREFS: NotificationPreferences = {
+  eventTypes: {
+    agent_status: true,
+    session_completed: true,
+    error_detected: true,
+    task_completed: true,
+    budget_threshold: true,
+    deployment_completed: true,
+  },
+  soundEnabled: false,
+  desktopEnabled: false,
+  quietHours: { enabled: false, start: '22:00', end: '08:00' },
+}
+
+const NOTIF_PREFS_KEY = 'notification_preferences'
+const SOUND_KEY = 'clawpulse_notifications_sound'
+
+const EVENT_TYPE_META: { key: keyof NotificationPreferences['eventTypes']; label: string; desc: string; icon: string }[] = [
+  { key: 'agent_status', label: 'Agent Status Changes', desc: 'When agents come online or go offline', icon: '🤖' },
+  { key: 'session_completed', label: 'Session Completed', desc: 'When an agent session finishes', icon: '✅' },
+  { key: 'error_detected', label: 'Error Detected', desc: 'When errors or failures occur', icon: '🚨' },
+  { key: 'task_completed', label: 'Task Completed', desc: 'When a task reaches completion', icon: '📋' },
+  { key: 'budget_threshold', label: 'Budget Threshold Exceeded', desc: 'When spending exceeds set limits', icon: '💰' },
+  { key: 'deployment_completed', label: 'Deployment Completed', desc: 'When a deployment finishes', icon: '🚀' },
+]
+
+function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        background: enabled ? 'rgba(139,92,246,0.35)' : 'var(--cp-input-bg)',
+        border: `1px solid ${enabled ? 'rgba(139,92,246,0.5)' : 'var(--cp-border-strong)'}`,
+      }}
+      className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+    >
+      <div
+        style={{
+          background: enabled ? '#a78bfa' : 'var(--cp-text-dim)',
+          transform: enabled ? 'translateX(22px)' : 'translateX(3px)',
+        }}
+        className="absolute top-[3px] w-[18px] h-[18px] rounded-full transition-all"
+      />
+    </button>
+  )
+}
+
+function NotificationsTab() {
+  const [prefs, setPrefs] = useState<NotificationPreferences>(DEFAULT_PREFS)
+  const [desktopPermission, setDesktopPermission] = useState<string>('default')
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(NOTIF_PREFS_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        setPrefs({ ...DEFAULT_PREFS, ...parsed, eventTypes: { ...DEFAULT_PREFS.eventTypes, ...parsed.eventTypes }, quietHours: { ...DEFAULT_PREFS.quietHours, ...parsed.quietHours } })
+      }
+      // Sync sound from existing key
+      const soundVal = localStorage.getItem(SOUND_KEY)
+      if (soundVal !== null) {
+        setPrefs(p => ({ ...p, soundEnabled: soundVal === 'true' }))
+      }
+    } catch {}
+    if (typeof Notification !== 'undefined') {
+      setDesktopPermission(Notification.permission)
+    }
+  }, [])
+
+  const save = useCallback((updated: NotificationPreferences) => {
+    setPrefs(updated)
+    localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(updated))
+    // Sync sound toggle with existing key used by useNotifications
+    localStorage.setItem(SOUND_KEY, String(updated.soundEnabled))
+  }, [])
+
+  const toggleEventType = (key: keyof NotificationPreferences['eventTypes']) => {
+    save({ ...prefs, eventTypes: { ...prefs.eventTypes, [key]: !prefs.eventTypes[key] } })
+  }
+
+  const requestDesktopPermission = async () => {
+    if (typeof Notification === 'undefined') return
+    const result = await Notification.requestPermission()
+    setDesktopPermission(result)
+    if (result === 'granted') save({ ...prefs, desktopEnabled: true })
+  }
+
+  const cardStyle = {
+    background: 'var(--cp-card-bg)' as const,
+    border: '1px solid var(--cp-border-strong)' as const,
+    backdropFilter: 'blur(12px)' as const,
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Event type toggles */}
+      <div style={cardStyle} className="rounded-2xl p-6">
+        <h3 style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-bold mb-1">Event Types</h3>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mb-4">Choose which events trigger notifications</p>
+        <div className="space-y-3">
+          {EVENT_TYPE_META.map(evt => (
+            <div key={evt.key} className="flex items-center justify-between gap-3 py-1">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-base flex-shrink-0">{evt.icon}</span>
+                <div className="min-w-0">
+                  <div style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-medium">{evt.label}</div>
+                  <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs">{evt.desc}</div>
+                </div>
+              </div>
+              <Toggle enabled={prefs.eventTypes[evt.key]} onToggle={() => toggleEventType(evt.key)} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sound & Desktop */}
+      <div style={cardStyle} className="rounded-2xl p-6">
+        <h3 style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-bold mb-4">Delivery</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-medium">🔊 Notification Sound</div>
+              <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs">Play a sound when notifications arrive</div>
+            </div>
+            <Toggle enabled={prefs.soundEnabled} onToggle={() => save({ ...prefs, soundEnabled: !prefs.soundEnabled })} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <div style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-medium">🖥️ Desktop Notifications</div>
+              <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs">
+                {desktopPermission === 'granted' ? 'Permission granted' : desktopPermission === 'denied' ? 'Permission denied — update in browser settings' : 'Browser will ask for permission'}
+              </div>
+            </div>
+            {desktopPermission === 'granted' ? (
+              <Toggle enabled={prefs.desktopEnabled} onToggle={() => save({ ...prefs, desktopEnabled: !prefs.desktopEnabled })} />
+            ) : (
+              <button
+                onClick={requestDesktopPermission}
+                disabled={desktopPermission === 'denied'}
+                style={{
+                  background: desktopPermission === 'denied' ? 'var(--cp-input-bg)' : 'rgba(139,92,246,0.2)',
+                  color: desktopPermission === 'denied' ? 'var(--cp-text-dim)' : 'var(--cp-text-accent-light)',
+                  border: '1px solid rgba(139,92,246,0.3)',
+                }}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+              >
+                Enable
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Quiet Hours */}
+      <div style={cardStyle} className="rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-bold">🌙 Quiet Hours</h3>
+            <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">Mute all notifications during set hours</p>
+          </div>
+          <Toggle enabled={prefs.quietHours.enabled} onToggle={() => save({ ...prefs, quietHours: { ...prefs.quietHours, enabled: !prefs.quietHours.enabled } })} />
+        </div>
+        {prefs.quietHours.enabled && (
+          <div className="flex items-center gap-3">
+            <div>
+              <label style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-medium block mb-1">Start</label>
+              <input
+                type="time"
+                value={prefs.quietHours.start}
+                onChange={e => save({ ...prefs, quietHours: { ...prefs.quietHours, start: e.target.value } })}
+                style={{ background: 'var(--cp-input-bg)', color: 'var(--cp-text-primary)', border: '1px solid var(--cp-border-strong)' }}
+                className="rounded-lg px-3 py-1.5 text-sm"
+              />
+            </div>
+            <span style={{ color: 'var(--cp-text-dim)' }} className="text-sm mt-5">→</span>
+            <div>
+              <label style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-medium block mb-1">End</label>
+              <input
+                type="time"
+                value={prefs.quietHours.end}
+                onChange={e => save({ ...prefs, quietHours: { ...prefs.quietHours, end: e.target.value } })}
+                style={{ background: 'var(--cp-input-bg)', color: 'var(--cp-text-primary)', border: '1px solid var(--cp-border-strong)' }}
+                className="rounded-lg px-3 py-1.5 text-sm"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Projects tab ──────────────────────────────────────────────────────────────
 
 const ICON_OPTIONS = ['📁', '🚀', '💼', '🎯', '🔧', '📊', '🌐', '🤖', '💡', '🎨', '📱', '🛡️', '⚡', '🧪', '📈', '🏢']
@@ -1143,6 +1355,16 @@ const TABS = [
     ),
   },
   {
+    id: 'notifications',
+    label: 'Notifications',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
+    ),
+  },
+  {
     id: 'projects',
     label: 'Projects',
     icon: (
@@ -1237,6 +1459,7 @@ export default function SettingsPage() {
       {/* Tab content */}
       {activeTab === 'general' && <GeneralTab />}
       {activeTab === 'users' && <UsersTab />}
+      {activeTab === 'notifications' && <NotificationsTab />}
       {activeTab === 'projects' && <ProjectsTab />}
       {activeTab === 'appearance' && <AppearanceTab />}
     </div>
