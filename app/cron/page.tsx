@@ -317,7 +317,7 @@ export default function CronJobsPage() {
     const { data, error } = await supabase
       .from('agent_sessions')
       .select('*, agent:agents(name)')
-      .ilike('session_key', 'cron:%')
+      .ilike('session_key', '%:cron:%')
       .order('started_at', { ascending: false })
 
     if (error) {
