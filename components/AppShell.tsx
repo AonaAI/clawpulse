@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Sidebar from '@/components/Sidebar'
 import NotificationProvider from '@/components/NotificationProvider'
+import RouteGuard from '@/components/RouteGuard'
 import { useOnboarding } from '@/components/useOnboarding'
 import { useAuth } from '@/components/AuthProvider'
 
@@ -62,6 +63,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--background)' }}>
       <Sidebar />
+      <RouteGuard />
       <NotificationProvider />
       <KeyboardShortcuts />
       <PWAInstallBanner />

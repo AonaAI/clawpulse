@@ -8,6 +8,7 @@ import { AGENTS } from '@/lib/data'
 import { APP_NAME } from '@/lib/config'
 import ProjectSwitcher from './ProjectSwitcher'
 import { useAuth } from './AuthProvider'
+import { useRBAC } from './RBACProvider'
 
 const SearchModal = dynamic(() => import('./SearchModal'), { ssr: false })
 
@@ -193,6 +194,7 @@ const navItems = [
 function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void; onSearchClick?: () => void }) {
   const pathname = usePathname()
   const { user, signOut } = useAuth()
+  const { hasAccess, role } = useRBAC()
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -252,7 +254,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
         <div style={{ color: 'var(--cp-text-nav-label)' }} className="px-2 mb-3 text-xs font-bold uppercase tracking-widest">
           Navigation
         </div>
-        {navItems.map((item) => {
+        {navItems.filter(item => hasAccess(item.href)).map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
@@ -299,81 +301,93 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
           System
         </div>
 
-        <Link
-          href="/cron"
-          style={{ color: 'var(--cp-text-nav)' }}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          Cron Jobs
-        </Link>
+        {hasAccess('/cron') && (
+          <Link
+            href="/cron"
+            style={{ color: 'var(--cp-text-nav)' }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Cron Jobs
+          </Link>
+        )}
 
-        <Link
-          href="/audit"
-          style={{ color: 'var(--cp-text-nav)' }}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
-          Audit Log
-        </Link>
+        {hasAccess('/audit') && (
+          <Link
+            href="/audit"
+            style={{ color: 'var(--cp-text-nav)' }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            Audit Log
+          </Link>
+        )}
 
-        <Link
-          href="/errors"
-          style={{ color: 'var(--cp-text-nav)' }}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          Errors
-        </Link>
+        {hasAccess('/errors') && (
+          <Link
+            href="/errors"
+            style={{ color: 'var(--cp-text-nav)' }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Errors
+          </Link>
+        )}
 
-        <Link
-          href="/alerts"
-          style={{ color: 'var(--cp-text-nav)' }}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            <circle cx="18" cy="5" r="2.5" fill="currentColor" stroke="none" />
-          </svg>
-          Alerts
-        </Link>
+        {hasAccess('/alerts') && (
+          <Link
+            href="/alerts"
+            style={{ color: 'var(--cp-text-nav)' }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              <circle cx="18" cy="5" r="2.5" fill="currentColor" stroke="none" />
+            </svg>
+            Alerts
+          </Link>
+        )}
 
-        <Link
-          href="/api-docs"
-          style={{ color: 'var(--cp-text-nav)' }}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 17l6-6-6-6" />
-            <path d="M12 19h8" />
-          </svg>
-          API
-        </Link>
+        {hasAccess('/api-docs') && (
+          <Link
+            href="/api-docs"
+            style={{ color: 'var(--cp-text-nav)' }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 17l6-6-6-6" />
+              <path d="M12 19h8" />
+            </svg>
+            API
+          </Link>
+        )}
 
-        <Link
-          href="/settings"
-          style={{ color: 'var(--cp-text-nav)' }}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5 mb-2"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14M12 2v2m0 16v2M2 12h2m16 0h2" />
-          </svg>
-          Settings
-        </Link>
+        {hasAccess('/settings') && (
+          <Link
+            href="/settings"
+            style={{ color: 'var(--cp-text-nav)' }}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5 mb-2"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14M12 2v2m0 16v2M2 12h2m16 0h2" />
+            </svg>
+            Settings
+          </Link>
+        )}
 
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
@@ -422,7 +436,7 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
               >
                 {user.email}
               </div>
-              <div style={{ color: '#6d28d9' }} className="text-xs">Admin</div>
+              <div style={{ color: '#6d28d9' }} className="text-xs capitalize">{role}</div>
             </div>
             <button
               onClick={signOut}

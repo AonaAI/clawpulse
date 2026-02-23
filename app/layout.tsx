@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import AuthProvider from "@/components/AuthProvider";
+import RBACProvider from "@/components/RBACProvider";
 import AppShell from "@/components/AppShell";
 import ProjectProvider from "@/components/ProjectProvider";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/config";
@@ -53,9 +54,11 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <ThemeProvider>
           <AuthProvider>
-            <ProjectProvider>
-              <AppShell>{children}</AppShell>
-            </ProjectProvider>
+            <RBACProvider>
+              <ProjectProvider>
+                <AppShell>{children}</AppShell>
+              </ProjectProvider>
+            </RBACProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

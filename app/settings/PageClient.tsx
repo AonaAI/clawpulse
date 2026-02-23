@@ -5,8 +5,10 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { supabase, createProject, updateProject, deleteProject } from '@/lib/supabase-client'
 import { useAuth } from '@/components/AuthProvider'
 import { useProject, Project } from '@/components/ProjectProvider'
+import { useRBAC } from '@/components/RBACProvider'
 import { useRouter } from 'next/navigation'
 import { APP_NAME } from '@/lib/config'
+import type { Role as UIRole } from '@/lib/rbac'
 
 type Role = 'admin' | 'editor' | 'viewer'
 
@@ -659,6 +661,75 @@ function DataRetentionSection() {
   )
 }
 
+// ── Dev Tools section ─────────────────────────────────────────────────────────
+
+const UI_ROLES: UIRole[] = ['admin', 'operator', 'viewer']
+
+const UI_ROLE_META: Record<UIRole, { label: string; desc: string; color: string; bg: string; border: string }> = {
+  admin:    { label: 'Admin',    desc: 'Full access including Settings', color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)' },
+  operator: { label: 'Operator', desc: 'Tasks, workflows, alerts, and more', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', border: 'rgba(96,165,250,0.3)' },
+  viewer:   { label: 'Viewer',   desc: 'Read-only dashboards only', color: 'var(--cp-text-secondary)', bg: 'rgba(156,163,175,0.08)', border: 'rgba(156,163,175,0.2)' },
+}
+
+function DevToolsSection() {
+  const { role, setRole } = useRBAC()
+
+  return (
+    <div
+      style={{
+        background: 'rgba(234,179,8,0.04)',
+        border: '1px solid rgba(234,179,8,0.2)',
+        backdropFilter: 'blur(12px)',
+      }}
+      className="rounded-2xl p-6"
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polyline points="4 17 10 11 4 5" />
+          <line x1="12" y1="19" x2="20" y2="19" />
+        </svg>
+        <h3 style={{ color: '#eab308' }} className="text-sm font-bold">
+          Dev Tools
+        </h3>
+      </div>
+      <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mb-4">
+        Simulate a different UI role to test RBAC behaviour. Persisted to localStorage.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {UI_ROLES.map(r => {
+          const meta = UI_ROLE_META[r]
+          const isActive = role === r
+          return (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              style={{
+                background: isActive ? meta.bg : 'var(--cp-input-bg)',
+                border: `1px solid ${isActive ? meta.border : 'var(--cp-border-strong)'}`,
+                color: isActive ? meta.color : 'var(--cp-text-secondary)',
+              }}
+              className="rounded-xl p-3 text-left transition-all hover:opacity-90"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold uppercase tracking-wider">{meta.label}</span>
+                {isActive && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+              <div style={{ color: 'var(--cp-text-muted)' }} className="text-xs leading-relaxed">
+                {meta.desc}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── General tab ───────────────────────────────────────────────────────────────
 
 function GeneralTab() {
@@ -756,6 +827,9 @@ function GeneralTab() {
           🔄 Restart Onboarding
         </button>
       </div>
+
+      {/* Dev Tools */}
+      <DevToolsSection />
 
       {/* Footer */}
       <div className="flex justify-center pt-2">
