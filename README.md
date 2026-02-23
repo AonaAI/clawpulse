@@ -1,36 +1,152 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔍 ClawPulse
 
-## Getting Started
+**Agent Ops Dashboard** — Monitor, manage, and understand your AI agents in real time.
 
-First, run the development server:
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3FCF8E)](https://supabase.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-Hosting-FFCA28)](https://firebase.google.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)](https://www.typescriptlang.org/)
+
+---
+
+ClawPulse is a comprehensive operations dashboard for AI agent systems. Track sessions, monitor errors, manage workflows, and gain full observability into your agent fleet — all from a single, real-time interface.
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| **Agent Monitoring** | Live status, health checks, and activity feeds for all connected agents |
+| **Session Tracking** | Full session history with timelines, durations, and detailed logs |
+| **Error Tracking** | Centralized error collection with stack traces and resolution status |
+| **Alerting** | Configurable alerts for agent failures, anomalies, and thresholds |
+| **Workflows** | Visual workflow management for multi-step agent operations |
+| **Knowledge Base** | Shared knowledge repository accessible by agents and operators |
+| **Tasks** | Task assignment, tracking, and completion monitoring |
+| **Comms** | Communication logs and message history across agent interactions |
+| **Metrics** | Token usage, response times, success rates, and custom KPIs |
+| **Mission / Vision / Goals** | Hierarchical objective tracking — mission → vision → goals |
+| **Dark / Light Theme** | Full theme support with system preference detection |
+| **PWA Support** | Install as a progressive web app on desktop and mobile |
+| **Real-time Updates** | Live data via Supabase Realtime subscriptions |
+
+## 📸 Screenshots
+
+> Screenshots coming soon
+
+<!--
+![Dashboard](docs/screenshots/dashboard.png)
+![Sessions](docs/screenshots/sessions.png)
+![Agents](docs/screenshots/agents.png)
+![Metrics](docs/screenshots/metrics.png)
+![Workflows](docs/screenshots/workflows.png)
+-->
+
+## 🚀 Quick Start
 
 ```bash
+# Clone the repo
+git clone https://github.com/yourusername/clawpulse.git
+cd clawpulse
+
+# Run setup (installs deps, copies env template)
+chmod +x setup.sh
+./setup.sh
+
+# Edit your environment variables
+nano .env.local
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see your dashboard.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🏗 Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+┌─────────────────────────────────────────┐
+│           Firebase Hosting              │
+│         (Static Export / CDN)           │
+├─────────────────────────────────────────┤
+│         Next.js 14 (Static)            │
+│     TypeScript · Tailwind CSS          │
+├─────────────────────────────────────────┤
+│              Supabase                   │
+│   Postgres · Realtime · Auth · RLS     │
+└─────────────────────────────────────────┘
+```
 
-## Learn More
+- **Next.js 14** — Static site generation via `next export`
+- **Supabase** — Postgres database with Row Level Security, Realtime subscriptions, and Auth
+- **Firebase Hosting** — Global CDN for the static build output
+- **TypeScript** — Full type safety across the codebase
+- **Tailwind CSS** — Utility-first styling with dark mode support
 
-To learn more about Next.js, take a look at the following resources:
+## ⚙️ Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copy `.env.example` to `.env.local` and configure:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Your Supabase anonymous/public key |
+| `NEXT_PUBLIC_APP_NAME` | ❌ | App display name (default: `ClawPulse`) |
+| `NEXT_PUBLIC_COMPANY_NAME` | ❌ | Your company/org name |
 
-## Deploy on Vercel
+## 🗄 Database Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+ClawPulse uses Supabase (Postgres). To set up your database:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Create a Supabase project** at [supabase.com](https://supabase.com)
+
+2. **Run migrations** in order via the Supabase SQL Editor or CLI:
+
+```bash
+# Using Supabase CLI
+supabase db push
+
+# Or manually run each migration in supabase/migrations/
+# 001_create_tables.sql
+# 002_add_write_policies.sql
+# 003_token_usage_settings_mission.sql
+# ...through 013_mission_hierarchy.sql
+```
+
+3. **Copy your project URL and anon key** from Supabase → Settings → API into `.env.local`
+
+## 🚢 Deployment
+
+### Firebase Hosting
+
+```bash
+# Build the static export
+npm run build
+
+# Deploy to Firebase
+firebase deploy --only hosting
+```
+
+The build outputs to `out/` which Firebase serves as a static site.
+
+### First-time Firebase setup
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting  # select "out" as public dir, configure as SPA
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'feat: add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+[MIT](LICENSE) — use it however you like.
