@@ -348,6 +348,18 @@ function SidebarContent({ onNavClick, onSearchClick }: { onNavClick?: () => void
         </Link>
 
         <Link
+          href="/api-docs"
+          style={{ color: 'var(--cp-text-nav)' }}
+          className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 17l6-6-6-6" />
+            <path d="M12 19h8" />
+          </svg>
+          API
+        </Link>
+
+        <Link
           href="/settings"
           style={{ color: 'var(--cp-text-nav)' }}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-white/5 mb-2"
@@ -446,6 +458,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/audit': 'Audit Log',
   '/errors': 'Errors',
   '/alerts': 'Alerts',
+  '/api-docs': 'API & Webhooks',
   '/settings': 'Settings',
 }
 
