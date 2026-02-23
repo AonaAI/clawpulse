@@ -11,8 +11,8 @@ export default function CompareLoading() {
           <div
             key={i}
             style={{
-              background: 'rgba(17, 2, 29, 0.6)',
-              border: '1px solid rgba(109, 40, 217, 0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
             }}
             className="rounded-xl p-5"
           >

@@ -77,11 +77,11 @@ const ACTION_CONFIG: Record<ActionType, { color: string; label: string; icon: Re
     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
   },
   task: {
-    color: '#a78bfa', label: 'Task',
+    color: 'var(--cp-text-accent-light)', label: 'Task',
     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>,
   },
   other: {
-    color: '#94a3b8', label: 'Other',
+    color: 'var(--cp-text-secondary)', label: 'Other',
     icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>,
   },
 }
@@ -285,8 +285,8 @@ export default function TimelinePage() {
       {/* Filter bar */}
       <div
         style={{
-          background: 'rgba(17, 2, 29, 0.6)',
-          border: '1px solid rgba(109, 40, 217, 0.14)',
+          background: 'var(--cp-card-bg)',
+          border: '1px solid var(--cp-border)',
           backdropFilter: 'blur(12px)',
         }}
         className="rounded-xl p-4 mb-6 space-y-3"
@@ -306,7 +306,7 @@ export default function TimelinePage() {
                   key={agent.id}
                   onClick={() => toggleAgent(agent.id)}
                   style={{
-                    background: isSelected ? `${color}20` : 'rgba(255,255,255,0.03)',
+                    background: isSelected ? `${color}20` : 'var(--cp-card-bg)',
                     border: `1px solid ${isSelected ? `${color}60` : 'rgba(255,255,255,0.08)'}`,
                     color: isSelected ? color : 'var(--cp-text-muted)',
                   }}
@@ -320,8 +320,8 @@ export default function TimelinePage() {
             {selectedAgents.length > 0 && (
               <button
                 onClick={() => setSelectedAgents([])}
-                style={{ color: '#6b7280' }}
-                className="px-2 py-1 text-xs hover:text-white transition-colors"
+                style={{ color: 'var(--cp-text-muted)' }}
+                className="px-2 py-1 text-xs hover:text-[var(--cp-text-primary)] transition-colors"
               >
                 Clear
               </button>
@@ -341,7 +341,7 @@ export default function TimelinePage() {
                   key={type}
                   onClick={() => toggleType(type)}
                   style={{
-                    background: isSelected ? `${cfg.color}20` : 'rgba(255,255,255,0.03)',
+                    background: isSelected ? `${cfg.color}20` : 'var(--cp-card-bg)',
                     border: `1px solid ${isSelected ? `${cfg.color}60` : 'rgba(255,255,255,0.08)'}`,
                     color: isSelected ? cfg.color : 'var(--cp-text-muted)',
                   }}
@@ -355,8 +355,8 @@ export default function TimelinePage() {
             {selectedTypes.length > 0 && (
               <button
                 onClick={() => setSelectedTypes([])}
-                style={{ color: '#6b7280' }}
-                className="px-2 py-1 text-xs hover:text-white transition-colors"
+                style={{ color: 'var(--cp-text-muted)' }}
+                className="px-2 py-1 text-xs hover:text-[var(--cp-text-primary)] transition-colors"
               >
                 Clear
               </button>
@@ -387,8 +387,8 @@ export default function TimelinePage() {
       ) : events.length === 0 ? (
         <div
           style={{
-            background: 'rgba(17, 2, 29, 0.6)',
-            border: '1px solid rgba(109, 40, 217, 0.14)',
+            background: 'var(--cp-card-bg)',
+            border: '1px solid var(--cp-border)',
             borderRadius: 12,
           }}
           className="text-center py-16 px-6"
@@ -415,7 +415,7 @@ export default function TimelinePage() {
                 marginTop: 12,
                 background: 'rgba(109,40,217,0.15)',
                 border: '1px solid rgba(109,40,217,0.3)',
-                color: '#c4b5fd',
+                color: 'var(--cp-text-accent-light)',
                 borderRadius: 8,
                 padding: '6px 16px',
                 fontSize: 12,
@@ -450,13 +450,13 @@ export default function TimelinePage() {
                   style={{
                     background: 'rgba(109, 40, 217, 0.15)',
                     border: '1px solid rgba(109, 40, 217, 0.3)',
-                    color: '#c4b5fd',
+                    color: 'var(--cp-text-accent-light)',
                   }}
                   className="text-xs font-semibold px-3 py-1 rounded-full"
                 >
                   {group.date}
                 </div>
-                <div style={{ flex: 1, height: 1, background: 'rgba(109,40,217,0.12)' }} />
+                <div style={{ flex: 1, height: 1, background: 'var(--cp-divider-accent)' }} />
               </div>
 
               {/* Events */}
@@ -580,12 +580,12 @@ export default function TimelinePage() {
                             {event.metadata && Object.keys(event.metadata).length > 0 && (
                               <pre
                                 style={{
-                                  background: 'rgba(0,0,0,0.3)',
+                                  background: 'var(--cp-code-bg)',
                                   border: '1px solid rgba(109,40,217,0.15)',
                                   borderRadius: 8,
                                   padding: '8px 12px',
                                   fontSize: 11,
-                                  color: '#94a3b8',
+                                  color: 'var(--cp-text-secondary)',
                                   overflow: 'auto',
                                   maxHeight: 200,
                                 }}
@@ -619,7 +619,7 @@ export default function TimelinePage() {
                 style={{
                   background: 'rgba(109, 40, 217, 0.15)',
                   border: '1px solid rgba(109, 40, 217, 0.3)',
-                  color: '#c4b5fd',
+                  color: 'var(--cp-text-accent-light)',
                 }}
                 className="px-6 py-2 rounded-lg text-sm font-medium hover:brightness-125 transition-all disabled:opacity-50"
               >

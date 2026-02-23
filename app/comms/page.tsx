@@ -51,7 +51,7 @@ interface CronJob {
 const STATUS_CONFIG: Record<string, { color: string; bg: string; border: string; label: string }> = {
   active:   { color: '#34d399', bg: 'rgba(52,211,153,0.06)', border: 'rgba(52,211,153,0.2)', label: 'Active' },
   ok:       { color: '#34d399', bg: 'rgba(52,211,153,0.06)', border: 'rgba(52,211,153,0.2)', label: 'OK' },
-  disabled: { color: '#6b7280', bg: 'rgba(107,114,128,0.06)', border: 'rgba(107,114,128,0.2)', label: 'Disabled' },
+  disabled: { color: 'var(--cp-text-muted)', bg: 'rgba(107,114,128,0.06)', border: 'rgba(107,114,128,0.2)', label: 'Disabled' },
   paused:   { color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.2)', label: 'Paused' },
   error:    { color: '#f87171', bg: 'rgba(248,113,113,0.06)', border: 'rgba(248,113,113,0.2)', label: 'Error' },
   pending:  { color: '#60a5fa', bg: 'rgba(96,165,250,0.06)', border: 'rgba(96,165,250,0.2)', label: 'Pending' },
@@ -189,7 +189,7 @@ function AgentAvatar({ agentId, size = 24 }: { agentId: string; size?: number })
         fontSize: size * 0.35,
         background: 'rgba(139,92,246,0.14)',
         border: '1px solid rgba(139,92,246,0.25)',
-        color: '#8b5cf6',
+        color: 'var(--cp-text-accent-light)',
       }}
       className="rounded-md flex items-center justify-center font-bold"
     >
@@ -213,8 +213,8 @@ function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: str
 
   return (
     <div style={{
-      borderTop: '1px solid rgba(255,255,255,0.05)',
-      background: 'rgba(0,0,0,0.18)',
+      borderTop: '1px solid var(--cp-separator-bg)',
+      background: 'var(--cp-code-bg)',
       padding: '16px 20px 20px 28px',
     }}>
       {/* Error banner */}
@@ -277,7 +277,7 @@ function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: str
         <div>
           <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }} className="mb-1">Schedule</div>
           <div style={{ color: 'var(--cp-text-primary)', fontSize: 13, fontWeight: 500 }}>{formatScheduleHuman(job.schedule)}</div>
-          <code style={{ color: '#8b5cf6', fontSize: 11, display: 'block', marginTop: 3, opacity: 0.8 }}>{job.schedule}</code>
+          <code style={{ color: 'var(--cp-text-accent-light)', fontSize: 11, display: 'block', marginTop: 3, opacity: 0.8 }}>{job.schedule}</code>
         </div>
 
         {/* Next run */}
@@ -322,7 +322,7 @@ function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: str
           <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }} className="mb-2">Payload / Instructions</div>
           <div style={{
             background: 'rgba(255,255,255,0.025)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            border: '1px solid var(--cp-border-subtle)',
             borderRadius: 8,
             padding: '10px 14px',
             color: 'var(--cp-text-muted)',
@@ -343,14 +343,14 @@ function CronJobExpandedPanel({ job, statusKey }: { job: CronJob; statusKey: str
         <div>
           <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }} className="mb-2">Run History</div>
           <div style={{
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: 'var(--cp-card-bg)',
+            border: '1px solid var(--cp-border-subtle)',
             borderRadius: 8,
             overflow: 'hidden',
             fontSize: 12,
           }}>
             {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px', padding: '7px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px', padding: '7px 14px', borderBottom: '1px solid var(--cp-input-bg)' }}>
               <span style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600 }}>TIMESTAMP</span>
               <span style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600 }}>STATUS</span>
               <span style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textAlign: 'right' }}>DURATION</span>
@@ -420,7 +420,7 @@ export default function CommsPage() {
       {/* Summary pills */}
       <div className="flex items-center gap-3 mb-10 flex-wrap">
         {[
-          { label: 'Slack Channels', value: totalChannels, color: '#a78bfa', bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.18)' },
+          { label: 'Slack Channels', value: totalChannels, color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.18)' },
           { label: 'Active Jobs',    value: activeJobs,    color: '#34d399', bg: 'rgba(52,211,153,0.06)',  border: 'rgba(52,211,153,0.18)'  },
           { label: 'Job Errors',     value: errorJobs,     color: '#f87171', bg: 'rgba(248,113,113,0.06)', border: 'rgba(248,113,113,0.18)' },
           { label: 'Pending Handoffs', value: handoffs.length, color: '#fbbf24', bg: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.18)' },
@@ -463,7 +463,7 @@ export default function CommsPage() {
               >
                 {/* Channel icon */}
                 <div
-                  style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', width: 36, height: 36, minWidth: 36 }}
+                  style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--cp-text-accent-light)', width: 36, height: 36, minWidth: 36 }}
                   className="rounded-lg flex items-center justify-center text-sm font-bold"
                 >
                   #
@@ -524,7 +524,7 @@ export default function CommsPage() {
                 return (
                   <div
                     key={job.id}
-                    style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : undefined }}
+                    style={{ borderTop: i > 0 ? '1px solid var(--cp-input-bg)' : undefined }}
                   >
                     {/* Clickable row */}
                     <button
@@ -572,7 +572,7 @@ export default function CommsPage() {
 
                       {/* Schedule */}
                       <code
-                        style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)', fontSize: 11 }}
+                        style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)', fontSize: 11 }}
                         className="hidden sm:block px-2 py-1 rounded-md font-mono flex-shrink-0"
                       >
                         {job.schedule}
@@ -662,7 +662,7 @@ export default function CommsPage() {
                 return (
                   <div
                     key={task.id}
-                    style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : undefined }}
+                    style={{ borderTop: i > 0 ? '1px solid var(--cp-input-bg)' : undefined }}
                     className="flex items-center gap-4 px-5 py-4"
                   >
                     {/* Blocked indicator */}

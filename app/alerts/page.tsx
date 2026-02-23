@@ -157,7 +157,7 @@ function AlertRuleCard({ rule, onToggle, onDelete }: {
             <span style={{ color: 'var(--cp-text-primary)' }} className="font-semibold text-sm">{rule.name}</span>
             <SeverityBadge severity={rule.severity} />
             {!rule.enabled && (
-              <span style={{ color: 'var(--cp-text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              <span style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
                 className="text-xs px-2 py-0.5 rounded-full font-semibold"
               >
                 Disabled
@@ -188,7 +188,7 @@ function AlertRuleCard({ rule, onToggle, onDelete }: {
             onClick={() => onToggle(rule.id)}
             style={{
               width: 38, height: 22, borderRadius: 11,
-              background: rule.enabled ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.07)',
+              background: rule.enabled ? 'rgba(52,211,153,0.2)' : 'var(--cp-border-subtle)',
               border: `1px solid ${rule.enabled ? 'rgba(52,211,153,0.45)' : 'rgba(255,255,255,0.1)'}`,
               position: 'relative',
               transition: 'all 0.2s',
@@ -274,7 +274,7 @@ function CreateAlertModal({ agents, onClose, onCreate }: {
       <div
         style={{
           position: 'relative', zIndex: 1,
-          background: 'linear-gradient(180deg, #150228 0%, #0e0120 100%)',
+          background: 'var(--cp-panel-bg)',
           border: '1px solid rgba(139,92,246,0.3)',
           borderRadius: 16,
           width: '100%', maxWidth: 480,
@@ -310,8 +310,8 @@ function CreateAlertModal({ agents, onClose, onCreate }: {
                   onClick={() => handleTypeChange(t)}
                   style={{
                     width: '100%',
-                    background: alertType === t ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.03)',
-                    border: alertType === t ? '1px solid rgba(139,92,246,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                    background: alertType === t ? 'rgba(124,58,237,0.18)' : 'var(--cp-card-bg)',
+                    border: alertType === t ? '1px solid rgba(139,92,246,0.4)' : '1px solid var(--cp-border-subtle)',
                     borderRadius: 8, padding: '10px 12px', textAlign: 'left', transition: 'all 0.15s',
                   }}
                 >
@@ -381,8 +381,8 @@ function CreateAlertModal({ agents, onClose, onCreate }: {
                     onClick={() => setSeverity(s)}
                     style={{
                       flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                      background: active ? cfg.bg : 'rgba(255,255,255,0.03)',
-                      border: active ? `1px solid ${cfg.border}` : '1px solid rgba(255,255,255,0.07)',
+                      background: active ? cfg.bg : 'var(--cp-card-bg)',
+                      border: active ? `1px solid ${cfg.border}` : '1px solid var(--cp-border-subtle)',
                       color: active ? cfg.color : 'var(--cp-text-dim)',
                       transition: 'all 0.15s',
                     }}
@@ -415,10 +415,10 @@ function CreateAlertModal({ agents, onClose, onCreate }: {
         </div>
 
         {/* Footer */}
-        <div style={{ borderTop: '1px solid rgba(109,40,217,0.12)' }} className="px-6 py-4 flex items-center justify-end gap-3">
+        <div style={{ borderTop: '1px solid var(--cp-divider-accent)' }} className="px-6 py-4 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            style={{ color: 'var(--cp-text-muted)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid rgba(255,255,255,0.08)' }}
             className="px-4 py-2 rounded-lg text-sm font-semibold hover:bg-white/[0.07] transition-all"
           >
             Cancel
@@ -536,7 +536,7 @@ export default function AlertsPage() {
           style={{
             background: 'rgba(124,58,237,0.2)',
             border: '1px solid rgba(139,92,246,0.4)',
-            color: '#c4b5fd',
+            color: 'var(--cp-text-accent-light)',
           }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-purple-500/25 transition-all flex-shrink-0"
         >
@@ -551,7 +551,7 @@ export default function AlertsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           {
-            label: 'Total Rules', value: totalRules.toString(), color: '#a78bfa',
+            label: 'Total Rules', value: totalRules.toString(), color: 'var(--cp-text-accent-light)',
             icon: (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -628,7 +628,7 @@ export default function AlertsPage() {
             </div>
             <button
               onClick={() => setShowModal(true)}
-              style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(139,92,246,0.35)', color: '#c4b5fd' }}
+              style={{ background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(139,92,246,0.35)', color: 'var(--cp-text-accent-light)' }}
               className="px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-500/25 transition-all"
             >
               Create your first rule
@@ -667,7 +667,7 @@ export default function AlertsPage() {
                 <div
                   key={entry.id}
                   style={{
-                    borderBottom: idx < history.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    borderBottom: idx < history.length - 1 ? '1px solid var(--cp-input-bg)' : 'none',
                     borderLeft: `2px solid ${cfg.color}`,
                   }}
                   className="px-4 py-3 flex items-start gap-3 hover:bg-white/[0.015] transition-colors"

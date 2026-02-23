@@ -93,7 +93,7 @@ const CATEGORY_CONFIG: Record<string, { color: string; bg: string; border: strin
 }
 
 function getCategoryStyle(cat: string) {
-  return CATEGORY_CONFIG[cat] ?? { color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)' }
+  return CATEGORY_CONFIG[cat] ?? { color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)' }
 }
 
 // ── Context Window Visualization ─────────────────────────────────────────────
@@ -123,7 +123,7 @@ function ContextBar({ used, limit }: { used: number; limit: number }) {
         </span>
       </div>
 
-      <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '999px', height: '10px', overflow: 'hidden' }} className="mb-1">
+      <div style={{ background: 'var(--cp-border-subtle)', borderRadius: '999px', height: '10px', overflow: 'hidden' }} className="mb-1">
         <div
           style={{
             width: `${pct}%`,
@@ -144,7 +144,7 @@ function ContextBar({ used, limit }: { used: number; limit: number }) {
       {used > 0 && (
         <div className="space-y-2.5">
           {[
-            { label: 'System Prompt', tokens: systemEst, color: '#8b5cf6' },
+            { label: 'System Prompt', tokens: systemEst, color: 'var(--cp-text-accent-light)' },
             { label: 'Tool Definitions', tokens: toolsEst, color: '#22d3ee' },
             { label: 'Conversation', tokens: convEst, color: '#60a5fa' },
           ].map(({ label, tokens, color: barColor }) => (
@@ -155,7 +155,7 @@ function ContextBar({ used, limit }: { used: number; limit: number }) {
                   ~{tokens >= 1000 ? `${(tokens / 1000).toFixed(1)}k` : Math.round(tokens)}
                 </span>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '999px', height: '4px', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--cp-border-subtle)', borderRadius: '999px', height: '4px', overflow: 'hidden' }}>
                 <div
                   style={{
                     width: `${(tokens / maxEst) * 100}%`,
@@ -184,7 +184,7 @@ function KnowledgeRow({ entry, isLast }: { entry: KnowledgeEntry; isLast: boolea
   const cat = getCategoryStyle(entry.category)
 
   return (
-    <div style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}>
+    <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)' }}>
       <button
         onClick={() => setExpanded(e => !e)}
         className="w-full px-4 sm:px-5 py-3.5 flex items-start gap-3 text-left hover:bg-white/[0.02] transition-colors"
@@ -232,7 +232,7 @@ function KnowledgeRow({ entry, isLast }: { entry: KnowledgeEntry; isLast: boolea
       {expanded && (
         <div
           className="px-4 sm:px-5 pb-4 pt-1"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}
+          style={{ borderTop: '1px solid var(--cp-input-bg)' }}
         >
           <pre
             style={{
@@ -382,7 +382,7 @@ export default function MemoryTab({ agentId, agentModel, latestSession }: Memory
                     style={{
                       background: isActive ? 'rgba(139,92,246,0.1)' : 'transparent',
                       borderLeft: isActive ? '2px solid #8b5cf6' : '2px solid transparent',
-                      borderBottom: '1px solid rgba(255,255,255,0.03)',
+                      borderBottom: '1px solid var(--cp-card-bg)',
                     }}
                   >
                     <span
@@ -413,7 +413,7 @@ export default function MemoryTab({ agentId, agentModel, latestSession }: Memory
                   <div className="flex items-center justify-between mb-3">
                     <span
                       style={{
-                        color: '#c4b5fd',
+                        color: 'var(--cp-text-accent-light)',
                         fontSize: '12px',
                         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
                       }}

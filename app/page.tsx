@@ -80,16 +80,16 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, onSelect, s
       <div
         onClick={() => onSelect?.(agent)}
         style={{
-          background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'rgba(255, 255, 255, 0.02)',
-          border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'rgba(109, 40, 217, 0.14)'}`,
+          background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'var(--cp-card-bg)',
+          border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'var(--cp-border)'}`,
           cursor: onSelect ? 'pointer' : 'default',
         }}
         className={`rounded-lg p-2.5 flex items-center gap-2 ${pulseClass}`}
       >
         <div
           style={{
-            background: isWorking ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(79, 46, 220, 0.15) 100%)' : 'rgba(255, 255, 255, 0.05)',
-            border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.45)' : 'rgba(255, 255, 255, 0.07)'}`,
+            background: isWorking ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(79, 46, 220, 0.15) 100%)' : 'var(--cp-separator-bg)',
+            border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.45)' : 'var(--cp-border-subtle)'}`,
             color: isWorking ? '#c4b5fd' : '#6b7280',
           }}
           className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
@@ -106,8 +106,8 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, onSelect, s
     <div
       onClick={() => onSelect?.(agent)}
       style={{
-        background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'rgba(255, 255, 255, 0.02)',
-        border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'rgba(109, 40, 217, 0.14)'}`,
+        background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'var(--cp-card-bg)',
+        border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'var(--cp-border)'}`,
         backdropFilter: 'blur(12px)',
         boxShadow: isWorking ? '0 0 0 1px rgba(139, 92, 246, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4)' : '0 4px 24px rgba(0, 0, 0, 0.3)',
         transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -119,8 +119,8 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, onSelect, s
         <div className="flex items-center gap-3 min-w-0">
           <div
             style={{
-              background: isWorking ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(79, 46, 220, 0.15) 100%)' : 'rgba(255, 255, 255, 0.05)',
-              border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.45)' : 'rgba(255, 255, 255, 0.07)'}`,
+              background: isWorking ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(79, 46, 220, 0.15) 100%)' : 'var(--cp-separator-bg)',
+              border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.45)' : 'var(--cp-border-subtle)'}`,
               boxShadow: isWorking ? '0 0 18px rgba(124, 58, 237, 0.22)' : 'none',
               color: isWorking ? '#c4b5fd' : '#6b7280',
             }}
@@ -136,7 +136,7 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, onSelect, s
             <button
               onClick={(e) => { e.stopPropagation(); onSpawn(agent) }}
               title="Spawn task"
-              style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.22)' }}
+              style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.22)' }}
               className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-purple-500/20 transition-colors text-sm"
             >▶</button>
           )}
@@ -155,8 +155,8 @@ const AgentCard = memo(function AgentCard({ agent, compact, onSpawn, onSelect, s
 
 const ActivityItem = memo(function ActivityItem({ item, isLast, isNew }: { item: { id: string; agent_id: string; agent_name: string; action: string; details: string; time: string }; isLast: boolean; isNew?: boolean }) {
   return (
-    <div className={`flex items-start gap-3 py-3.5 ${isNew ? 'realtime-fade-in' : ''}`} style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)' }}>
-      <div style={{ background: 'rgba(109, 40, 217, 0.15)', border: '1px solid rgba(139, 92, 246, 0.18)', width: '26px', height: '26px', minWidth: '26px', color: '#8b5cf6' }} className="rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">
+    <div className={`flex items-start gap-3 py-3.5 ${isNew ? 'realtime-fade-in' : ''}`} style={{ borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)' }}>
+      <div style={{ background: 'rgba(109, 40, 217, 0.15)', border: '1px solid rgba(139, 92, 246, 0.18)', width: '26px', height: '26px', minWidth: '26px', color: 'var(--cp-text-accent-light)' }} className="rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0">
         {item.agent_name.slice(0, 2).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -211,7 +211,7 @@ const EVENT_CONFIG: Record<EventType, { color: string; bg: string; border: strin
   deployment:     { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.25)',  label: 'Deployed' },
   message_sent:   { color: '#22d3ee', bg: 'rgba(34,211,238,0.1)',  border: 'rgba(34,211,238,0.25)',  label: 'Message' },
   warning:        { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  label: 'Warning' },
-  analysis:       { color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', label: 'Analysis' },
+  analysis:       { color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', label: 'Analysis' },
   info:           { color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  label: 'Info' },
 }
 
@@ -316,7 +316,7 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.45)',
+        background: 'var(--cp-code-bg)',
         zIndex: 60,
         display: 'flex',
         justifyContent: 'flex-end',
@@ -327,7 +327,7 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
           width: 420,
           maxWidth: '100vw',
           height: '100%',
-          background: '#0d0621',
+          background: 'var(--cp-deep-bg)',
           borderLeft: '1px solid rgba(109,40,217,0.28)',
           display: 'flex',
           flexDirection: 'column',
@@ -336,14 +336,14 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
         }}
       >
         {/* Header */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--cp-separator-bg)', flexShrink: 0 }}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div style={{
                 width: 40, height: 40, borderRadius: 12, flexShrink: 0,
                 background: status === 'working'
                   ? 'linear-gradient(135deg, rgba(124,58,237,0.35) 0%, rgba(79,46,220,0.15) 100%)'
-                  : 'rgba(255,255,255,0.05)',
+                  : 'var(--cp-separator-bg)',
                 border: `1px solid ${status === 'working' ? 'rgba(139,92,246,0.45)' : 'rgba(255,255,255,0.08)'}`,
                 color: status === 'working' ? '#c4b5fd' : '#6b7280',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -367,7 +367,7 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
               </span>
               <button
                 onClick={onClose}
-                style={{ color: 'var(--cp-text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)', width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
@@ -377,7 +377,7 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
           {/* Model badge */}
           {staticAgent?.model && (
             <div style={{ marginTop: 10 }}>
-              <span style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>
+              <span style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', fontSize: 11, padding: '2px 8px', borderRadius: 6, fontWeight: 600 }}>
                 {staticAgent.model}
               </span>
             </div>
@@ -389,7 +389,7 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
           {loading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} style={{ height: 48, borderRadius: 8, background: 'rgba(255,255,255,0.03)' }} className="animate-pulse" />
+                <div key={i} style={{ height: 48, borderRadius: 8, background: 'var(--cp-card-bg)' }} className="animate-pulse" />
               ))}
             </div>
           ) : (
@@ -409,10 +409,10 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
               {/* Session Info */}
               <div style={{ marginBottom: 16 }}>
                 <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Session Info</div>
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '10px 14px' }} className="grid grid-cols-3 gap-3">
+                <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-subtle)', borderRadius: 8, padding: '10px 14px' }} className="grid grid-cols-3 gap-3">
                   <div>
                     <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 10, marginBottom: 3 }}>Tokens Today</div>
-                    <div style={{ color: '#a78bfa', fontWeight: 700, fontSize: 15 }}>{todayTokens !== null ? formatTokenCount(todayTokens) : '—'}</div>
+                    <div style={{ color: 'var(--cp-text-accent-light)', fontWeight: 700, fontSize: 15 }}>{todayTokens !== null ? formatTokenCount(todayTokens) : '—'}</div>
                   </div>
                   <div>
                     <div style={{ color: 'var(--cp-text-dimmer)', fontSize: 10, marginBottom: 3 }}>Runtime</div>
@@ -447,14 +447,14 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
                     Live
                   </span>
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-subtle)', borderRadius: 8, overflow: 'hidden' }}>
                   {panelActivity.length === 0 ? (
                     <div style={{ color: 'var(--cp-text-dim)', fontSize: 12, padding: '16px', textAlign: 'center', fontStyle: 'italic' }}>No recent activity</div>
                   ) : panelActivity.map((item, i) => {
                     const evType = detectEventType(item.action || '')
                     const evCfg = EVENT_CONFIG[evType]
                     return (
-                      <div key={item.id ?? i} style={{ padding: '10px 14px', borderBottom: i < panelActivity.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                      <div key={item.id ?? i} style={{ padding: '10px 14px', borderBottom: i < panelActivity.length - 1 ? '1px solid var(--cp-input-bg)' : 'none' }}>
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <span style={{ color: evCfg.color, background: evCfg.bg, border: `1px solid ${evCfg.border}`, fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
                             {evCfg.label}
@@ -477,14 +477,14 @@ function AgentLivePanel({ agentId, agents, onClose }: { agentId: string; agents:
         </div>
 
         {/* Footer: link to full detail */}
-        <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+        <div style={{ padding: '12px 20px', borderTop: '1px solid var(--cp-separator-bg)', flexShrink: 0 }}>
           <Link
             href={`/agents/${agentId}`}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               width: '100%', padding: '9px 0', borderRadius: 10,
               background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)',
-              color: '#a78bfa', fontWeight: 600, fontSize: 13,
+              color: 'var(--cp-text-accent-light)', fontWeight: 600, fontSize: 13,
               textDecoration: 'none', transition: 'background 0.15s',
             }}
             onClick={onClose}
@@ -663,7 +663,7 @@ export default function OverviewPage() {
   const idleAgents = filteredAgents.filter(a => a.status === 'idle')
 
   const stats = [
-    { label: 'Total Agents', value: filteredAgents.length, color: '#a78bfa', iconColor: 'rgba(167, 139, 250, 0.7)', gradient: 'linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(109, 40, 217, 0.04) 100%)', border: 'rgba(139, 92, 246, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0-3-3.85" /></svg> },
+    { label: 'Total Agents', value: filteredAgents.length, color: 'var(--cp-text-accent-light)', iconColor: 'rgba(167, 139, 250, 0.7)', gradient: 'linear-gradient(135deg, rgba(124, 58, 237, 0.14) 0%, rgba(109, 40, 217, 0.04) 100%)', border: 'rgba(139, 92, 246, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0-3-3.85" /></svg> },
     { label: 'Active Now', value: workingAgents.length, color: '#34d399', iconColor: 'rgba(52, 211, 153, 0.7)', gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.04) 100%)', border: 'rgba(52, 211, 153, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg> },
     { label: 'Idle', value: idleAgents.length, color: 'var(--cp-text-secondary)', iconColor: 'rgba(156, 163, 175, 0.7)', gradient: 'linear-gradient(135deg, rgba(75, 85, 99, 0.1) 0%, rgba(55, 65, 81, 0.04) 100%)', border: 'rgba(75, 85, 99, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
     { label: 'Tasks Done', value: doneTasks.length, color: '#22d3ee', iconColor: 'rgba(34, 211, 238, 0.7)', gradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(8, 145, 178, 0.04) 100%)', border: 'rgba(34, 211, 238, 0.2)', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg> },
@@ -783,13 +783,13 @@ export default function OverviewPage() {
                 const agent = filteredAgents.find(a => a.id === task.assigned_agent)
                 const pColor = priorityConfig[task.priority].color
                 return (
-                  <div key={task.id} className={`px-4 ${compact ? 'py-2.5' : 'py-3.5'} flex items-start gap-3`} style={{ borderBottom: i < activeTasks.length - 1 ? '1px solid rgba(255, 255, 255, 0.04)' : 'none' }}>
+                  <div key={task.id} className={`px-4 ${compact ? 'py-2.5' : 'py-3.5'} flex items-start gap-3`} style={{ borderBottom: i < activeTasks.length - 1 ? '1px solid var(--cp-input-bg)' : 'none' }}>
                     <div style={{ background: pColor, width: '2px', minWidth: '2px', borderRadius: '2px', opacity: 0.75, alignSelf: 'stretch' }} />
                     <div className="flex-1 min-w-0">
                       <div style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-medium truncate mb-1.5">{task.title}</div>
                       {!compact && (
                         <div className="flex items-center gap-2">
-                          <span style={{ color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '1px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600 }}>{agent?.name ?? task.assigned_agent}</span>
+                          <span style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '1px 7px', borderRadius: '5px', fontSize: '10px', fontWeight: 600 }}>{agent?.name ?? task.assigned_agent}</span>
                           <span style={{ color: 'var(--cp-text-dim)', fontSize: '11px' }}>{task.project}</span>
                         </div>
                       )}
@@ -843,7 +843,7 @@ export default function OverviewPage() {
       {/* Print Header */}
       <div className="print-header" style={{ marginBottom: 24, borderBottom: '2px solid #7c3aed', paddingBottom: 12 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700 }}>{APP_NAME} — Dashboard Report</h1>
-        <p style={{ fontSize: 12, color: '#666' }}>Generated: {new Date().toLocaleString()}</p>
+        <p style={{ fontSize: 12, color: 'var(--cp-text-muted)' }}>Generated: {new Date().toLocaleString()}</p>
       </div>
       {/* Header */}
       <div className="mb-6 sm:mb-8">

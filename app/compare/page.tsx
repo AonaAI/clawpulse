@@ -25,8 +25,8 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   return (
     <div
       style={{
-        background: 'rgba(17, 2, 29, 0.6)',
-        border: '1px solid rgba(109, 40, 217, 0.14)',
+        background: 'var(--cp-card-bg)',
+        border: '1px solid var(--cp-border)',
         backdropFilter: 'blur(12px)',
       }}
       className="rounded-xl p-5"
@@ -95,7 +95,7 @@ function LineChart({ series }: { series: { label: string; color: string; data: n
           x2={w - padX}
           y1={padY + (1 - frac) * (h - 2 * padY)}
           y2={padY + (1 - frac) * (h - 2 * padY)}
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--cp-border-subtle)"
           strokeWidth={1}
         />
       ))}
@@ -135,7 +135,7 @@ function CompletionRings({ items }: { items: { label: string; done: number; tota
         return (
           <div key={item.label} className="flex flex-col items-center gap-2">
             <svg width={size} height={size}>
-              <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+              <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--cp-border-subtle)" strokeWidth={stroke} />
               <circle
                 cx={size / 2}
                 cy={size / 2}
@@ -169,7 +169,7 @@ function StatBoxes({ items }: { items: { label: string; value: string | number; 
         <div
           key={item.label}
           style={{
-            background: 'rgba(255,255,255,0.03)',
+            background: 'var(--cp-card-bg)',
             border: `1px solid ${item.color}22`,
             borderRadius: 12,
             padding: '16px 24px',
@@ -211,7 +211,7 @@ function AgentPicker({
             key={a.id}
             onClick={() => toggle(a.id)}
             style={{
-              background: isSelected ? `${color}18` : 'rgba(255,255,255,0.03)',
+              background: isSelected ? `${color}18` : 'var(--cp-card-bg)',
               border: `1.5px solid ${isSelected ? color : 'rgba(255,255,255,0.08)'}`,
               color: isSelected ? color : 'rgba(255,255,255,0.5)',
               borderRadius: 999,
@@ -345,7 +345,7 @@ export default function ComparePage() {
         <div className="skeleton-shimmer mt-6" style={{ width: '100%', height: 48, borderRadius: 12 }} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} style={{ background: 'rgba(17,2,29,0.6)', border: '1px solid rgba(109,40,217,0.14)' }} className="rounded-xl p-5">
+            <div key={i} style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)' }} className="rounded-xl p-5">
               <div className="skeleton-shimmer mb-4" style={{ width: 160, height: 18, borderRadius: 6 }} />
               <div className="skeleton-shimmer" style={{ width: '100%', height: 180, borderRadius: 8 }} />
             </div>
@@ -382,8 +382,8 @@ export default function ComparePage() {
       {/* Agent picker */}
       <div
         style={{
-          background: 'rgba(17, 2, 29, 0.6)',
-          border: '1px solid rgba(109, 40, 217, 0.14)',
+          background: 'var(--cp-card-bg)',
+          border: '1px solid var(--cp-border)',
           backdropFilter: 'blur(12px)',
         }}
         className="rounded-xl p-4 mb-6"

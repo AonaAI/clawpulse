@@ -74,7 +74,7 @@ const EVENT_CONFIG: Record<EventType, { color: string; bg: string; border: strin
     icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
   },
   analysis: {
-    color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.1)', border: 'rgba(167, 139, 250, 0.25)', label: 'Analysis',
+    color: 'var(--cp-text-accent-light)', bg: 'rgba(167, 139, 250, 0.1)', border: 'rgba(167, 139, 250, 0.25)', label: 'Analysis',
     icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
   },
   info: {
@@ -327,7 +327,7 @@ export default function ActivityPage() {
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Activity Feed</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">
             Live event stream &amp; Slack messages from all agents
-            {totalEvents > 0 && <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">· {totalEvents.toLocaleString()} events</span>}
+            {totalEvents > 0 && <span style={{ color: 'var(--cp-text-accent-light)' }} className="ml-2 font-bold">· {totalEvents.toLocaleString()} events</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -346,7 +346,7 @@ export default function ActivityPage() {
             key={f}
             onClick={() => setFeedFilter(f)}
             style={{
-              background: feedFilter === f ? 'rgba(124, 58, 237, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+              background: feedFilter === f ? 'rgba(124, 58, 237, 0.2)' : 'var(--cp-input-bg)',
               border: feedFilter === f ? '1px solid rgba(139, 92, 246, 0.45)' : '1px solid rgba(255, 255, 255, 0.08)',
               color: feedFilter === f ? '#c4b5fd' : '#6b7280',
             }}
@@ -358,7 +358,7 @@ export default function ActivityPage() {
             <span className="capitalize">{f}</span>
             <span
               style={{
-                background: feedFilter === f ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                background: feedFilter === f ? 'rgba(139, 92, 246, 0.2)' : 'var(--cp-border-subtle)',
                 color: feedFilter === f ? '#a78bfa' : '#4b5563',
               }}
               className="text-xs px-1.5 py-0.5 rounded-full font-bold"
@@ -407,8 +407,8 @@ export default function ActivityPage() {
             <button
               onClick={() => setFilterType('all')}
               style={{
-                background: filterType === 'all' ? 'rgba(124, 58, 237, 0.18)' : 'rgba(255, 255, 255, 0.04)',
-                border: filterType === 'all' ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.07)',
+                background: filterType === 'all' ? 'rgba(124, 58, 237, 0.18)' : 'var(--cp-input-bg)',
+                border: filterType === 'all' ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid var(--cp-border-subtle)',
                 color: filterType === 'all' ? '#c4b5fd' : '#6b7280',
               }}
               className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
@@ -422,8 +422,8 @@ export default function ActivityPage() {
                   key={type}
                   onClick={() => setFilterType(filterType === type ? 'all' : type)}
                   style={{
-                    background: filterType === type ? cfg.bg : 'rgba(255, 255, 255, 0.04)',
-                    border: filterType === type ? `1px solid ${cfg.border}` : '1px solid rgba(255, 255, 255, 0.07)',
+                    background: filterType === type ? cfg.bg : 'var(--cp-input-bg)',
+                    border: filterType === type ? `1px solid ${cfg.border}` : '1px solid var(--cp-border-subtle)',
                     color: filterType === type ? cfg.color : '#6b7280',
                   }}
                   className="px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
@@ -442,8 +442,8 @@ export default function ActivityPage() {
             <button
               onClick={() => setFilterAgent('all')}
               style={{
-                background: filterAgent === 'all' ? 'rgba(124, 58, 237, 0.18)' : 'rgba(255, 255, 255, 0.03)',
-                border: filterAgent === 'all' ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid rgba(255, 255, 255, 0.06)',
+                background: filterAgent === 'all' ? 'rgba(124, 58, 237, 0.18)' : 'var(--cp-card-bg)',
+                border: filterAgent === 'all' ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid var(--cp-border-subtle)',
                 color: filterAgent === 'all' ? '#c4b5fd' : '#4b5563',
               }}
               className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
@@ -455,8 +455,8 @@ export default function ActivityPage() {
                 key={ag}
                 onClick={() => setFilterAgent(filterAgent === ag ? 'all' : ag)}
                 style={{
-                  background: filterAgent === ag ? 'rgba(109, 40, 217, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                  border: filterAgent === ag ? '1px solid rgba(109, 40, 217, 0.35)' : '1px solid rgba(255, 255, 255, 0.06)',
+                  background: filterAgent === ag ? 'rgba(109, 40, 217, 0.15)' : 'var(--cp-card-bg)',
+                  border: filterAgent === ag ? '1px solid rgba(109, 40, 217, 0.35)' : '1px solid var(--cp-border-subtle)',
                   color: filterAgent === ag ? '#a78bfa' : '#4b5563',
                 }}
                 className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
@@ -492,7 +492,7 @@ export default function ActivityPage() {
               <div className="flex items-center gap-3 mb-3">
                 <span
                   style={{
-                    background: 'rgba(109, 40, 217, 0.12)',
+                    background: 'var(--cp-divider-accent)',
                     border: '1px solid var(--cp-border-stronger)',
                     color: '#7c3aed',
                   }}
@@ -521,16 +521,16 @@ export default function ActivityPage() {
                       <div
                         key={entry.id}
                         style={{
-                          borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                          borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)',
                           background: 'rgba(109,40,217,0.04)',
                         }}
                       >
                         <div className="px-5 py-3 flex items-center gap-4">
                           <div
                             style={{
-                              background: 'rgba(109,40,217,0.12)',
-                              border: '1px solid rgba(109,40,217,0.25)',
-                              color: '#8b5cf6',
+                              background: 'var(--cp-divider-accent)',
+                              border: '1px solid var(--cp-border-stronger)',
+                              color: 'var(--cp-text-accent-light)',
                               width: '28px',
                               height: '28px',
                               minWidth: '28px',
@@ -551,13 +551,13 @@ export default function ActivityPage() {
                                 {cfg.label}
                               </span>
                               <span
-                                style={{ background: 'rgba(109,40,217,0.12)', color: '#a78bfa', border: '1px solid rgba(109,40,217,0.25)' }}
+                                style={{ background: 'var(--cp-divider-accent)', color: 'var(--cp-text-accent-light)', border: '1px solid var(--cp-border-stronger)' }}
                                 className="text-xs px-2 py-0.5 rounded-full font-bold"
                               >
                                 × {entry.count} similar
                               </span>
                             </div>
-                            <div style={{ color: '#8b5cf6' }} className="text-xs mt-0.5 truncate">{entry.action}</div>
+                            <div style={{ color: 'var(--cp-text-accent-light)' }} className="text-xs mt-0.5 truncate">{entry.action}</div>
                           </div>
                           <span style={{ color: 'var(--cp-text-dimmer)', fontSize: '11px', fontWeight: 600 }} className="flex-shrink-0 font-mono">
                             {formatTimestamp(entry.created_at)}
@@ -575,7 +575,7 @@ export default function ActivityPage() {
                       <div
                         key={item.id}
                         style={{
-                          borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                          borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)',
                           background: 'transparent',
                         }}
                       >
@@ -600,7 +600,7 @@ export default function ActivityPage() {
                             style={{
                               background: 'rgba(109, 40, 217, 0.15)',
                               border: '1px solid rgba(139, 92, 246, 0.2)',
-                              color: '#8b5cf6',
+                              color: 'var(--cp-text-accent-light)',
                               width: '28px',
                               height: '28px',
                               minWidth: '28px',
@@ -659,7 +659,7 @@ export default function ActivityPage() {
                       key={item.id}
                       className={isNew ? 'realtime-fade-in' : ''}
                       style={{
-                        borderBottom: isLast ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                        borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)',
                         background: isNew ? 'rgba(52, 211, 153, 0.04)' : 'transparent',
                         transition: 'background 0.5s',
                       }}
@@ -683,7 +683,7 @@ export default function ActivityPage() {
                           style={{
                             background: 'rgba(109, 40, 217, 0.15)',
                             border: '1px solid rgba(139, 92, 246, 0.2)',
-                            color: '#8b5cf6',
+                            color: 'var(--cp-text-accent-light)',
                             width: '28px',
                             height: '28px',
                             minWidth: '28px',
@@ -716,7 +716,7 @@ export default function ActivityPage() {
                               {formatTimestamp(item.created_at)}
                             </span>
                           </div>
-                          <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold mb-0.5">{item.action}</div>
+                          <div style={{ color: 'var(--cp-text-accent-light)' }} className="text-sm font-semibold mb-0.5">{item.action}</div>
                           {item.details && (
                             <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs leading-relaxed">{item.details}</div>
                           )}
@@ -738,7 +738,7 @@ export default function ActivityPage() {
                 style={{
                   background: 'rgba(124, 58, 237, 0.15)',
                   border: '1px solid rgba(139, 92, 246, 0.3)',
-                  color: '#c4b5fd',
+                  color: 'var(--cp-text-accent-light)',
                 }}
                 className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-purple-500/20 disabled:opacity-50"
               >

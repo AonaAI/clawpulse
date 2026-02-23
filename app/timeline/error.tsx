@@ -7,7 +7,7 @@ export default function TimelineError({ error, reset }: { error: Error; reset: (
       <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mb-4">{error.message}</p>
       <button
         onClick={reset}
-        style={{ background: 'rgba(109, 40, 217, 0.2)', border: '1px solid rgba(109, 40, 217, 0.3)', color: '#c4b5fd' }}
+        style={{ background: 'rgba(109, 40, 217, 0.2)', border: '1px solid rgba(109, 40, 217, 0.3)', color: 'var(--cp-text-accent-light)' }}
         className="px-4 py-2 rounded-lg text-sm font-medium"
       >
         Try again

@@ -101,7 +101,7 @@ export default function UsagePage() {
       label: 'Today',
       tokens: summary.today.tokens,
       cost: summary.today.cost,
-      color: '#8b5cf6',
+      color: 'var(--cp-text-accent-light)',
       gradient: 'linear-gradient(135deg, rgba(124,58,237,0.14) 0%, rgba(109,40,217,0.04) 100%)',
       border: 'rgba(139,92,246,0.2)',
     },
@@ -212,7 +212,7 @@ export default function UsagePage() {
                       <div
                         className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none z-10 transition-opacity duration-150"
                         style={{
-                          background: 'rgba(10,1,24,0.96)',
+                          background: 'var(--cp-card-solid-bg)',
                           border: '1px solid rgba(139,92,246,0.35)',
                           borderRadius: 8,
                           padding: '6px 10px',
@@ -220,8 +220,8 @@ export default function UsagePage() {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
                         }}
                       >
-                        <div style={{ color: '#f8f4ff' }} className="text-xs font-bold">{formatDate(day.date)}</div>
-                        <div style={{ color: '#a78bfa' }} className="text-xs">{formatTokens(day.total_tokens)} tokens</div>
+                        <div style={{ color: 'var(--cp-text-primary)' }} className="text-xs font-bold">{formatDate(day.date)}</div>
+                        <div style={{ color: 'var(--cp-text-accent-light)' }} className="text-xs">{formatTokens(day.total_tokens)} tokens</div>
                         <div style={{ color: '#34d399' }} className="text-xs">{formatCost(day.total_cost)}</div>
                       </div>
                       {/* Bar */}
@@ -283,7 +283,7 @@ export default function UsagePage() {
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2 min-w-0">
                         <div
-                          style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6' }}
+                          style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--cp-text-accent-light)' }}
                           className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
                         >
                           {agent.agent_name.slice(0, 2).toUpperCase()}
@@ -378,8 +378,8 @@ export default function UsagePage() {
                 key={opt}
                 onClick={() => setSortBy(opt)}
                 style={{
-                  background: sortBy === opt ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.04)',
-                  border: sortBy === opt ? '1px solid rgba(139,92,246,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                  background: sortBy === opt ? 'rgba(124,58,237,0.18)' : 'var(--cp-input-bg)',
+                  border: sortBy === opt ? '1px solid rgba(139,92,246,0.4)' : '1px solid var(--cp-border-subtle)',
                   color: sortBy === opt ? '#c4b5fd' : '#6b7280',
                 }}
                 className="px-2.5 py-1 rounded-lg text-xs font-semibold capitalize"
@@ -413,7 +413,7 @@ export default function UsagePage() {
                   className="grid px-5 py-3.5 items-center"
                   style={{
                     gridTemplateColumns: '1fr 1fr 80px 80px 80px 90px',
-                    borderBottom: i < sortedRecords.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    borderBottom: i < sortedRecords.length - 1 ? '1px solid var(--cp-input-bg)' : 'none',
                   }}
                 >
                   <div>

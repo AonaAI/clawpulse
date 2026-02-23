@@ -7,7 +7,7 @@ import { useDebounce } from '@/lib/useDebounce'
 import type { KnowledgeEntry, KnowledgeCategory } from '@/lib/types'
 
 const CATEGORIES: { value: KnowledgeCategory | 'all'; label: string; color: string; bg: string; border: string }[] = [
-  { value: 'all',      label: 'All',       color: '#a78bfa', bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.2)' },
+  { value: 'all',      label: 'All',       color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.2)' },
   { value: 'lesson',   label: 'Lessons',   color: '#60a5fa', bg: 'rgba(96,165,250,0.06)',  border: 'rgba(96,165,250,0.2)'  },
   { value: 'skill',    label: 'Skills',    color: '#34d399', bg: 'rgba(52,211,153,0.06)',  border: 'rgba(52,211,153,0.2)'  },
   { value: 'document', label: 'Documents', color: '#fbbf24', bg: 'rgba(251,191,36,0.06)',  border: 'rgba(251,191,36,0.2)'  },
@@ -111,7 +111,7 @@ function KnowledgeCard({ entry, onEdit, onDelete }: { entry: KnowledgeEntry; onE
           {agent ? (
             <div className="flex items-center gap-2">
               <div
-                style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.2)', width: 20, height: 20, minWidth: 20, fontSize: 9, color: '#8b5cf6' }}
+                style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.2)', width: 20, height: 20, minWidth: 20, fontSize: 9, color: 'var(--cp-text-accent-light)' }}
                 className="rounded-md flex items-center justify-center font-bold"
               >{agent.name.slice(0, 2).toUpperCase()}</div>
               <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs">{agent.name}</span>
@@ -339,7 +339,7 @@ function WebhookApiDocs() {
     <div
       style={{
         background: 'var(--cp-card-bg)',
-        border: '1px solid rgba(109,40,217,0.18)',
+        border: '1px solid var(--cp-border-strong)',
         backdropFilter: 'blur(12px)',
         borderRadius: 16,
         overflow: 'hidden',
@@ -377,7 +377,7 @@ function WebhookApiDocs() {
       </button>
 
       {open && (
-        <div style={{ borderTop: '1px solid rgba(109,40,217,0.12)' }}>
+        <div style={{ borderTop: '1px solid var(--cp-divider-accent)' }}>
           {/* Endpoint */}
           <div className="px-6 py-5 space-y-5">
             <div>
@@ -386,13 +386,13 @@ function WebhookApiDocs() {
               </p>
               <div
                 style={{
-                  background: 'rgba(0,0,0,0.3)',
+                  background: 'var(--cp-code-bg)',
                   border: '1px solid rgba(109,40,217,0.16)',
                   borderRadius: 8,
                   padding: '10px 14px',
                   fontFamily: 'monospace',
                   fontSize: 13,
-                  color: '#a78bfa',
+                  color: 'var(--cp-text-accent-light)',
                   wordBreak: 'break-all',
                 }}
               >
@@ -406,13 +406,13 @@ function WebhookApiDocs() {
               <p style={{ color: 'var(--cp-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
                 Authentication
               </p>
-              <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(109,40,217,0.12)', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
-                <span style={{ color: '#9ca3af' }}>Header: </span>
+              <div style={{ background: 'var(--cp-code-bg)', border: '1px solid var(--cp-divider-accent)', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
+                <span style={{ color: 'var(--cp-text-secondary)' }}>Header: </span>
                 <span style={{ color: '#fbbf24', fontFamily: 'monospace' }}>Authorization: Bearer {'<WEBHOOK_API_KEY>'}</span>
               </div>
-              <p style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>
-                Set <code style={{ fontFamily: 'monospace', color: '#a78bfa' }}>WEBHOOK_API_KEY</code> as a Supabase secret:
-                {' '}<code style={{ fontFamily: 'monospace', color: '#9ca3af' }}>supabase secrets set WEBHOOK_API_KEY=your-key</code>
+              <p style={{ color: 'var(--cp-text-muted)', fontSize: 12, marginTop: 6 }}>
+                Set <code style={{ fontFamily: 'monospace', color: 'var(--cp-text-accent-light)' }}>WEBHOOK_API_KEY</code> as a Supabase secret:
+                {' '}<code style={{ fontFamily: 'monospace', color: 'var(--cp-text-secondary)' }}>supabase secrets set WEBHOOK_API_KEY=your-key</code>
               </p>
             </div>
 
@@ -421,12 +421,12 @@ function WebhookApiDocs() {
               <p style={{ color: 'var(--cp-text-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
                 Request body (JSON)
               </p>
-              <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(109,40,217,0.12)', borderRadius: 8, overflow: 'hidden' }}>
+              <div style={{ background: 'var(--cp-code-bg)', border: '1px solid var(--cp-divider-accent)', borderRadius: 8, overflow: 'hidden' }}>
                 <table style={{ width: '100%', fontSize: 12.5, borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
                       {['Field', 'Type', 'Required', 'Description'].map(h => (
-                        <th key={h} style={{ color: '#6b7280', fontWeight: 700, textAlign: 'left', padding: '8px 14px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                        <th key={h} style={{ color: 'var(--cp-text-muted)', fontWeight: 700, textAlign: 'left', padding: '8px 14px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -438,8 +438,8 @@ function WebhookApiDocs() {
                       { field: 'metadata', type: 'object', req: false, desc: 'Arbitrary JSON stored on the agent row and logged to activity_log' },
                     ].map((row, i) => (
                       <tr key={row.field} style={{ borderTop: i > 0 ? '1px solid rgba(109,40,217,0.08)' : undefined }}>
-                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: '#a78bfa', fontWeight: 600 }}>{row.field}</td>
-                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: '#9ca3af' }}>{row.type}</td>
+                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: 'var(--cp-text-accent-light)', fontWeight: 600 }}>{row.field}</td>
+                        <td style={{ padding: '8px 14px', fontFamily: 'monospace', color: 'var(--cp-text-secondary)' }}>{row.type}</td>
                         <td style={{ padding: '8px 14px' }}>
                           <span style={{
                             background: row.req ? 'rgba(52,211,153,0.08)' : 'rgba(107,114,128,0.08)',
@@ -450,7 +450,7 @@ function WebhookApiDocs() {
                             {row.req ? 'required' : 'optional'}
                           </span>
                         </td>
-                        <td style={{ padding: '8px 14px', color: '#9ca3af' }}>{row.desc}</td>
+                        <td style={{ padding: '8px 14px', color: 'var(--cp-text-secondary)' }}>{row.desc}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -472,10 +472,10 @@ function WebhookApiDocs() {
                 ].map(r => (
                   <div
                     key={r.code}
-                    style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid rgba(109,40,217,0.12)`, borderRadius: 8, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8 }}
+                    style={{ background: 'var(--cp-code-bg)', border: `1px solid var(--cp-divider-accent)`, borderRadius: 8, padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 8 }}
                   >
                     <span style={{ fontFamily: 'monospace', color: r.color, fontWeight: 700, fontSize: 13 }}>{r.code}</span>
-                    <span style={{ color: '#9ca3af', fontSize: 12 }}>{r.label}</span>
+                    <span style={{ color: 'var(--cp-text-secondary)', fontSize: 12 }}>{r.label}</span>
                   </div>
                 ))}
               </div>
@@ -493,8 +493,8 @@ function WebhookApiDocs() {
                     key={i}
                     onClick={() => setActiveTab(i)}
                     style={{
-                      background: activeTab === i ? 'rgba(124,58,237,0.16)' : 'rgba(0,0,0,0.2)',
-                      border: `1px solid ${activeTab === i ? 'rgba(139,92,246,0.35)' : 'rgba(109,40,217,0.12)'}`,
+                      background: activeTab === i ? 'rgba(124,58,237,0.16)' : 'var(--cp-code-bg)',
+                      border: `1px solid ${activeTab === i ? 'rgba(139,92,246,0.35)' : 'var(--cp-divider-accent)'}`,
                       color: activeTab === i ? '#a78bfa' : '#6b7280',
                       borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600,
                     }}
@@ -507,13 +507,13 @@ function WebhookApiDocs() {
               <div style={{ position: 'relative' }}>
                 <pre
                   style={{
-                    background: 'rgba(0,0,0,0.4)',
+                    background: 'var(--cp-code-bg)',
                     border: '1px solid rgba(109,40,217,0.16)',
                     borderRadius: 10,
                     padding: '16px 18px',
                     fontFamily: 'monospace',
                     fontSize: 12.5,
-                    color: '#d1d5db',
+                    color: 'var(--cp-text-dimmer)',
                     overflowX: 'auto',
                     lineHeight: 1.7,
                     margin: 0,
@@ -544,16 +544,16 @@ function WebhookApiDocs() {
                 borderRadius: 10,
                 padding: '12px 16px',
                 fontSize: 12.5,
-                color: '#9ca3af',
+                color: 'var(--cp-text-secondary)',
               }}
             >
               <span style={{ color: '#fbbf24', fontWeight: 700 }}>Deploy: </span>
               Run{' '}
-              <code style={{ fontFamily: 'monospace', color: '#a78bfa' }}>
+              <code style={{ fontFamily: 'monospace', color: 'var(--cp-text-accent-light)' }}>
                 supabase functions deploy update-agent-status
               </code>{' '}
               then set your secret with{' '}
-              <code style={{ fontFamily: 'monospace', color: '#a78bfa' }}>
+              <code style={{ fontFamily: 'monospace', color: 'var(--cp-text-accent-light)' }}>
                 supabase secrets set WEBHOOK_API_KEY=your-secret-key
               </code>
             </div>
@@ -729,8 +729,8 @@ export default function KnowledgePage() {
                 key={cat.value}
                 onClick={() => setFilter(cat.value)}
                 style={{
-                  background: isActive ? cat.bg : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${isActive ? cat.border : 'rgba(109,40,217,0.14)'}`,
+                  background: isActive ? cat.bg : 'var(--cp-card-bg)',
+                  border: `1px solid ${isActive ? cat.border : 'var(--cp-border)'}`,
                   color: isActive ? cat.color : '#6b7280',
                 }}
                 className="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all"
@@ -739,7 +739,7 @@ export default function KnowledgePage() {
                 <span
                   style={{
                     color: isActive ? cat.color : '#374151',
-                    background: isActive ? `${cat.color}18` : 'rgba(0,0,0,0.2)',
+                    background: isActive ? `${cat.color}18` : 'var(--cp-code-bg)',
                     marginLeft: 6,
                     fontSize: 11,
                     padding: '1px 6px',
@@ -798,7 +798,7 @@ export default function KnowledgePage() {
           {!search && (
             <button
               onClick={() => { setEditingEntry(null); setModalOpen(true) }}
-              style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
+              style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
               className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
             >
               Add your first entry

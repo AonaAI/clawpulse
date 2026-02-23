@@ -63,7 +63,7 @@ const TYPE_CONFIG: Record<TraceEventType, { color: string; bg: string; border: s
     icon: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
   },
   system: {
-    color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.3)', label: 'System',
+    color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.3)', label: 'System',
     icon: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>,
   },
   task: {
@@ -71,7 +71,7 @@ const TYPE_CONFIG: Record<TraceEventType, { color: string; bg: string; border: s
     icon: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>,
   },
   other: {
-    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', label: 'Event',
+    color: 'var(--cp-text-secondary)', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', label: 'Event',
     icon: <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>,
   },
 }
@@ -133,7 +133,7 @@ function SortIcon({ field, current, dir }: { field: string; current: string; dir
     </svg>
   )
   return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: '#a78bfa' }}>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--cp-text-accent-light)' }}>
       {dir === 'asc' ? <path d="M12 5v14M5 12l7-7 7 7" /> : <path d="M12 19V5M5 12l7 7 7-7" />}
     </svg>
   )
@@ -175,7 +175,7 @@ function TraceCard({
       {/* Dot + line */}
       <div style={{ width: 22, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 1 }}>
         <div style={{ width: 2, height: isFirst ? 8 : 10, background: isFirst ? 'transparent' : 'rgba(109,40,217,0.2)', flexShrink: 0 }} />
-        <div style={{ width: 9, height: 9, borderRadius: '50%', background: cfg.color, border: '2px solid #0a0118', boxShadow: `0 0 5px ${cfg.color}55`, flexShrink: 0 }} />
+        <div style={{ width: 9, height: 9, borderRadius: '50%', background: cfg.color, border: '2px solid var(--background)', boxShadow: `0 0 5px ${cfg.color}55`, flexShrink: 0 }} />
         {!isLast && <div style={{ width: 2, flex: 1, background: 'rgba(109,40,217,0.2)', minHeight: 14, flexShrink: 0 }} />}
       </div>
 
@@ -221,7 +221,7 @@ function TraceCard({
             </div>
             {/* Duration bar */}
             {!isFirst && totalMs > 0 && (
-              <div className="mt-1.5" style={{ height: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+              <div className="mt-1.5" style={{ height: 2, background: 'var(--cp-separator-bg)', borderRadius: 2 }}>
                 <div style={{ width: `${barWidth}%`, height: '100%', background: `linear-gradient(90deg, ${cfg.color}50, ${cfg.color})`, borderRadius: 2 }} />
               </div>
             )}
@@ -229,7 +229,7 @@ function TraceCard({
 
           {/* Expanded */}
           {expanded && hasDetails && (
-            <div style={{ borderTop: `1px solid ${cfg.border}`, background: 'rgba(0,0,0,0.25)', borderRadius: '0 0 7px 7px' }} className="px-3 py-2 space-y-2">
+            <div style={{ borderTop: `1px solid ${cfg.border}`, background: 'var(--cp-code-bg)', borderRadius: '0 0 7px 7px' }} className="px-3 py-2 space-y-2">
               {event.details && (
                 <div>
                   <div style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Details</div>
@@ -239,7 +239,7 @@ function TraceCard({
               {Object.keys(event.metadata).length > 0 && (
                 <div>
                   <div style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Metadata</div>
-                  <pre style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(109,40,217,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#94a3b8', overflow: 'auto', maxHeight: 180 }}>
+                  <pre style={{ background: 'var(--cp-code-bg)', border: '1px solid rgba(109,40,217,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: 'var(--cp-text-secondary)', overflow: 'auto', maxHeight: 180 }}>
                     {JSON.stringify(event.metadata, null, 2)}
                   </pre>
                 </div>
@@ -265,7 +265,7 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
     })
   }, [session.id])
 
-  const statusCfg = STATUS_CONFIG[session.status] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', label: session.status }
+  const statusCfg = STATUS_CONFIG[session.status] ?? { color: 'var(--cp-text-secondary)', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', label: session.status }
   const totalMs = session.last_active && session.started_at
     ? new Date(session.last_active).getTime() - new Date(session.started_at).getTime()
     : 0
@@ -279,8 +279,8 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
   return (
     <div
       style={{
-        background: 'rgba(10,1,24,0.98)',
-        border: '1px solid rgba(109,40,217,0.25)',
+        background: 'var(--cp-card-solid-bg)',
+        border: '1px solid var(--cp-border-stronger)',
         backdropFilter: 'blur(16px)',
         borderRadius: 14,
         marginTop: 0,
@@ -288,13 +288,13 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
     >
       {/* Panel header */}
       <div
-        style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}
+        style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}
         className="px-5 py-4 flex items-start justify-between gap-3"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <div
-              style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', width: 28, height: 28, minWidth: 28, fontSize: 10, fontWeight: 700 }}
+              style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--cp-text-accent-light)', width: 28, height: 28, minWidth: 28, fontSize: 10, fontWeight: 700 }}
               className="rounded-lg flex items-center justify-center flex-shrink-0"
             >
               {getInitials(session.agent_name)}
@@ -308,7 +308,7 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
             </span>
           </div>
           <code
-            style={{ fontSize: 11, color: '#a78bfa', background: 'rgba(109,40,217,0.08)', border: '1px solid rgba(109,40,217,0.15)', padding: '1px 8px', borderRadius: 5, display: 'inline-block' }}
+            style={{ fontSize: 11, color: 'var(--cp-text-accent-light)', background: 'rgba(109,40,217,0.08)', border: '1px solid rgba(109,40,217,0.15)', padding: '1px 8px', borderRadius: 5, display: 'inline-block' }}
           >
             {session.session_key}
           </code>
@@ -384,7 +384,7 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
             <div
               style={{ background: 'rgba(109,40,217,0.06)', border: '1px solid rgba(109,40,217,0.15)', borderRadius: 8, padding: '8px 14px', marginTop: 12, display: 'inline-block' }}
             >
-              <span style={{ color: '#a78bfa', fontSize: 12, fontWeight: 600 }}>Detailed traces coming soon</span>
+              <span style={{ color: 'var(--cp-text-accent-light)', fontSize: 12, fontWeight: 600 }}>Detailed traces coming soon</span>
             </div>
           </div>
         ) : (
@@ -397,7 +397,7 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
                 top: 14,
                 bottom: 6,
                 width: 2,
-                background: 'linear-gradient(180deg, rgba(109,40,217,0.25) 0%, rgba(109,40,217,0.04) 100%)',
+                background: 'linear-gradient(180deg, var(--cp-border-stronger) 0%, rgba(109,40,217,0.04) 100%)',
                 zIndex: 0,
                 pointerEvents: 'none',
               }}
@@ -418,7 +418,7 @@ function SessionTracePanel({ session, onClose }: { session: SessionRow; onClose:
             {/* End marker */}
             <div className="flex items-center gap-2 mt-1" style={{ paddingLeft: 68 }}>
               <div style={{ width: 22, display: 'flex', justifyContent: 'center' }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(109,40,217,0.25)', border: '1.5px solid rgba(109,40,217,0.12)' }} />
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--cp-border-stronger)', border: '1.5px solid var(--cp-divider-accent)' }} />
               </div>
               <span style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 600 }}>
                 Session end{session.last_active && <span style={{ opacity: 0.6 }}> · {formatTime(session.last_active)}</span>}
@@ -506,7 +506,7 @@ export default function SessionsPage() {
           </h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">
             Agent session history &amp; trace viewer
-            {total > 0 && <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">· {total.toLocaleString()} sessions</span>}
+            {total > 0 && <span style={{ color: 'var(--cp-text-accent-light)' }} className="ml-2 font-bold">· {total.toLocaleString()} sessions</span>}
           </p>
         </div>
       </div>
@@ -556,7 +556,7 @@ export default function SessionsPage() {
             <div className="overflow-x-auto">
               <table className="w-full" style={{ minWidth: 560 }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }}>
+                  <tr style={{ borderBottom: '1px solid var(--cp-divider-accent)' }}>
                     <th style={{ color: 'var(--cp-text-dim)' }} className="text-left text-xs font-bold uppercase tracking-wider px-5 py-3">Agent</th>
                     <th style={{ color: 'var(--cp-text-dim)' }} className="text-left text-xs font-bold uppercase tracking-wider px-4 py-3 hidden sm:table-cell">Session ID</th>
                     <th
@@ -586,13 +586,13 @@ export default function SessionsPage() {
                 <tbody>
                   {sessions.map((session, idx) => {
                     const isSelected = selectedSession?.id === session.id
-                    const statusCfg = STATUS_CONFIG[session.status] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', label: session.status }
+                    const statusCfg = STATUS_CONFIG[session.status] ?? { color: 'var(--cp-text-secondary)', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', label: session.status }
                     return (
                       <tr
                         key={session.id}
                         onClick={() => handleRowClick(session)}
                         style={{
-                          borderBottom: idx < sessions.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                          borderBottom: idx < sessions.length - 1 ? '1px solid var(--cp-input-bg)' : 'none',
                           cursor: 'pointer',
                           background: isSelected ? 'rgba(109,40,217,0.08)' : 'transparent',
                           transition: 'background 0.15s',
@@ -603,7 +603,7 @@ export default function SessionsPage() {
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
                             <div
-                              style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', width: 28, height: 28, minWidth: 28, fontSize: 10, fontWeight: 700 }}
+                              style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--cp-text-accent-light)', width: 28, height: 28, minWidth: 28, fontSize: 10, fontWeight: 700 }}
                               className="rounded-lg flex items-center justify-center flex-shrink-0"
                             >
                               {getInitials(session.agent_name)}
@@ -616,7 +616,7 @@ export default function SessionsPage() {
                         </td>
                         {/* Session key */}
                         <td className="px-4 py-3 hidden sm:table-cell">
-                          <span style={{ background: 'rgba(109,40,217,0.08)', border: '1px solid rgba(109,40,217,0.14)', color: '#a78bfa', fontFamily: 'monospace', fontSize: 11 }} className="px-2 py-0.5 rounded">
+                          <span style={{ background: 'rgba(109,40,217,0.08)', border: '1px solid var(--cp-border)', color: 'var(--cp-text-accent-light)', fontFamily: 'monospace', fontSize: 11 }} className="px-2 py-0.5 rounded">
                             {session.session_key.length > 14 ? session.session_key.slice(0, 7) + '…' + session.session_key.slice(-5) : session.session_key}
                           </span>
                         </td>
@@ -675,7 +675,7 @@ export default function SessionsPage() {
                 <button
                   onClick={() => loadSessions(false)}
                   disabled={loadingMore}
-                  style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#c4b5fd' }}
+                  style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--cp-text-accent-light)' }}
                   className="px-6 py-2 rounded-xl text-sm font-semibold hover:bg-purple-500/20 disabled:opacity-50 transition-all"
                 >
                   {loadingMore ? 'Loading…' : `Load more (${sessions.length} of ${total})`}

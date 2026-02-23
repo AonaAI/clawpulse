@@ -19,9 +19,9 @@ interface UserRecord {
 // ── Role badge ───────────────────────────────────────────────────────────────
 
 const ROLE_CFG: Record<Role, { color: string; bg: string; border: string }> = {
-  admin:  { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)' },
+  admin:  { color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)' },
   editor: { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.3)' },
-  viewer: { color: '#9ca3af', bg: 'rgba(156,163,175,0.08)', border: 'rgba(156,163,175,0.2)' },
+  viewer: { color: 'var(--cp-text-secondary)', bg: 'rgba(156,163,175,0.08)', border: 'rgba(156,163,175,0.2)' },
 }
 
 function RoleBadge({ role }: { role: Role }) {
@@ -677,7 +677,7 @@ function AppearanceTab() {
               key={opt.value}
               onClick={() => applyTheme(opt.value)}
               style={{
-                background: theme === opt.value ? 'rgba(109,40,217,0.12)' : 'var(--cp-input-bg)',
+                background: theme === opt.value ? 'var(--cp-divider-accent)' : 'var(--cp-input-bg)',
                 border: `1px solid ${theme === opt.value ? 'rgba(139,92,246,0.5)' : 'var(--cp-border-strong)'}`,
               }}
               className="rounded-xl p-4 text-left transition-all"
@@ -694,7 +694,7 @@ function AppearanceTab() {
               </div>
               {theme === opt.value && (
                 <div
-                  style={{ color: '#a78bfa' }}
+                  style={{ color: 'var(--cp-text-accent-light)' }}
                   className="text-xs font-bold mt-2 flex items-center gap-1"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -796,8 +796,8 @@ export default function SettingsPage() {
         <div className="flex items-center gap-3 mb-1">
           <div
             style={{
-              background: 'rgba(109,40,217,0.12)',
-              border: '1px solid rgba(109,40,217,0.25)',
+              background: 'var(--cp-divider-accent)',
+              border: '1px solid var(--cp-border-stronger)',
             }}
             className="w-9 h-9 rounded-xl flex items-center justify-center"
           >
@@ -834,7 +834,7 @@ export default function SettingsPage() {
                 isActive
                   ? {
                       background: 'rgba(109,40,217,0.2)',
-                      color: '#c4b5fd',
+                      color: 'var(--cp-text-accent-light)',
                       border: '1px solid rgba(109,40,217,0.35)',
                     }
                   : {

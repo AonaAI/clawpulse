@@ -38,15 +38,15 @@ export default function CommsLoading() {
         <div className="xl:col-span-2">
           <div
             style={{
-              background: 'rgba(17, 2, 29, 0.6)',
-              border: '1px solid rgba(109, 40, 217, 0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
               backdropFilter: 'blur(12px)',
             }}
             className="rounded-xl overflow-hidden"
           >
             <div
               className="px-5 py-4 flex items-center justify-between"
-              style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+              style={{ borderBottom: '1px solid var(--cp-border-subtle)' }}
             >
               <div className="skeleton-shimmer" style={{ width: 130, height: 16, borderRadius: 6 }} />
               <div className="skeleton-shimmer" style={{ width: 80, height: 24, borderRadius: 99 }} />
@@ -61,8 +61,8 @@ export default function CommsLoading() {
         <div>
           <div
             style={{
-              background: 'rgba(17, 2, 29, 0.6)',
-              border: '1px solid rgba(109, 40, 217, 0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
               backdropFilter: 'blur(12px)',
             }}
             className="rounded-xl p-5"
@@ -74,9 +74,9 @@ export default function CommsLoading() {
                   key={i}
                   className="flex items-center justify-between px-3 py-2.5"
                   style={{
-                    background: 'rgba(255,255,255,0.02)',
+                    background: 'var(--cp-card-bg)',
                     borderRadius: 8,
-                    border: '1px solid rgba(255,255,255,0.04)',
+                    border: '1px solid var(--cp-input-bg)',
                   }}
                 >
                   <div className="skeleton-shimmer" style={{ width: 100, height: 12, borderRadius: 6 }} />

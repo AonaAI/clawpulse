@@ -97,8 +97,8 @@ function EditableText({
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            style={{ color: 'var(--cp-text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
-            className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium hover:text-white transition-colors"
+            style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium hover:text-[var(--cp-text-primary)] transition-colors"
           >
             <EditIcon /> Edit
           </button>
@@ -106,7 +106,7 @@ function EditableText({
           <div className="flex gap-1.5">
             <button
               onClick={() => { setEditing(false); setDraft(value) }}
-              style={{ color: 'var(--cp-text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+              style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
               className="px-2 py-1 rounded-md text-xs font-medium"
             >
               Cancel
@@ -129,7 +129,7 @@ function EditableText({
           autoFocus
           rows={large ? 3 : 2}
           style={{
-            background: 'rgba(0,0,0,0.3)',
+            background: 'var(--cp-code-bg)',
             border: `1px solid ${color}40`,
             color: 'var(--cp-text-primary)',
             fontSize: large ? '16px' : '14px',
@@ -205,8 +205,8 @@ function GoalsList({
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            style={{ color: 'var(--cp-text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
-            className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium hover:text-white transition-colors"
+            style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium hover:text-[var(--cp-text-primary)] transition-colors"
           >
             <EditIcon /> Edit
           </button>
@@ -214,7 +214,7 @@ function GoalsList({
           <div className="flex gap-1.5">
             <button
               onClick={() => { setEditing(false); setDraft(goals); setNewGoal('') }}
-              style={{ color: 'var(--cp-text-dim)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+              style={{ color: 'var(--cp-text-dim)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }}
               className="px-2 py-1 rounded-md text-xs font-medium"
             >
               Cancel
@@ -239,7 +239,7 @@ function GoalsList({
                 value={goal}
                 onChange={e => updateGoal(i, e.target.value)}
                 style={{
-                  background: 'rgba(0,0,0,0.3)',
+                  background: 'var(--cp-code-bg)',
                   border: `1px solid ${color}30`,
                   color: 'var(--cp-text-primary)',
                   fontSize: '13px',
@@ -258,7 +258,7 @@ function GoalsList({
               onKeyDown={e => e.key === 'Enter' && addGoal()}
               placeholder="Add a goal…"
               style={{
-                background: 'rgba(0,0,0,0.3)',
+                background: 'var(--cp-code-bg)',
                 border: `1px dashed ${color}40`,
                 color: 'var(--cp-text-primary)',
                 fontSize: '13px',
@@ -364,7 +364,7 @@ function AgentKpiCard({
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02] transition-colors"
       >
         <div
-          style={{ background: 'rgba(109,40,217,0.12)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6' }}
+          style={{ background: 'var(--cp-divider-accent)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--cp-text-accent-light)' }}
           className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
         >
           {agent.name.slice(0, 2).toUpperCase()}
@@ -395,15 +395,15 @@ function AgentKpiCard({
           {/* Mission */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ color: '#a78bfa', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Agent Mission</span>
+              <span style={{ color: 'var(--cp-text-accent-light)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Agent Mission</span>
               {!editingMission ? (
-                <button onClick={() => setEditingMission(true)} style={{ color: 'var(--cp-text-dim)' }} className="flex items-center gap-1 text-xs hover:text-white">
+                <button onClick={() => setEditingMission(true)} style={{ color: 'var(--cp-text-dim)' }} className="flex items-center gap-1 text-xs hover:text-[var(--cp-text-primary)]">
                   <EditIcon /> Edit
                 </button>
               ) : (
                 <div className="flex gap-1.5">
                   <button onClick={() => { setEditingMission(false); setDraftMission(agent.mission || '') }} style={{ color: 'var(--cp-text-dim)' }} className="text-xs px-2 py-0.5 rounded">Cancel</button>
-                  <button onClick={saveMission} disabled={saving} style={{ color: '#a78bfa' }} className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded">
+                  <button onClick={saveMission} disabled={saving} style={{ color: 'var(--cp-text-accent-light)' }} className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded">
                     <CheckIcon /> {saving ? 'Saving…' : 'Save'}
                   </button>
                 </div>
@@ -415,7 +415,7 @@ function AgentKpiCard({
                 onChange={e => setDraftMission(e.target.value)}
                 autoFocus rows={2}
                 placeholder="Enter agent mission…"
-                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(167,139,250,0.3)', color: 'var(--cp-text-primary)', fontSize: '13px', resize: 'vertical' }}
+                style={{ background: 'var(--cp-code-bg)', border: '1px solid rgba(167,139,250,0.3)', color: 'var(--cp-text-primary)', fontSize: '13px', resize: 'vertical' }}
                 className="w-full rounded-lg px-3 py-2 outline-none"
               />
             ) : (
@@ -430,7 +430,7 @@ function AgentKpiCard({
             <div className="flex items-center justify-between mb-2">
               <span style={{ color: '#22d3ee', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>KPIs</span>
               {!editingKpis ? (
-                <button onClick={() => setEditingKpis(true)} style={{ color: 'var(--cp-text-dim)' }} className="flex items-center gap-1 text-xs hover:text-white">
+                <button onClick={() => setEditingKpis(true)} style={{ color: 'var(--cp-text-dim)' }} className="flex items-center gap-1 text-xs hover:text-[var(--cp-text-primary)]">
                   <EditIcon /> Edit
                 </button>
               ) : (
@@ -449,7 +449,7 @@ function AgentKpiCard({
                     <input
                       value={kpi}
                       onChange={e => setDraftKpis(prev => prev.map((k, j) => j === i ? e.target.value : k))}
-                      style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(34,211,238,0.25)', color: 'var(--cp-text-primary)', fontSize: '12px' }}
+                      style={{ background: 'var(--cp-code-bg)', border: '1px solid rgba(34,211,238,0.25)', color: 'var(--cp-text-primary)', fontSize: '12px' }}
                       className="flex-1 rounded-lg px-2.5 py-1.5 outline-none"
                     />
                     <button onClick={() => setDraftKpis(prev => prev.filter((_, j) => j !== i))} style={{ color: '#ef4444' }} className="p-0.5 rounded hover:bg-red-500/10">
@@ -463,7 +463,7 @@ function AgentKpiCard({
                     onChange={e => setNewKpi(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && addKpi()}
                     placeholder="Add KPI…"
-                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px dashed rgba(34,211,238,0.3)', color: 'var(--cp-text-primary)', fontSize: '12px' }}
+                    style={{ background: 'var(--cp-code-bg)', border: '1px dashed rgba(34,211,238,0.3)', color: 'var(--cp-text-primary)', fontSize: '12px' }}
                     className="flex-1 rounded-lg px-2.5 py-1.5 outline-none placeholder-gray-600"
                   />
                   <button onClick={addKpi} style={{ color: '#22d3ee' }} className="flex items-center gap-1 text-xs font-bold px-2 py-1.5 rounded">
@@ -525,7 +525,7 @@ function ProjectCard({
 
   return (
     <div
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
+      style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }}
       className="rounded-2xl overflow-hidden"
     >
       {/* Project header */}
@@ -554,8 +554,8 @@ function ProjectCard({
               onClick={toggleInherit}
               style={{
                 color: project.inherit_company_mission ? inheritColor : 'var(--cp-text-dim)',
-                background: project.inherit_company_mission ? `${inheritColor}12` : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${project.inherit_company_mission ? inheritColor + '35' : 'rgba(255,255,255,0.07)'}`,
+                background: project.inherit_company_mission ? `${inheritColor}12` : 'var(--cp-card-bg)',
+                border: `1px solid ${project.inherit_company_mission ? inheritColor + '35' : 'var(--cp-border-subtle)'}`,
               }}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
               title="Toggle inherit company mission"
@@ -581,7 +581,7 @@ function ProjectCard({
               {project.inherit_company_mission ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span style={{ color: '#a78bfa', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Mission</span>
+                    <span style={{ color: 'var(--cp-text-accent-light)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Mission</span>
                     <span style={{ color: inheritColor, fontSize: '9px', background: `${inheritColor}15`, border: `1px solid ${inheritColor}30`, padding: '1px 6px', borderRadius: '999px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Inherited</span>
                   </div>
                   <p style={{ color: companyMission ? 'var(--cp-text-secondary)' : 'var(--cp-text-dim)', fontSize: '13px', lineHeight: '1.6', fontStyle: companyMission ? 'normal' : 'italic' }}>
@@ -784,11 +784,11 @@ export default function MissionPage() {
 
           {/* ── Divider ── */}
           <div className="flex items-center gap-4">
-            <div style={{ flex: 1, height: '1px', background: 'rgba(109,40,217,0.14)' }} />
+            <div style={{ flex: 1, height: '1px', background: 'var(--cp-border)' }} />
             <span style={{ color: 'var(--cp-text-nav-label)' }} className="text-xs font-bold uppercase tracking-widest">
               {visibleProjects.length} Project{visibleProjects.length !== 1 ? 's' : ''}
             </span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(109,40,217,0.14)' }} />
+            <div style={{ flex: 1, height: '1px', background: 'var(--cp-border)' }} />
           </div>
 
           {/* ── Project cards ── */}

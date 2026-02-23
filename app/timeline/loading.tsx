@@ -6,7 +6,7 @@ export default function TimelineLoading() {
         <div className="skeleton-shimmer" style={{ width: 300, height: 14, borderRadius: 6 }} />
       </div>
       <div
-        style={{ background: 'rgba(17, 2, 29, 0.6)', border: '1px solid rgba(109, 40, 217, 0.14)' }}
+        style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)' }}
         className="rounded-xl p-4 mb-6 space-y-3"
       >
         <div className="skeleton-shimmer" style={{ width: '100%', height: 36, borderRadius: 8 }} />

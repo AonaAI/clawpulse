@@ -16,7 +16,7 @@ const ACTION_COLORS: Record<string, { color: string; bg: string; border: string 
 const PAGE_SIZE = 50
 
 function ActionBadge({ action }: { action: string }) {
-  const cfg = ACTION_COLORS[action] || { color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)' }
+  const cfg = ACTION_COLORS[action] || { color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)' }
   return (
     <span style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }} className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
       {action}
@@ -31,7 +31,7 @@ function ExpandableChanges({ changes }: { changes: Record<string, unknown> }) {
 
   return (
     <div>
-      <button onClick={() => setOpen(!open)} style={{ color: '#a78bfa' }} className="text-xs font-semibold hover:underline">
+      <button onClick={() => setOpen(!open)} style={{ color: 'var(--cp-text-accent-light)' }} className="text-xs font-semibold hover:underline">
         {open ? '▾ Hide' : `▸ ${keys.length} field${keys.length !== 1 ? 's' : ''}`}
       </button>
       {open && (
@@ -150,7 +150,7 @@ export default function AuditPage() {
           <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl sm:text-3xl font-bold tracking-tight">Audit Log</h1>
           <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1 font-medium">
             Track all mutations across the system
-            {total > 0 && <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">· {total.toLocaleString()} entries</span>}
+            {total > 0 && <span style={{ color: 'var(--cp-text-accent-light)' }} className="ml-2 font-bold">· {total.toLocaleString()} entries</span>}
           </p>
         </div>
         <LiveBadge status={connectionStatus} />
@@ -195,8 +195,8 @@ export default function AuditPage() {
               key={a}
               onClick={() => setActionFilter(a)}
               style={{
-                background: actionFilter === a ? (a === 'all' ? 'rgba(124,58,237,0.18)' : ACTION_COLORS[a]?.bg || 'rgba(124,58,237,0.18)') : 'rgba(255,255,255,0.04)',
-                border: actionFilter === a ? `1px solid ${a === 'all' ? 'rgba(139,92,246,0.4)' : ACTION_COLORS[a]?.border || 'rgba(139,92,246,0.4)'}` : '1px solid rgba(255,255,255,0.07)',
+                background: actionFilter === a ? (a === 'all' ? 'rgba(124,58,237,0.18)' : ACTION_COLORS[a]?.bg || 'rgba(124,58,237,0.18)') : 'var(--cp-input-bg)',
+                border: actionFilter === a ? `1px solid ${a === 'all' ? 'rgba(139,92,246,0.4)' : ACTION_COLORS[a]?.border || 'rgba(139,92,246,0.4)'}` : '1px solid var(--cp-border-subtle)',
                 color: actionFilter === a ? (a === 'all' ? '#c4b5fd' : ACTION_COLORS[a]?.color || '#c4b5fd') : '#6b7280',
               }}
               className="px-3 py-1 rounded-lg text-xs font-semibold capitalize"
@@ -275,7 +275,7 @@ export default function AuditPage() {
           items.map((item, i) => (
             <div
               key={item.id}
-              style={{ borderBottom: i < items.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+              style={{ borderBottom: i < items.length - 1 ? '1px solid var(--cp-input-bg)' : 'none' }}
               className="sm:grid grid-cols-[140px_80px_100px_1fr_100px_1fr] gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors"
             >
               {/* Time */}
@@ -285,7 +285,7 @@ export default function AuditPage() {
               {/* Action */}
               <div><ActionBadge action={item.action} /></div>
               {/* Entity Type */}
-              <div style={{ color: '#c4b5fd' }} className="text-xs font-semibold capitalize">{item.entity_type}</div>
+              <div style={{ color: 'var(--cp-text-accent-light)' }} className="text-xs font-semibold capitalize">{item.entity_type}</div>
               {/* Entity ID */}
               <div style={{ color: 'var(--cp-text-secondary)' }} className="text-xs font-mono truncate" title={item.entity_id}>
                 {item.entity_id.length > 20 ? item.entity_id.slice(0, 8) + '…' + item.entity_id.slice(-8) : item.entity_id}
@@ -312,7 +312,7 @@ export default function AuditPage() {
               style={{
                 background: 'rgba(124,58,237,0.12)',
                 border: '1px solid rgba(139,92,246,0.25)',
-                color: '#c4b5fd',
+                color: 'var(--cp-text-accent-light)',
               }}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-30"
             >
@@ -324,7 +324,7 @@ export default function AuditPage() {
               style={{
                 background: 'rgba(124,58,237,0.12)',
                 border: '1px solid rgba(139,92,246,0.25)',
-                color: '#c4b5fd',
+                color: 'var(--cp-text-accent-light)',
               }}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-30"
             >

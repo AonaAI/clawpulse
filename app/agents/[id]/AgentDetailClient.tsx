@@ -82,7 +82,7 @@ const EVENT_CONFIG: Record<EventType, { color: string; bg: string; border: strin
   deployment: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', label: 'Deployed' },
   message_sent: { color: '#22d3ee', bg: 'rgba(34,211,238,0.1)', border: 'rgba(34,211,238,0.25)', label: 'Message' },
   warning: { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)', label: 'Warning' },
-  analysis: { color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', label: 'Analysis' },
+  analysis: { color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', label: 'Analysis' },
   info: { color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.25)', label: 'Info' },
 }
 
@@ -256,7 +256,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
   return (
     <div
       className="px-4 sm:px-5 py-4 flex items-start gap-3"
-      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
+      style={{ borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)' }}
     >
       {/* Timeline dot */}
       <div className="flex flex-col items-center gap-1 flex-shrink-0 mt-1">
@@ -297,7 +297,7 @@ function SessionRow({ session, isLast }: { session: Session; isLast: boolean }) 
             </span>
           )}
           {(session.tokens_used ?? session.token_count ?? 0) > 0 && (
-            <span style={{ color: '#8b5cf6' }} className="text-xs font-semibold">
+            <span style={{ color: 'var(--cp-text-accent-light)' }} className="text-xs font-semibold">
               {formatTokens(session.tokens_used ?? session.token_count ?? 0)} tokens
             </span>
           )}
@@ -710,7 +710,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                   {avgDuration > 0 && (
                     <div className="text-right">
                       <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">Avg duration</div>
-                      <div style={{ color: '#8b5cf6' }} className="text-sm font-bold">{avgDuration}m</div>
+                      <div style={{ color: 'var(--cp-text-accent-light)' }} className="text-sm font-bold">{avgDuration}m</div>
                     </div>
                   )}
                   {sessionTokens > 0 && (
@@ -761,7 +761,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                   <div
                     key={event.id}
                     className="px-4 sm:px-5 py-3.5 flex items-start gap-3"
-                    style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
+                    style={{ borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)' }}
                   >
                     <span
                       style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, fontSize: '10px' }}
@@ -770,7 +770,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                       {cfg.label}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <div style={{ color: '#8b5cf6' }} className="text-sm font-semibold leading-tight">{event.action}</div>
+                      <div style={{ color: 'var(--cp-text-accent-light)' }} className="text-sm font-semibold leading-tight">{event.action}</div>
                       {event.details && (
                         <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs mt-0.5 leading-relaxed truncate">{event.details}</div>
                       )}
@@ -809,7 +809,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                 <div
                   key={label}
                   className="px-4 sm:px-5 py-3.5 flex items-start gap-4"
-                  style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+                  style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--cp-input-bg)' : 'none' }}
                 >
                   <span style={{ color: 'var(--cp-text-dim)', fontSize: '12px', minWidth: '140px' }} className="font-semibold uppercase tracking-wide flex-shrink-0 pt-0.5">{label}</span>
                   <span style={{ color: mono ? '#c4b5fd' : 'var(--cp-text-secondary)', fontFamily: mono ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : undefined, fontSize: '13px' }}>
@@ -833,7 +833,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                     <Link
                       key={spawnId}
                       href={`/agents/${spawnId}`}
-                      style={{ color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.22)' }}
+                      style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.22)' }}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-purple-500/20 transition-colors min-h-[36px] flex items-center"
                     >
                       {target?.name ?? spawnId}
@@ -941,7 +941,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                       <div
                         key={task.id}
                         className="px-4 sm:px-5 py-3.5"
-                        style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}
+                        style={{ borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)' }}
                       >
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold leading-tight">{task.title}</span>
@@ -1007,7 +1007,7 @@ export default function AgentDetailClient({ id }: { id: string }) {
                       error: { color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', label: 'Error' },
                     }[req.status] || { color: 'var(--cp-text-muted)', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.2)', label: req.status }
                     return (
-                      <div key={req.id} className="px-4 sm:px-5 py-3.5" style={{ borderBottom: i < spawnRequests.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                      <div key={req.id} className="px-4 sm:px-5 py-3.5" style={{ borderBottom: i < spawnRequests.length - 1 ? '1px solid var(--cp-input-bg)' : 'none' }}>
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <span style={{ color: 'var(--cp-text-card-title)' }} className="text-sm font-semibold leading-tight truncate">{req.task}</span>
                           <span style={{ background: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.border}`, fontSize: '10px' }} className="px-2 py-0.5 rounded-full font-bold flex-shrink-0 whitespace-nowrap">

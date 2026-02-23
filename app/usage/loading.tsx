@@ -2,7 +2,7 @@ import { CostCardSkeleton, TableSkeleton } from '@/components/Skeletons'
 
 function AgentUsageRowSkeleton({ isLast = false }: { isLast?: boolean }) {
   return (
-    <div style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)' }}>
+    <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--cp-input-bg)' }}>
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
           <div className="skeleton-shimmer" style={{ width: 28, height: 28, borderRadius: 8 }} />
@@ -52,8 +52,8 @@ export default function UsageLoading() {
         <div className="xl:col-span-2">
           <div
             style={{
-              background: 'rgba(17, 2, 29, 0.6)',
-              border: '1px solid rgba(109, 40, 217, 0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
               backdropFilter: 'blur(12px)',
             }}
             className="rounded-xl p-5"
@@ -71,8 +71,8 @@ export default function UsageLoading() {
         <div>
           <div
             style={{
-              background: 'rgba(17, 2, 29, 0.6)',
-              border: '1px solid rgba(109, 40, 217, 0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
               backdropFilter: 'blur(12px)',
             }}
             className="rounded-xl p-5"

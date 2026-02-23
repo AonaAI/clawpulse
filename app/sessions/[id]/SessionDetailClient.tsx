@@ -111,7 +111,7 @@ function extractSystemPrompt(metadata: Record<string, unknown> | null): string |
 const ROLE_CONFIG = {
   user: { color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.3)', label: 'User' },
   assistant: { color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.3)', label: 'Assistant' },
-  system: { color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.3)', label: 'System' },
+  system: { color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.3)', label: 'System' },
   tool: { color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.3)', label: 'Tool' },
 } as const
 
@@ -156,11 +156,11 @@ function ToolCallBlock({ msg }: { msg: ConversationMessage }) {
       </button>
 
       {expanded && (
-        <div style={{ borderTop: '1px solid rgba(251,191,36,0.15)', background: 'rgba(0,0,0,0.2)' }} className="px-3 py-2 space-y-2">
+        <div style={{ borderTop: '1px solid rgba(251,191,36,0.15)', background: 'var(--cp-code-bg)' }} className="px-3 py-2 space-y-2">
           {hasInput && (
             <div>
               <div style={{ color: '#fbbf24', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Input</div>
-              <pre style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11.5, color: '#d4b483', overflow: 'auto', maxHeight: 240, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <pre style={{ background: 'var(--cp-code-bg)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11.5, color: '#d4b483', overflow: 'auto', maxHeight: 240, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {typeof msg.input === 'string' ? msg.input : JSON.stringify(msg.input, null, 2)}
               </pre>
             </div>
@@ -168,7 +168,7 @@ function ToolCallBlock({ msg }: { msg: ConversationMessage }) {
           {hasOutput && (
             <div>
               <div style={{ color: '#fbbf24', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Output</div>
-              <pre style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11.5, color: '#d4b483', overflow: 'auto', maxHeight: 240, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <pre style={{ background: 'var(--cp-code-bg)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11.5, color: '#d4b483', overflow: 'auto', maxHeight: 240, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                 {typeof msg.output === 'string' ? msg.output : JSON.stringify(msg.output, null, 2)}
               </pre>
             </div>
@@ -311,12 +311,12 @@ function TraceEventItem({ event, prevTimestamp }: { event: TraceEvent; prevTimes
             <div style={{ color: 'var(--cp-text-secondary)', fontSize: 12.5, fontWeight: 500, marginTop: 2 }}>{event.action}</div>
           </div>
           {expanded && hasDetails && (
-            <div style={{ borderTop: '1px solid rgba(109,40,217,0.12)', background: 'rgba(0,0,0,0.2)', borderRadius: '0 0 7px 7px' }} className="px-3 py-2 space-y-2">
+            <div style={{ borderTop: '1px solid var(--cp-divider-accent)', background: 'var(--cp-code-bg)', borderRadius: '0 0 7px 7px' }} className="px-3 py-2 space-y-2">
               {event.details && (
                 <p style={{ color: 'var(--cp-text-secondary)', fontSize: 12, lineHeight: 1.6 }} className="whitespace-pre-wrap">{event.details}</p>
               )}
               {Object.keys(event.metadata).length > 0 && (
-                <pre style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(109,40,217,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#94a3b8', overflow: 'auto', maxHeight: 180 }}>
+                <pre style={{ background: 'var(--cp-code-bg)', border: '1px solid rgba(109,40,217,0.15)', borderRadius: 6, padding: '6px 10px', fontSize: 11, color: 'var(--cp-text-secondary)', overflow: 'auto', maxHeight: 180 }}>
                   {JSON.stringify(event.metadata, null, 2)}
                 </pre>
               )}
@@ -360,7 +360,7 @@ function PromptInspectorSidebar({
           zIndex: 10,
           background: 'rgba(109,40,217,0.15)',
           border: '1px solid rgba(139,92,246,0.25)',
-          color: '#a78bfa',
+          color: 'var(--cp-text-accent-light)',
           width: 28,
           height: 28,
           borderRadius: 8,
@@ -395,7 +395,7 @@ function PromptInspectorSidebar({
             </div>
             {systemPrompt ? (
               <pre style={{
-                color: '#c4b5fd',
+                color: 'var(--cp-text-accent-light)',
                 fontSize: 11.5,
                 lineHeight: 1.75,
                 whiteSpace: 'pre-wrap',
@@ -489,7 +489,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
       <Link
         href="/sessions"
-        style={{ color: '#a78bfa', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}
+        style={{ color: 'var(--cp-text-accent-light)', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}
         className="mb-6 hover:text-purple-300 transition-colors"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
@@ -498,7 +498,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
       <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', borderRadius: 12, padding: '48px 24px', textAlign: 'center', marginTop: 16 }}>
         <div style={{ color: 'var(--cp-text-muted)', fontSize: 14, fontWeight: 600 }}>Session not found</div>
         <div style={{ color: 'var(--cp-text-dim)', fontSize: 12, marginTop: 6 }}>
-          ID: <code style={{ color: '#a78bfa' }}>{id}</code>
+          ID: <code style={{ color: 'var(--cp-text-accent-light)' }}>{id}</code>
         </div>
       </div>
     </div>
@@ -508,7 +508,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
 
   const messages = extractMessages(session.metadata)
   const systemPrompt = extractSystemPrompt(session.metadata)
-  const statusCfg = STATUS_CONFIG[session.status] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', label: session.status }
+  const statusCfg = STATUS_CONFIG[session.status] ?? { color: 'var(--cp-text-secondary)', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', label: session.status }
 
   const msgTimestamps = messages.map(m => m.timestamp).filter(Boolean) as string[]
   const msgTotalMs = msgTimestamps.length >= 2
@@ -528,7 +528,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
       {/* Back link */}
       <Link
         href="/sessions"
-        style={{ color: '#a78bfa', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}
+        style={{ color: 'var(--cp-text-accent-light)', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}
         className="mb-5 hover:text-purple-300 transition-colors"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
@@ -544,7 +544,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
         <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
           <div className="flex items-center gap-3">
             <div
-              style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', width: 40, height: 40, fontSize: 13, fontWeight: 700 }}
+              style={{ background: 'rgba(109,40,217,0.15)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--cp-text-accent-light)', width: 40, height: 40, fontSize: 13, fontWeight: 700 }}
               className="rounded-xl flex items-center justify-center flex-shrink-0"
             >
               {getInitials(session.agent_name)}
@@ -559,7 +559,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
                   {statusCfg.label}
                 </span>
               </div>
-              <code style={{ fontSize: 11, color: '#a78bfa', background: 'rgba(109,40,217,0.08)', border: '1px solid rgba(109,40,217,0.15)', padding: '1px 8px', borderRadius: 5, display: 'inline-block', marginTop: 2 }}>
+              <code style={{ fontSize: 11, color: 'var(--cp-text-accent-light)', background: 'rgba(109,40,217,0.08)', border: '1px solid rgba(109,40,217,0.15)', padding: '1px 8px', borderRadius: 5, display: 'inline-block', marginTop: 2 }}>
                 {session.session_key}
               </code>
             </div>
@@ -567,7 +567,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
           {session.model && (
             <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 8, padding: '4px 12px' }}>
               <div style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>Model</div>
-              <div style={{ color: '#c4b5fd', fontSize: 12, fontWeight: 600 }}>{session.model}</div>
+              <div style={{ color: 'var(--cp-text-accent-light)', fontSize: 12, fontWeight: 600 }}>{session.model}</div>
             </div>
           )}
         </div>
@@ -580,7 +580,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
             { label: 'Total Tokens', value: formatTokens(session.token_count) },
             { label: 'Messages', value: msgSummary },
           ].map(stat => (
-            <div key={stat.label} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '8px 12px' }}>
+            <div key={stat.label} style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-subtle)', borderRadius: 8, padding: '8px 12px' }}>
               <div style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{stat.label}</div>
               <div style={{ color: 'var(--cp-text-primary)', fontSize: 13, fontWeight: 600 }}>{stat.value}</div>
             </div>
@@ -608,7 +608,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
           >
             {tab === 'conversation' ? 'Conversation' : 'Trace Events'}
             {tab === 'trace' && trace.length > 0 && (
-              <span style={{ marginLeft: 6, background: 'rgba(167,139,250,0.2)', color: '#a78bfa', fontSize: 10, fontWeight: 800, padding: '1px 5px', borderRadius: 99 }}>
+              <span style={{ marginLeft: 6, background: 'rgba(167,139,250,0.2)', color: 'var(--cp-text-accent-light)', fontSize: 10, fontWeight: 800, padding: '1px 5px', borderRadius: 99 }}>
                 {trace.length}
               </span>
             )}
@@ -636,7 +636,7 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
                 {trace.length > 0 && (
                   <button
                     onClick={() => setActiveTab('trace')}
-                    style={{ marginTop: 14, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#c4b5fd', padding: '7px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ marginTop: 14, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--cp-text-accent-light)', padding: '7px 18px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                   >
                     View {trace.length} trace events instead
                   </button>

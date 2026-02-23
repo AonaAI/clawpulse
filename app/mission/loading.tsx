@@ -17,9 +17,9 @@ export default function MissionLoading() {
 
       {/* Divider */}
       <div className="flex items-center gap-4 mb-8">
-        <div style={{ flex: 1, height: 1, background: 'rgba(109,40,217,0.14)' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--cp-border)' }} />
         <div className="skeleton-shimmer" style={{ width: 130, height: 12, borderRadius: 6 }} />
-        <div style={{ flex: 1, height: 1, background: 'rgba(109,40,217,0.14)' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--cp-border)' }} />
       </div>
 
       {/* Agent missions */}

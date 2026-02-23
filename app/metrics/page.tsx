@@ -119,13 +119,13 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
           <div key={item.id} className="flex items-start gap-3">
             <div className="flex flex-col items-center flex-shrink-0 pt-1">
               <div
-                style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.22)', color: '#8b5cf6', width: 28, height: 28, fontSize: 10 }}
+                style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.22)', color: 'var(--cp-text-accent-light)', width: 28, height: 28, fontSize: 10 }}
                 className="rounded-lg flex items-center justify-center font-bold"
               >
                 {(agent?.name ?? item.agent_id).slice(0, 2).toUpperCase()}
               </div>
               {i < items.length - 1 && (
-                <div style={{ width: 1, height: 20, background: 'rgba(109,40,217,0.12)', marginTop: 4 }} />
+                <div style={{ width: 1, height: 20, background: 'var(--cp-divider-accent)', marginTop: 4 }} />
               )}
             </div>
             <div className="flex-1 min-w-0 pb-0.5">
@@ -247,7 +247,7 @@ export default function MetricsPage() {
   const agentRows: BarRow[] = AGENTS.map(agent => ({
     label: agent.name,
     value: tasks.filter(t => t.assigned_agent === agent.id).length,
-    color: '#8b5cf6',
+    color: 'var(--cp-text-accent-light)',
     subLabel: agent.role,
   })).filter(r => r.value > 0).sort((a, b) => b.value - a.value)
   const agentMax = Math.max(...agentRows.map(r => r.value), 1)
@@ -371,7 +371,7 @@ export default function MetricsPage() {
                 <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs mt-0.5">Latest actions logged across all agents</p>
               </div>
               <span
-                style={{ color: '#a78bfa', background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}
+                style={{ color: 'var(--cp-text-accent-light)', background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)' }}
                 className="text-xs px-2.5 py-1 rounded-full font-semibold"
               >
                 {activity.length} events

@@ -32,15 +32,15 @@ const ERROR_TYPE_CONFIG: Record<ErrorType, { color: string; bg: string; border: 
   'OOM':        { color: '#f87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.35)' },
   'Timeout':    { color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  border: 'rgba(251,146,60,0.35)'  },
   'Rate Limit': { color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.35)' },
-  'Auth':       { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.35)' },
+  'Auth':       { color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.35)' },
   'API Error':  { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.35)'  },
-  'Unknown':    { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.35)' },
+  'Unknown':    { color: 'var(--cp-text-secondary)', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.35)' },
 }
 
 const SEVERITY_CONFIG: Record<Severity, { color: string; bg: string; border: string; label: string }> = {
   critical: { color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)', label: 'Critical' },
   warning:  { color: '#fbbf24', bg: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.25)',  label: 'Warning'  },
-  info:     { color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.25)', label: 'Info'     },
+  info:     { color: 'var(--cp-text-secondary)', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.25)', label: 'Info'     },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ function AgentAvatar({ name }: { name: string }) {
       style={{
         background: 'rgba(109,40,217,0.15)',
         border: '1px solid rgba(139,92,246,0.2)',
-        color: '#8b5cf6',
+        color: 'var(--cp-text-accent-light)',
         width: 28, height: 28, minWidth: 28,
         fontSize: 10, fontWeight: 700,
       }}
@@ -114,14 +114,14 @@ function ErrorDetailPanel({ entry, onClose }: { entry: ErrorEntry; onClose: () =
   return (
     <div
       style={{
-        background: 'rgba(10,1,24,0.98)',
+        background: 'var(--cp-card-solid-bg)',
         border: `1px solid ${typeCfg.border}`,
         backdropFilter: 'blur(16px)',
         borderRadius: 14,
       }}
     >
       {/* Header */}
-      <div style={{ borderBottom: '1px solid rgba(109,40,217,0.12)' }} className="px-5 py-4 flex items-start justify-between gap-3">
+      <div style={{ borderBottom: '1px solid var(--cp-divider-accent)' }} className="px-5 py-4 flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <AgentAvatar name={entry.agent_name} />
@@ -179,12 +179,12 @@ function ErrorDetailPanel({ entry, onClose }: { entry: ErrorEntry; onClose: () =
             </div>
             <pre
               style={{
-                background: 'rgba(0,0,0,0.4)',
+                background: 'var(--cp-code-bg)',
                 border: '1px solid rgba(109,40,217,0.15)',
                 borderRadius: 8,
                 padding: '10px 14px',
                 fontSize: 11,
-                color: '#94a3b8',
+                color: 'var(--cp-text-secondary)',
                 overflow: 'auto',
                 maxHeight: 200,
                 whiteSpace: 'pre-wrap',
@@ -224,12 +224,12 @@ function ErrorDetailPanel({ entry, onClose }: { entry: ErrorEntry; onClose: () =
             </div>
             <pre
               style={{
-                background: 'rgba(0,0,0,0.4)',
+                background: 'var(--cp-code-bg)',
                 border: '1px solid rgba(109,40,217,0.15)',
                 borderRadius: 8,
                 padding: '10px 14px',
                 fontSize: 11,
-                color: '#94a3b8',
+                color: 'var(--cp-text-secondary)',
                 overflow: 'auto',
                 maxHeight: 160,
               }}
@@ -248,7 +248,7 @@ function ErrorDetailPanel({ entry, onClose }: { entry: ErrorEntry; onClose: () =
             style={{
               background: 'rgba(124,58,237,0.15)',
               border: '1px solid rgba(139,92,246,0.3)',
-              color: '#c4b5fd',
+              color: 'var(--cp-text-accent-light)',
             }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-500/20 transition-all"
           >
@@ -376,7 +376,7 @@ export default function ErrorsPage() {
           {
             label: 'Most Affected Agent',
             value: loading ? '…' : stats.mostAffectedAgent,
-            color: '#a78bfa',
+            color: 'var(--cp-text-accent-light)',
             icon: (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
@@ -439,8 +439,8 @@ export default function ErrorsPage() {
           <button
             onClick={() => setTypeFilter('all')}
             style={{
-              background: typeFilter === 'all' ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.04)',
-              border: typeFilter === 'all' ? '1px solid rgba(139,92,246,0.4)' : '1px solid rgba(255,255,255,0.07)',
+              background: typeFilter === 'all' ? 'rgba(124,58,237,0.18)' : 'var(--cp-input-bg)',
+              border: typeFilter === 'all' ? '1px solid rgba(139,92,246,0.4)' : '1px solid var(--cp-border-subtle)',
               color: typeFilter === 'all' ? '#c4b5fd' : '#6b7280',
             }}
             className="px-2.5 py-1 rounded-lg text-xs font-semibold"
@@ -455,8 +455,8 @@ export default function ErrorsPage() {
                 key={type}
                 onClick={() => setTypeFilter(type)}
                 style={{
-                  background: active ? cfg.bg : 'rgba(255,255,255,0.04)',
-                  border: active ? `1px solid ${cfg.border}` : '1px solid rgba(255,255,255,0.07)',
+                  background: active ? cfg.bg : 'var(--cp-input-bg)',
+                  border: active ? `1px solid ${cfg.border}` : '1px solid var(--cp-border-subtle)',
                   color: active ? cfg.color : '#6b7280',
                 }}
                 className="px-2.5 py-1 rounded-lg text-xs font-semibold"
@@ -513,7 +513,7 @@ export default function ErrorsPage() {
           >
             {/* Header */}
             <div
-              style={{ borderBottom: '1px solid rgba(109,40,217,0.12)', background: 'rgba(109,40,217,0.04)' }}
+              style={{ borderBottom: '1px solid var(--cp-divider-accent)', background: 'rgba(109,40,217,0.04)' }}
               className="hidden md:grid grid-cols-[140px_160px_120px_1fr_90px_80px] gap-3 px-5 py-3"
             >
               {['Timestamp', 'Agent', 'Error Type', 'Message', 'Session', 'Severity'].map(h => (
@@ -535,7 +535,7 @@ export default function ErrorsPage() {
                   <div
                     onClick={() => handleRowClick(entry)}
                     style={{
-                      borderBottom: idx < items.length - 1 && !isSelected ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                      borderBottom: idx < items.length - 1 && !isSelected ? '1px solid var(--cp-input-bg)' : 'none',
                       cursor: 'pointer',
                       background: isSelected ? `rgba(${type === 'OOM' ? '248,113,113' : type === 'Timeout' ? '251,146,60' : type === 'Rate Limit' ? '251,191,36' : type === 'Auth' ? '167,139,250' : type === 'API Error' ? '96,165,250' : '148,163,184'},0.05)` : 'transparent',
                       borderLeft: isSelected ? `2px solid ${typeCfg.color}` : '2px solid transparent',
@@ -585,7 +585,7 @@ export default function ErrorsPage() {
                         <Link
                           href="/sessions"
                           onClick={e => e.stopPropagation()}
-                          style={{ color: '#a78bfa', fontSize: 11, fontFamily: 'monospace' }}
+                          style={{ color: 'var(--cp-text-accent-light)', fontSize: 11, fontFamily: 'monospace' }}
                           className="hover:underline truncate"
                         >
                           {entry.session_id.slice(0, 10) + '…'}
@@ -616,7 +616,7 @@ export default function ErrorsPage() {
 
                   {/* Inline detail panel */}
                   {isSelected && (
-                    <div className="px-3 pb-3" style={{ borderBottom: idx < items.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                    <div className="px-3 pb-3" style={{ borderBottom: idx < items.length - 1 ? '1px solid var(--cp-input-bg)' : 'none' }}>
                       <ErrorDetailPanel entry={entry} onClose={() => setSelectedEntry(null)} />
                     </div>
                   )}
@@ -630,7 +630,7 @@ export default function ErrorsPage() {
                 <button
                   onClick={() => loadData(false)}
                   disabled={loadingMore}
-                  style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: '#c4b5fd' }}
+                  style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--cp-text-accent-light)' }}
                   className="px-6 py-2 rounded-xl text-sm font-semibold hover:bg-purple-500/20 disabled:opacity-50 transition-all"
                 >
                   {loadingMore ? 'Loading…' : `Load more (${items.length} of ${total})`}

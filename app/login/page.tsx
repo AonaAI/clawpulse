@@ -40,7 +40,7 @@ export default function LoginPage() {
     <div
       className="min-h-screen flex items-center justify-center px-4"
       style={{
-        background: 'radial-gradient(ellipse at 50% 0%, #1a0533 0%, #11021d 40%, #0a0118 100%)',
+        background: 'var(--cp-page-gradient)',
       }}
     >
       {/* Background glow effects */}
@@ -87,7 +87,7 @@ export default function LoginPage() {
           </div>
           <h1
             className="text-2xl font-bold tracking-tight"
-            style={{ color: '#f8f4ff' }}
+            style={{ color: 'var(--cp-text-primary)' }}
           >
             {APP_NAME}
           </h1>
@@ -105,17 +105,17 @@ export default function LoginPage() {
             background: 'rgba(255,255,255,0.025)',
             border: '1px solid rgba(109, 40, 217, 0.22)',
             backdropFilter: 'blur(20px)',
-            boxShadow: '0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.4), inset 0 1px 0 var(--cp-border-subtle)',
           }}
           className="rounded-2xl px-7 py-8"
         >
           <h2
             className="text-base font-semibold mb-1"
-            style={{ color: '#f8f4ff' }}
+            style={{ color: 'var(--cp-text-primary)' }}
           >
             Sign in to your account
           </h2>
-          <p className="text-xs mb-7" style={{ color: '#6b7280' }}>
+          <p className="text-xs mb-7" style={{ color: 'var(--cp-text-muted)' }}>
             Protected workspace — authorized access only
           </p>
 
@@ -125,7 +125,7 @@ export default function LoginPage() {
               <label
                 htmlFor="email"
                 className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
-                style={{ color: '#9ca3af' }}
+                style={{ color: 'var(--cp-text-secondary)' }}
               >
                 Email
               </label>
@@ -139,17 +139,17 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(109, 40, 217, 0.25)',
-                  color: '#f8f4ff',
+                  background: 'var(--cp-input-bg)',
+                  border: '1px solid var(--cp-border-stronger)',
+                  color: 'var(--cp-text-primary)',
                   caretColor: '#8b5cf6',
                 }}
                 onFocus={e => {
                   e.currentTarget.style.border = '1px solid rgba(139, 92, 246, 0.6)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(109, 40, 217, 0.12)'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px var(--cp-divider-accent)'
                 }}
                 onBlur={e => {
-                  e.currentTarget.style.border = '1px solid rgba(109, 40, 217, 0.25)'
+                  e.currentTarget.style.border = '1px solid var(--cp-border-stronger)'
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               />
@@ -160,7 +160,7 @@ export default function LoginPage() {
               <label
                 htmlFor="password"
                 className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
-                style={{ color: '#9ca3af' }}
+                style={{ color: 'var(--cp-text-secondary)' }}
               >
                 Password
               </label>
@@ -174,17 +174,17 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(109, 40, 217, 0.25)',
-                  color: '#f8f4ff',
+                  background: 'var(--cp-input-bg)',
+                  border: '1px solid var(--cp-border-stronger)',
+                  color: 'var(--cp-text-primary)',
                   caretColor: '#8b5cf6',
                 }}
                 onFocus={e => {
                   e.currentTarget.style.border = '1px solid rgba(139, 92, 246, 0.6)'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(109, 40, 217, 0.12)'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px var(--cp-divider-accent)'
                 }}
                 onBlur={e => {
-                  e.currentTarget.style.border = '1px solid rgba(109, 40, 217, 0.25)'
+                  e.currentTarget.style.border = '1px solid var(--cp-border-stronger)'
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               />
@@ -203,7 +203,7 @@ export default function LoginPage() {
                     : '1.5px solid rgba(109, 40, 217, 0.35)',
                   background: rememberMe
                     ? 'linear-gradient(135deg, #6412A6 0%, #4c1d95 100%)'
-                    : 'rgba(255,255,255,0.03)',
+                    : 'var(--cp-card-bg)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -220,7 +220,7 @@ export default function LoginPage() {
               </div>
               <span
                 className="text-xs font-medium"
-                style={{ color: '#9ca3af' }}
+                style={{ color: 'var(--cp-text-secondary)' }}
                 onClick={() => setRememberMe(v => !v)}
               >
                 Remember me
@@ -274,7 +274,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs mt-6" style={{ color: '#4b5563' }}>
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--cp-text-dim)' }}>
           {APP_NAME} — {APP_DESCRIPTION}
         </p>
       </div>

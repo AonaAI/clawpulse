@@ -132,8 +132,8 @@ const AgentCard = memo(function AgentCard({ agent, tokenStats, mission, pulseTyp
   return (
     <div
       style={{
-        background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'rgba(255, 255, 255, 0.02)',
-        border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'rgba(109, 40, 217, 0.14)'}`,
+        background: isWorking ? 'rgba(124, 58, 237, 0.04)' : 'var(--cp-card-bg)',
+        border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.28)' : 'var(--cp-border)'}`,
         backdropFilter: 'blur(12px)',
         boxShadow: isWorking
           ? '0 0 0 1px rgba(139, 92, 246, 0.06), 0 8px 32px rgba(0, 0, 0, 0.4)'
@@ -147,8 +147,8 @@ const AgentCard = memo(function AgentCard({ agent, tokenStats, mission, pulseTyp
         style={{
           background: isWorking
             ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(79, 46, 220, 0.04) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%)',
-          borderBottom: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.05)'}`,
+            : 'linear-gradient(135deg, var(--cp-card-bg) 0%, transparent 100%)',
+          borderBottom: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.15)' : 'var(--cp-separator-bg)'}`,
         }}
         className="p-5"
       >
@@ -158,7 +158,7 @@ const AgentCard = memo(function AgentCard({ agent, tokenStats, mission, pulseTyp
               style={{
                 background: isWorking
                   ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(79, 46, 220, 0.15) 100%)'
-                  : 'rgba(255, 255, 255, 0.06)',
+                  : 'var(--cp-border-subtle)',
                 border: `1px solid ${isWorking ? 'rgba(139, 92, 246, 0.5)' : 'rgba(255, 255, 255, 0.08)'}`,
                 boxShadow: isWorking ? '0 0 20px rgba(124, 58, 237, 0.25)' : 'none',
                 color: isWorking ? '#c4b5fd' : '#6b7280',
@@ -234,7 +234,7 @@ const AgentCard = memo(function AgentCard({ agent, tokenStats, mission, pulseTyp
                   <span
                     key={id}
                     style={{
-                      color: '#8b5cf6',
+                      color: 'var(--cp-text-accent-light)',
                       background: 'rgba(139, 92, 246, 0.1)',
                       border: '1px solid rgba(139, 92, 246, 0.22)',
                       fontSize: '11px',
@@ -282,7 +282,7 @@ const AgentCard = memo(function AgentCard({ agent, tokenStats, mission, pulseTyp
               <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">Tokens (7d)</span>
             </div>
             <div className="text-right">
-              <span style={{ color: '#a78bfa' }} className="text-xs font-bold">{formatTokensShort(tokenStats.total_tokens)}</span>
+              <span style={{ color: 'var(--cp-text-accent-light)' }} className="text-xs font-bold">{formatTokensShort(tokenStats.total_tokens)}</span>
               <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs ml-1">${tokenStats.total_cost.toFixed(3)}</span>
             </div>
           </div>

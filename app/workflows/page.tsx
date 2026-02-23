@@ -195,7 +195,7 @@ function FlowDiagram({ sessions }: { sessions: SessionRow[] }) {
             <div className="flex flex-col items-center gap-1">
               <div
                 style={{
-                  background: 'rgba(109,40,217,0.12)',
+                  background: 'var(--cp-divider-accent)',
                   border: `1px solid ${cfg.border}`,
                   color: cfg.color,
                   boxShadow: `0 0 12px ${cfg.color}20`,
@@ -251,9 +251,9 @@ function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
         {/* Initiator avatar */}
         <div
           style={{
-            background: 'rgba(109,40,217,0.12)',
+            background: 'var(--cp-divider-accent)',
             border: '1px solid rgba(139,92,246,0.22)',
-            color: '#8b5cf6',
+            color: 'var(--cp-text-accent-light)',
             width: 36,
             height: 36,
             minWidth: 36,
@@ -306,7 +306,7 @@ function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
         <div className="px-5 py-4 space-y-3">
           {/* Full flow diagram */}
           <div className="flex items-center gap-2 mb-4">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#a78bfa', flexShrink: 0 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--cp-text-accent-light)', flexShrink: 0 }}>
               <line x1="6" y1="3" x2="6" y2="15" />
               <circle cx="18" cy="6" r="3" />
               <circle cx="6" cy="18" r="3" />
@@ -315,7 +315,7 @@ function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
             <span style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pipeline Flow</span>
           </div>
           <div
-            style={{ background: 'rgba(109,40,217,0.04)', border: '1px solid rgba(109,40,217,0.12)', borderRadius: 10 }}
+            style={{ background: 'rgba(109,40,217,0.04)', border: '1px solid var(--cp-divider-accent)', borderRadius: 10 }}
             className="p-4 mb-4 overflow-x-auto"
           >
             <FlowDiagram sessions={pipeline.sessions} />
@@ -340,7 +340,7 @@ function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
                 >
                   {/* Step number */}
                   <div
-                    style={{ background: 'rgba(109,40,217,0.15)', color: '#a78bfa', width: 22, height: 22, minWidth: 22, fontSize: 10, fontWeight: 800, borderRadius: 6 }}
+                    style={{ background: 'rgba(109,40,217,0.15)', color: 'var(--cp-text-accent-light)', width: 22, height: 22, minWidth: 22, fontSize: 10, fontWeight: 800, borderRadius: 6 }}
                     className="flex items-center justify-center flex-shrink-0"
                   >
                     {idx + 1}
@@ -348,7 +348,7 @@ function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
 
                   {/* Agent avatar */}
                   <div
-                    style={{ background: 'rgba(109,40,217,0.12)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', width: 28, height: 28, minWidth: 28, fontSize: 10, fontWeight: 700 }}
+                    style={{ background: 'var(--cp-divider-accent)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--cp-text-accent-light)', width: 28, height: 28, minWidth: 28, fontSize: 10, fontWeight: 700 }}
                     className="rounded-lg flex items-center justify-center flex-shrink-0"
                   >
                     {getInitials(session.agent_name)}
@@ -485,7 +485,7 @@ export default function WorkflowsPage() {
         <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm mt-1.5 font-medium">
           Pipeline visualization — agent collaboration &amp; task chains
           {allPipelines.length > 0 && (
-            <span style={{ color: '#a78bfa' }} className="ml-2 font-bold">
+            <span style={{ color: 'var(--cp-text-accent-light)' }} className="ml-2 font-bold">
               · {allPipelines.length} pipeline{allPipelines.length !== 1 ? 's' : ''} (7d)
             </span>
           )}

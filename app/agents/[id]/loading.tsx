@@ -12,7 +12,7 @@ export default function AgentDetailLoading() {
       <div
         style={{
           background: 'var(--cp-page-gradient)',
-          border: '1px solid rgba(109, 40, 217, 0.18)',
+          border: '1px solid var(--cp-border-strong)',
           backdropFilter: 'blur(12px)',
         }}
         className="rounded-2xl p-6 mb-6"
@@ -37,8 +37,8 @@ export default function AgentDetailLoading() {
           {/* Mission */}
           <div
             style={{
-              background: 'rgba(17,2,29,0.6)',
-              border: '1px solid rgba(109,40,217,0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
               backdropFilter: 'blur(12px)',
             }}
             className="rounded-xl p-5"
@@ -54,15 +54,15 @@ export default function AgentDetailLoading() {
           {/* Activity */}
           <div
             style={{
-              background: 'rgba(17,2,29,0.6)',
-              border: '1px solid rgba(109,40,217,0.14)',
+              background: 'var(--cp-card-bg)',
+              border: '1px solid var(--cp-border)',
               backdropFilter: 'blur(12px)',
             }}
             className="rounded-xl overflow-hidden"
           >
             <div
               className="px-5 py-4"
-              style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+              style={{ borderBottom: '1px solid var(--cp-input-bg)' }}
             >
               <div className="skeleton-shimmer" style={{ width: 130, height: 16, borderRadius: 6 }} />
             </div>
@@ -70,7 +70,7 @@ export default function AgentDetailLoading() {
               <div
                 key={i}
                 className="px-5 py-3.5 flex items-start gap-3"
-                style={{ borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+                style={{ borderBottom: i < 4 ? '1px solid var(--cp-input-bg)' : 'none' }}
               >
                 <div className="skeleton-shimmer" style={{ width: 28, height: 28, borderRadius: 8 }} />
                 <div className="flex-1 space-y-1.5">
@@ -89,8 +89,8 @@ export default function AgentDetailLoading() {
             <div
               key={i}
               style={{
-                background: 'rgba(17,2,29,0.6)',
-                border: '1px solid rgba(109,40,217,0.14)',
+                background: 'var(--cp-card-bg)',
+                border: '1px solid var(--cp-border)',
                 backdropFilter: 'blur(12px)',
               }}
               className="rounded-xl p-4 space-y-2"

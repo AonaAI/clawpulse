@@ -4,8 +4,8 @@ function FilterBarSkeleton() {
   return (
     <div
       style={{
-        background: 'rgba(17, 2, 29, 0.6)',
-        border: '1px solid rgba(109, 40, 217, 0.14)',
+        background: 'var(--cp-card-bg)',
+        border: '1px solid var(--cp-border)',
         backdropFilter: 'blur(12px)',
       }}
       className="rounded-xl p-4 mb-6 space-y-3"

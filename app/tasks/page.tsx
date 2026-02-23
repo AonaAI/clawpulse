@@ -105,7 +105,7 @@ const TaskCard = memo(function TaskCard({ task, onEdit, onDelete }: { task: Task
       {agent && (
         <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--cp-divider)' }}>
           <div
-            style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.2)', width: 20, height: 20, minWidth: 20, fontSize: 9, color: '#8b5cf6' }}
+            style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.2)', width: 20, height: 20, minWidth: 20, fontSize: 9, color: 'var(--cp-text-accent-light)' }}
             className="rounded-md flex items-center justify-center font-bold"
           >{agent.name.slice(0, 2).toUpperCase()}</div>
           <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs font-medium">{agent.name}</span>
@@ -352,7 +352,7 @@ export default function TasksPage() {
       {/* Stats */}
       <div className="flex items-center gap-3 mb-8 flex-wrap">
         {[
-          { label: 'Total',     value: totalTasks,    color: '#a78bfa', bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.18)' },
+          { label: 'Total',     value: totalTasks,    color: 'var(--cp-text-accent-light)', bg: 'rgba(167,139,250,0.06)', border: 'rgba(167,139,250,0.18)' },
           { label: 'Completed', value: doneTasks,     color: '#34d399', bg: 'rgba(52,211,153,0.06)',  border: 'rgba(52,211,153,0.18)'  },
           { label: 'Blocked',   value: blockedTasks,  color: '#f87171', bg: 'rgba(248,113,113,0.06)', border: 'rgba(248,113,113,0.18)' },
           { label: 'Critical',  value: criticalTasks, color: '#fbbf24', bg: 'rgba(251,191,36,0.06)',  border: 'rgba(251,191,36,0.18)'  },
@@ -390,9 +390,9 @@ export default function TasksPage() {
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       style={{
-                        background: snapshot.isDraggingOver ? `${col.color}08` : 'rgba(10, 1, 24, 0.85)',
+                        background: snapshot.isDraggingOver ? `${col.color}08` : 'var(--cp-card-solid-bg)',
                         border: `1px solid ${snapshot.isDraggingOver ? col.color + '30' : col.border}`,
-                        borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+                        borderTop: '1px solid var(--cp-input-bg)',
                         borderRadius: '0 0 12px 12px',
                         transition: 'background 0.2s, border-color 0.2s',
                       }}
