@@ -19,8 +19,8 @@ export default function NotificationProvider() {
 
   return (
     <>
-      {/* Fixed bell in top-right */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-1">
+      {/* Fixed bell in top-right - responsive positioning to avoid mobile header overlap */}
+      <div className="fixed top-20 md:top-4 right-4 z-50 flex items-center gap-1">
         <ThemeToggle />
         <NotificationBell
           notifications={notifications}
