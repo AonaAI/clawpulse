@@ -11,6 +11,7 @@ import ExportButton, { exportToCSV } from '@/components/ExportButton'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
 import { useProject } from '@/components/ProjectProvider'
+import { normalizeModelName } from '@/lib/model-utils'
 
 function formatLastActive(ms: number | null): string {
   if (ms === null) return 'Never'
@@ -26,9 +27,11 @@ function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
   return AGENTS.map(agent => {
     const lookup = agent.dir ?? agent.id
     const data = liveMap.get(lookup)
+    // Prefer static config model (friendly name); fall back to normalized live model from DB
+    const resolvedModel = agent.model || normalizeModelName(data?.model) || 'Unknown'
     return {
       ...agent,
-      ...(data?.model ? { model: data.model } : {}),
+      model: resolvedModel,
       status: (data?.status ?? 'offline') as AgentStatus,
       sessionCount: data?.sessionCount ?? 0,
       lastActive: data?.lastActive ?? null,
