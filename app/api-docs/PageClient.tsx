@@ -47,6 +47,79 @@ const METHOD_COLORS: Record<string, string> = {
   DELETE: '#ef4444',
 }
 
+// ─── Admin API Data ─────────────────────────────────────────────────────────
+
+interface AdminEndpoint {
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  path: string
+  description: string
+  requestBody?: {
+    parameters: { name: string; type: string; required: boolean; description: string }[]
+  }
+  queryParams?: { name: string; type: string; required: boolean; description: string }[]
+  exampleRequest?: string
+  exampleResponse: string
+  restrictions?: string[]
+}
+
+const ADMIN_ENDPOINTS: AdminEndpoint[] = [
+  {
+    method: 'GET',
+    path: '/api/admin/users',
+    description: 'List all users with their roles',
+    exampleResponse: JSON.stringify({
+      users: [
+        {
+          id: 'uuid',
+          email: 'user@example.com',
+          last_sign_in_at: '2024-02-24T12:00:00Z',
+          created_at: '2024-01-01T00:00:00Z',
+          role: 'admin',
+        },
+      ],
+    }, null, 2),
+  },
+  {
+    method: 'POST',
+    path: '/api/admin/users',
+    description: 'Invite a new user by email',
+    requestBody: {
+      parameters: [
+        { name: 'email', type: 'string', required: true, description: 'Email address to invite' },
+        { name: 'role', type: 'string', required: false, description: 'One of: admin, editor, viewer (default: viewer)' },
+      ],
+    },
+    exampleRequest: JSON.stringify({ email: 'newuser@example.com', role: 'viewer' }, null, 2),
+    exampleResponse: JSON.stringify({
+      success: true,
+      user: { id: 'uuid', email: 'newuser@example.com' },
+    }, null, 2),
+  },
+  {
+    method: 'PATCH',
+    path: '/api/admin/users',
+    description: "Update a user's role",
+    requestBody: {
+      parameters: [
+        { name: 'userId', type: 'string', required: true, description: 'User ID to update' },
+        { name: 'role', type: 'string', required: true, description: 'New role: admin, editor, or viewer' },
+      ],
+    },
+    exampleRequest: JSON.stringify({ userId: 'uuid', role: 'editor' }, null, 2),
+    exampleResponse: JSON.stringify({ success: true }, null, 2),
+  },
+  {
+    method: 'DELETE',
+    path: '/api/admin/users',
+    description: 'Delete a user account',
+    queryParams: [
+      { name: 'userId', type: 'string', required: true, description: 'User ID to delete' },
+    ],
+    restrictions: ['Cannot delete your own account'],
+    exampleResponse: JSON.stringify({ success: true }, null, 2),
+  },
+]
+
 function buildTableDocs(): TableDoc[] {
   const base = `${SUPABASE_URL}/rest/v1`
   return [
@@ -290,6 +363,149 @@ const EndpointCard = memo(function EndpointCard({ endpoint }: { endpoint: Endpoi
               {endpoint.exampleResponse}
             </pre>
           </div>
+        </div>
+      )}
+    </div>
+  )
+})
+
+const AdminEndpointCard = memo(function AdminEndpointCard({ endpoint }: { endpoint: AdminEndpoint }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div
+      style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-strong)' }}
+      className="rounded-xl overflow-hidden"
+    >
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <MethodBadge method={endpoint.method} />
+        <code style={{ color: 'var(--cp-text-primary)' }} className="text-sm font-mono flex-1 truncate">
+          {endpoint.path}
+        </code>
+        <span style={{ color: 'var(--cp-text-muted)' }} className="text-xs hidden sm:block">{endpoint.description}</span>
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cp-text-dim)"
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          className={`transition-transform flex-shrink-0 ${expanded ? 'rotate-180' : ''}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {expanded && (
+        <div style={{ borderTop: '1px solid var(--cp-border-strong)' }} className="px-4 py-4 space-y-4">
+          <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm">{endpoint.description}</p>
+
+          {/* Query Parameters */}
+          {endpoint.queryParams && endpoint.queryParams.length > 0 && (
+            <div>
+              <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-2">Query Parameters</span>
+              <div className="space-y-2">
+                {endpoint.queryParams.map(param => (
+                  <div
+                    key={param.name}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--cp-border-strong)' }}
+                    className="p-2 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <code style={{ color: '#a5f3fc' }} className="text-xs font-mono">{param.name}</code>
+                      <span style={{ color: '#fbbf24', background: 'rgba(245,158,11,0.1)' }} className="px-1.5 py-0.5 rounded text-xs font-mono">
+                        {param.type}
+                      </span>
+                      {param.required && (
+                        <span style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)' }} className="px-1.5 py-0.5 rounded text-xs font-semibold">
+                          required
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs">{param.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Request Body Parameters */}
+          {endpoint.requestBody && (
+            <div>
+              <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider block mb-2">Request Body</span>
+              <div className="space-y-2">
+                {endpoint.requestBody.parameters.map(param => (
+                  <div
+                    key={param.name}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--cp-border-strong)' }}
+                    className="p-2 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <code style={{ color: '#a5f3fc' }} className="text-xs font-mono">{param.name}</code>
+                      <span style={{ color: '#fbbf24', background: 'rgba(245,158,11,0.1)' }} className="px-1.5 py-0.5 rounded text-xs font-mono">
+                        {param.type}
+                      </span>
+                      {param.required && (
+                        <span style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)' }} className="px-1.5 py-0.5 rounded text-xs font-semibold">
+                          required
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs">{param.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Example Request */}
+          {endpoint.exampleRequest && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider">Example Request</span>
+                <CopyButton text={endpoint.exampleRequest} />
+              </div>
+              <pre
+                style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--cp-border-strong)', color: '#fde68a' }}
+                className="p-3 rounded-lg text-xs overflow-x-auto font-mono"
+              >
+                {endpoint.exampleRequest}
+              </pre>
+            </div>
+          )}
+
+          {/* Example Response */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider">Example Response</span>
+              <CopyButton text={endpoint.exampleResponse} />
+            </div>
+            <pre
+              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--cp-border-strong)', color: '#86efac' }}
+              className="p-3 rounded-lg text-xs overflow-x-auto font-mono"
+            >
+              {endpoint.exampleResponse}
+            </pre>
+          </div>
+
+          {/* Restrictions */}
+          {endpoint.restrictions && endpoint.restrictions.length > 0 && (
+            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }} className="rounded-xl p-3">
+              <div className="flex items-start gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" className="mt-0.5 flex-shrink-0">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div>
+                  <p style={{ color: '#fca5a5' }} className="text-xs font-semibold mb-1">Restrictions</p>
+                  <ul className="space-y-1">
+                    {endpoint.restrictions.map((restriction, i) => (
+                      <li key={i} style={{ color: '#fca5a5' }} className="text-xs">• {restriction}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -625,10 +841,140 @@ function WebhooksSection() {
   )
 }
 
+// ─── Admin API Section ──────────────────────────────────────────────────────
+
+function AdminApiSection() {
+  return (
+    <div className="space-y-6">
+      {/* Authentication Info */}
+      <div
+        style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-strong)' }}
+        className="rounded-2xl p-6 space-y-4"
+      >
+        <div className="flex items-center gap-3">
+          <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)' }} className="w-10 h-10 rounded-xl flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <div>
+            <h3 style={{ color: 'var(--cp-text-primary)' }} className="text-base font-bold">Authentication Required</h3>
+            <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs">All endpoints require admin role + valid session</p>
+          </div>
+        </div>
+
+        <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }} className="rounded-xl p-3">
+          <p style={{ color: '#fca5a5' }} className="text-xs">
+            <strong>Requirements:</strong> Valid Supabase authentication (session cookie) + <code className="px-1 py-0.5 rounded" style={{ background: 'rgba(0,0,0,0.2)' }}>role = 'admin'</code> in the <code className="px-1 py-0.5 rounded" style={{ background: 'rgba(0,0,0,0.2)' }}>user_roles</code> table.
+          </p>
+        </div>
+
+        <div>
+          <span style={{ color: 'var(--cp-text-dim)' }} className="text-xs font-semibold uppercase tracking-wider">Base URL</span>
+          <div className="flex items-center gap-2 mt-1">
+            <code
+              style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--cp-border-strong)', color: '#86efac' }}
+              className="flex-1 px-3 py-2 rounded-lg text-xs font-mono"
+            >
+              /api/admin
+            </code>
+            <CopyButton text="/api/admin" />
+          </div>
+        </div>
+      </div>
+
+      {/* Rate Limiting */}
+      <div
+        style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-strong)' }}
+        className="rounded-2xl p-6 space-y-3"
+      >
+        <div className="flex items-center gap-3">
+          <div style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }} className="w-10 h-10 rounded-xl flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div>
+            <h3 style={{ color: 'var(--cp-text-primary)' }} className="text-base font-bold">Rate Limiting</h3>
+            <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs">20 requests per minute per user</p>
+          </div>
+        </div>
+        <p style={{ color: 'var(--cp-text-muted)' }} className="text-xs">
+          When rate limited, the API returns status <code className="px-1.5 py-0.5 rounded font-mono" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>429</code> with error message.
+        </p>
+      </div>
+
+      {/* Error Responses */}
+      <div
+        style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-strong)' }}
+        className="rounded-2xl p-6 space-y-3"
+      >
+        <h3 style={{ color: 'var(--cp-text-primary)' }} className="text-base font-bold mb-3">Error Responses</h3>
+        <div className="space-y-2">
+          {[
+            { status: 401, error: 'Unauthorized', description: 'Not authenticated or session expired' },
+            { status: 403, error: 'Forbidden', description: 'Authenticated but not an admin' },
+            { status: 429, error: 'Rate limit exceeded', description: 'Too many requests (20/minute per user)' },
+          ].map(err => (
+            <div
+              key={err.status}
+              style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--cp-border-strong)' }}
+              className="p-3 rounded-lg flex items-center gap-3"
+            >
+              <code style={{ color: '#ef4444', background: 'rgba(239,68,68,0.15)' }} className="px-2 py-1 rounded font-mono text-xs font-bold">
+                {err.status}
+              </code>
+              <div className="flex-1">
+                <div style={{ color: 'var(--cp-text-primary)' }} className="text-xs font-semibold">{err.error}</div>
+                <div style={{ color: 'var(--cp-text-dim)' }} className="text-xs">{err.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Endpoints */}
+      <div className="space-y-3">
+        <h2 style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-bold">User Management Endpoints</h2>
+        <div className="space-y-2">
+          {ADMIN_ENDPOINTS.map((endpoint, i) => (
+            <AdminEndpointCard key={i} endpoint={endpoint} />
+          ))}
+        </div>
+      </div>
+
+      {/* Security Note */}
+      <div
+        style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}
+        className="rounded-2xl p-6"
+      >
+        <div className="flex items-start gap-3">
+          <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)' }} className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div>
+            <h3 style={{ color: '#22c55e' }} className="text-base font-bold mb-2">Server-Side Only</h3>
+            <p style={{ color: '#86efac' }} className="text-xs mb-3">
+              The <code className="px-1.5 py-0.5 rounded font-mono" style={{ background: 'rgba(0,0,0,0.2)' }}>SUPABASE_SERVICE_ROLE_KEY</code> is only available server-side via API routes, server components, and the <code className="px-1.5 py-0.5 rounded font-mono" style={{ background: 'rgba(0,0,0,0.2)' }}>getAdminClient()</code> helper.
+            </p>
+            <p style={{ color: '#86efac' }} className="text-xs">
+              <strong>Never</strong> expose the service role key to the client. All admin operations must go through the secure API routes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function ApiDocsPage() {
-  const [activeTab, setActiveTab] = useState<'docs' | 'webhooks'>('docs')
+  const [activeTab, setActiveTab] = useState<'supabase' | 'admin' | 'webhooks'>('supabase')
   const tableDocs = buildTableDocs()
 
   return (
@@ -649,15 +995,15 @@ export default function ApiDocsPage() {
             </svg>
           </div>
           <div>
-            <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-xl font-bold">API & Webhooks</h1>
-            <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm">Supabase REST API reference and webhook configuration</p>
+            <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-xl font-bold">API Documentation</h1>
+            <p style={{ color: 'var(--cp-text-muted)' }} className="text-sm">REST API reference, admin endpoints, and webhook configuration</p>
           </div>
         </div>
       </div>
 
       {/* Tab switcher */}
       <div className="flex gap-1" style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border-strong)', borderRadius: '12px', padding: '4px' }}>
-        {(['docs', 'webhooks'] as const).map(tab => (
+        {(['supabase', 'admin', 'webhooks'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -667,12 +1013,12 @@ export default function ApiDocsPage() {
             }}
             className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
           >
-            {tab === 'docs' ? '📖 API Documentation' : '🔗 Webhooks'}
+            {tab === 'supabase' ? '📊 Supabase API' : tab === 'admin' ? '🔐 Admin API' : '🔗 Webhooks'}
           </button>
         ))}
       </div>
 
-      {activeTab === 'docs' ? (
+      {activeTab === 'supabase' ? (
         <div className="space-y-6">
           <ApiKeySection />
 
@@ -690,6 +1036,8 @@ export default function ApiDocsPage() {
             </div>
           ))}
         </div>
+      ) : activeTab === 'admin' ? (
+        <AdminApiSection />
       ) : (
         <WebhooksSection />
       )}
