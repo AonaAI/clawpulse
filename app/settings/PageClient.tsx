@@ -75,6 +75,7 @@ function InviteModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim()) return
+    if (!supabaseAdmin) { setError("Admin client not configured"); return }
     setLoading(true)
     setError(null)
 
@@ -227,6 +228,7 @@ function DeleteModal({
   const [error, setError] = useState<string | null>(null)
 
   const handleDelete = async () => {
+    if (!supabaseAdmin) { setError("Admin client not configured"); return }
     setLoading(true)
     setError(null)
     const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(user.id)
@@ -324,6 +326,11 @@ function UsersTab() {
   const [roleUpdating, setRoleUpdating] = useState<string | null>(null)
 
   const loadUsers = useCallback(async () => {
+    if (!supabaseAdmin) {
+      setUsers([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     const [{ data: authData }, { data: rolesData }] = await Promise.all([
       supabaseAdmin.auth.admin.listUsers(),
@@ -372,6 +379,16 @@ function UsersTab() {
     if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`
     if (diff < 7 * 86_400_000) return `${Math.floor(diff / 86_400_000)}d ago`
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  if (!supabaseAdmin) {
+    return (
+      <div className="p-8 text-center rounded-2xl" style={{ background: "var(--cp-card-bg)", border: "1px solid var(--cp-border-strong)" }}>
+        <p style={{ color: "var(--cp-text-muted)" }} className="text-sm">
+          User management requires admin configuration. Set NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY in your environment.
+        </p>
+      </div>
+    )
   }
 
   return (
