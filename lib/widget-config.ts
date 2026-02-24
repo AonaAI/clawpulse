@@ -14,10 +14,11 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: 'stats-bar', label: 'Stats Bar', enabled: true, compact: false, order: 0, collapsed: false, size: 'full' },
   { id: 'quick-actions', label: 'Quick Actions', enabled: true, compact: false, order: 1, collapsed: false, size: 'full' },
   { id: 'agent-grid', label: 'Agent Status Grid', enabled: true, compact: false, order: 2, collapsed: false, size: 'full' },
-  { id: 'cost-summary', label: 'Cost Summary', enabled: true, compact: false, order: 3, collapsed: false, size: 'half' },
-  { id: 'active-tasks', label: 'Active Tasks', enabled: true, compact: false, order: 4, collapsed: false, size: 'half' },
-  { id: 'activity-feed', label: 'Activity Feed', enabled: true, compact: false, order: 5, collapsed: false, size: 'half' },
-  { id: 'recent-deployments', label: 'Recent Deployments', enabled: true, compact: false, order: 6, collapsed: false, size: 'half' },
+  { id: 'budget-status', label: 'Budget Status', enabled: true, compact: false, order: 3, collapsed: false, size: 'half' },
+  { id: 'cost-summary', label: 'Cost Summary', enabled: true, compact: false, order: 4, collapsed: false, size: 'half' },
+  { id: 'active-tasks', label: 'Active Tasks', enabled: true, compact: false, order: 5, collapsed: false, size: 'half' },
+  { id: 'activity-feed', label: 'Activity Feed', enabled: true, compact: false, order: 6, collapsed: false, size: 'half' },
+  { id: 'recent-deployments', label: 'Recent Deployments', enabled: true, compact: false, order: 7, collapsed: false, size: 'half' },
 ]
 
 const STORAGE_KEY = 'clawpulse-widget-layout'

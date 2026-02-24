@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase-client'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type AlertType = 'agent_offline' | 'error_rate' | 'token_budget' | 'session_duration' | 'agent_idle'
+type AlertType = 'agent_offline' | 'error_rate' | 'token_budget' | 'session_duration' | 'agent_idle' | 'cost_budget'
 type Severity = 'info' | 'warning' | 'critical'
 
 interface AlertRule {
@@ -19,6 +19,9 @@ interface AlertRule {
   enabled: boolean
   createdAt: string
   lastTriggered?: string
+  budgetScope?: 'global' | 'per_agent'
+  alertAt80?: boolean
+  alertAt100?: boolean
 }
 
 interface AlertHistoryEntry {
@@ -45,6 +48,7 @@ const ALERT_TYPE_CONFIG: Record<AlertType, {
   token_budget:     { label: 'Token Budget',          description: (t) => `Token usage exceeds ${t.toLocaleString()} tokens`,      unit: 'tokens',  defaultThreshold: 100000 },
   session_duration: { label: 'Session Duration',      description: (t) => `Session duration anomaly: exceeds ${t} minutes`,        unit: 'minutes', defaultThreshold: 120    },
   agent_idle:       { label: 'Agent Idle Too Long',   description: (t) => `Agent idle for more than ${t} minutes`,                 unit: 'minutes', defaultThreshold: 30     },
+  cost_budget:      { label: 'Cost Budget',           description: (t) => `Monthly spend alert: budget $${t} (warns at 80% & 100%)`, unit: '$',     defaultThreshold: 500    },
 }
 
 const SEVERITY_CONFIG: Record<Severity, { color: string; bg: string; border: string; label: string }> = {
@@ -65,10 +69,49 @@ function formatTs(iso: string): string {
   })
 }
 
+const DEFAULT_BUDGET_RULES: AlertRule[] = [
+  {
+    id: 'default-budget-80',
+    name: '80% Budget Warning',
+    type: 'cost_budget',
+    threshold: 3000,
+    severity: 'warning',
+    targetAgent: 'all',
+    targetAgentName: 'All agents',
+    enabled: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    budgetScope: 'global',
+    alertAt80: true,
+    alertAt100: false,
+  },
+  {
+    id: 'default-budget-100',
+    name: '100% Budget Exceeded',
+    type: 'cost_budget',
+    threshold: 3000,
+    severity: 'critical',
+    targetAgent: 'all',
+    targetAgentName: 'All agents',
+    enabled: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    budgetScope: 'global',
+    alertAt80: false,
+    alertAt100: true,
+  },
+]
+
 function loadRules(): AlertRule[] {
-  if (typeof window === 'undefined') return []
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') }
-  catch { return [] }
+  if (typeof window === 'undefined') return DEFAULT_BUDGET_RULES
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return DEFAULT_BUDGET_RULES
+    const saved: AlertRule[] = JSON.parse(raw)
+    // If saved rules don't include budget defaults, prepend them
+    const hasDefaults = saved.some(r => r.id === 'default-budget-80' || r.id === 'default-budget-100')
+    if (!hasDefaults) return [...DEFAULT_BUDGET_RULES, ...saved]
+    return saved
+  }
+  catch { return DEFAULT_BUDGET_RULES }
 }
 
 function saveRules(rules: AlertRule[]): void {
@@ -98,6 +141,12 @@ function AlertTypeIcon({ type }: { type: AlertType }) {
   if (type === 'session_duration') return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  )
+  if (type === 'cost_budget') return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   )
   return (
@@ -239,16 +288,20 @@ function CreateAlertModal({ agents, onClose, onCreate }: {
   const [threshold, setThreshold] = useState<number>(ALERT_TYPE_CONFIG['agent_offline'].defaultThreshold)
   const [severity, setSeverity] = useState<Severity>('warning')
   const [targetAgent, setTargetAgent] = useState('all')
+  const [budgetScope, setBudgetScope] = useState<'global' | 'per_agent'>('global')
+  const [alertAt80, setAlertAt80] = useState(true)
+  const [alertAt100, setAlertAt100] = useState(true)
 
   const handleTypeChange = (t: AlertType) => {
     setAlertType(t)
     setThreshold(ALERT_TYPE_CONFIG[t].defaultThreshold)
+    if (t === 'cost_budget') setSeverity('warning')
   }
 
   const handleSubmit = () => {
     if (!name.trim()) return
     const agent = agents.find(a => a.id === targetAgent)
-    onCreate({
+    const rule: Omit<AlertRule, 'id' | 'createdAt'> = {
       name: name.trim(),
       type: alertType,
       threshold,
@@ -256,7 +309,13 @@ function CreateAlertModal({ agents, onClose, onCreate }: {
       targetAgent,
       targetAgentName: agent?.name || 'All agents',
       enabled: true,
-    })
+    }
+    if (alertType === 'cost_budget') {
+      rule.budgetScope = budgetScope
+      rule.alertAt80 = alertAt80
+      rule.alertAt100 = alertAt100
+    }
+    onCreate(rule)
     onClose()
   }
 
@@ -412,6 +471,79 @@ function CreateAlertModal({ agents, onClose, onCreate }: {
               {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
+
+          {/* Cost Budget specific options */}
+          {alertType === 'cost_budget' && (
+            <>
+              <div>
+                <div style={{ color: 'var(--cp-text-dim)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+                  Budget Scope
+                </div>
+                <div className="flex gap-2">
+                  {(['global', 'per_agent'] as const).map(scope => (
+                    <button
+                      key={scope}
+                      onClick={() => setBudgetScope(scope)}
+                      style={{
+                        flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                        background: budgetScope === scope ? 'rgba(124,58,237,0.18)' : 'var(--cp-card-bg)',
+                        border: budgetScope === scope ? '1px solid rgba(139,92,246,0.4)' : '1px solid var(--cp-border-subtle)',
+                        color: budgetScope === scope ? '#c4b5fd' : 'var(--cp-text-dim)',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {scope === 'global' ? '🌐 Global' : '🤖 Per Agent'}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ color: 'var(--cp-text-dim)', fontSize: 11, marginTop: 6 }}>
+                  {budgetScope === 'global'
+                    ? `Global monthly budget: $${threshold}/month`
+                    : `Per-agent budget: $${threshold}/agent/month`}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: 'var(--cp-text-dim)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>
+                  Alert Thresholds
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { key: 'alertAt80', label: '⚠️ Alert at 80%', desc: `Warn at $${(threshold * 0.8).toFixed(0)}`, value: alertAt80, set: setAlertAt80 },
+                    { key: 'alertAt100', label: '🚨 Alert at 100%', desc: `Critical at $${threshold}`, value: alertAt100, set: setAlertAt100 },
+                  ].map(item => (
+                    <div
+                      key={item.key}
+                      onClick={() => item.set(!item.value)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        background: item.value ? 'rgba(124,58,237,0.08)' : 'var(--cp-card-bg)',
+                        border: item.value ? '1px solid rgba(139,92,246,0.3)' : '1px solid var(--cp-border-subtle)',
+                        borderRadius: 8, padding: '10px 12px', cursor: 'pointer', transition: 'all 0.15s',
+                      }}
+                    >
+                      <div style={{
+                        width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                        background: item.value ? '#7c3aed' : 'var(--cp-input-bg)',
+                        border: item.value ? '1px solid #a78bfa' : '1px solid var(--cp-border-strong)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {item.value && (
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ color: item.value ? '#c4b5fd' : 'var(--cp-text-primary)', fontSize: 13, fontWeight: 600 }}>{item.label}</div>
+                        <div style={{ color: 'var(--cp-text-dim)', fontSize: 11 }}>{item.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Footer */}

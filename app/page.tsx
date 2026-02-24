@@ -18,6 +18,7 @@ const CustomizePanel = dynamic(() => import('@/components/widgets/CustomizePanel
 const SpawnModal = dynamic(() => import('@/components/SpawnModal'), { ssr: false })
 const QuickActionsWidget = dynamic(() => import('@/components/widgets/QuickActionsWidget'), { ssr: false })
 const CostSummaryWidget = dynamic(() => import('@/components/widgets/CostSummaryWidget'), { ssr: false })
+const BudgetStatusWidget = dynamic(() => import('@/components/widgets/BudgetStatusWidget'), { ssr: false })
 const RecentDeploymentsWidget = dynamic(() => import('@/components/widgets/RecentDeploymentsWidget'), { ssr: false })
 const LiveActivityPanel = dynamic(() => import('@/components/LiveActivityPanel'), { ssr: false })
 const Sparkline = dynamic(() => import('@/components/Sparkline'), { ssr: false })
@@ -749,6 +750,21 @@ export default function OverviewPage() {
             </div>
             <div className={`grid ${compact ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}`}>
               {filteredAgents.map((agent) => <AgentCard key={agent.id} agent={agent} compact={compact} onSpawn={setSpawnAgent} onSelect={(a) => setSelectedAgentId(a.id)} sparkline={sparklines[agent.id]} pulseType={agentPulses.get(agent.id)} />)}
+            </div>
+          </div>
+        )
+
+      case 'budget-status':
+        return (
+          <div key="budget-status">
+            <div className="flex items-center justify-between mb-4">
+              <h2 style={{ color: 'var(--cp-text-heading)' }} className="font-semibold text-base">Budget Status</h2>
+              <span style={{ color: 'var(--cp-text-muted)', background: 'var(--cp-input-bg)', border: '1px solid var(--cp-border-subtle)' }} className="text-xs px-2.5 py-0.5 rounded-full font-medium">
+                This Month
+              </span>
+            </div>
+            <div style={{ background: 'var(--cp-card-bg)', border: '1px solid var(--cp-border)', backdropFilter: 'blur(12px)' }} className="rounded-xl overflow-hidden">
+              <BudgetStatusWidget compact={compact} />
             </div>
           </div>
         )
