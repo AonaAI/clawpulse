@@ -740,6 +740,17 @@ export default function SessionsPage() {
                             )}
                             <div className="flex items-center gap-1.5">
                               <Link
+                                href={`/sessions/${session.id}/replay`}
+                                onClick={e => e.stopPropagation()}
+                                title="View session replay"
+                                style={{ color: 'var(--cp-text-dim)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 6 }}
+                                className="group-hover:opacity-80 hover:!opacity-100 hover:bg-white/[0.06] transition-all flex-shrink-0"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polygon points="5 3 19 12 5 21 5 3" />
+                                </svg>
+                              </Link>
+                              <Link
                                 href={`/sessions/${session.id}`}
                                 onClick={e => e.stopPropagation()}
                                 title="View session details"

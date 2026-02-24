@@ -564,12 +564,24 @@ export default function SessionDetailClient({ id: propId }: { id: string }) {
               </code>
             </div>
           </div>
-          {session.model && (
-            <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 8, padding: '4px 12px' }}>
-              <div style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>Model</div>
-              <div style={{ color: 'var(--cp-text-accent-light)', fontSize: 12, fontWeight: 600 }}>{session.model}</div>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/sessions/${id}/replay`}
+              style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--cp-text-accent-light)', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}
+              className="hover:bg-purple-500/20 transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              View Replay
+            </Link>
+            {session.model && (
+              <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: 8, padding: '4px 12px' }}>
+                <div style={{ color: 'var(--cp-text-dim)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>Model</div>
+                <div style={{ color: 'var(--cp-text-accent-light)', fontSize: 12, fontWeight: 600 }}>{session.model}</div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats grid */}
