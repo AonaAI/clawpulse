@@ -7,6 +7,8 @@ import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import type { AgentStatus, AgentLive, MergedAgent } from '@/lib/types'
 import type { ConnectionStatus } from '@/lib/useRealtimeSubscription'
 
+const isDev = process.env.NODE_ENV === 'development'
+
 function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
   const liveMap = new Map(live.map(d => [d.dir, d]))
   return AGENTS.map(agent => {
@@ -20,6 +22,16 @@ function mergeLiveData(live: (AgentLive & { dir: string })[]): MergedAgent[] {
       totalTokens: data?.totalTokens ?? 0,
     }
   })
+}
+
+/** Parse current_task JSON for sessionCount / totalTokens */
+function parseTaskMeta(currentTask: unknown): { sessionCount: number; totalTokens: number } {
+  try {
+    const meta = JSON.parse((currentTask as string) || '{}')
+    return { sessionCount: meta.sessionCount || 0, totalTokens: meta.totalTokens || 0 }
+  } catch {
+    return { sessionCount: 0, totalTokens: 0 }
+  }
 }
 
 const UNKNOWN_AGENTS: MergedAgent[] = AGENTS.map(a => ({
@@ -52,12 +64,21 @@ export function useRealtimeAgents(): UseRealtimeAgentsResult {
   const [pulses, setPulses] = useState<Map<string, PulseType>>(new Map())
   const pulseTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
+  // Monotonic counter to prevent stale fetch responses from overwriting newer realtime data
+  const updateSeqRef = useRef(0)
+
   const fetchAgents = useCallback(async () => {
+    const fetchSeq = ++updateSeqRef.current
     try {
       const live = await fetchAgentLiveStatus()
-      setAgents(mergeLiveData(live))
-      setLastRefreshed(new Date())
-      setError(false)
+      // Only apply if no realtime update arrived while we were fetching
+      if (updateSeqRef.current === fetchSeq) {
+        setAgents(mergeLiveData(live))
+        setLastRefreshed(new Date())
+        setError(false)
+      } else if (isDev) {
+        console.debug('[ClawPulse RT] Skipped stale fetch (seq %d < %d)', fetchSeq, updateSeqRef.current)
+      }
     } catch {
       setError(true)
     } finally {
@@ -97,21 +118,40 @@ export function useRealtimeAgents(): UseRealtimeAgentsResult {
   }, [])
 
   const handleAgentUpdate = useCallback((record: Record<string, unknown>) => {
+    // Bump sequence so any in-flight fetch won't overwrite this newer data
+    updateSeqRef.current++
+
     const id = record.id as string
     const newStatus = record.status as AgentStatus
+    const lastActivity = record.last_activity as string | null
+    const { sessionCount, totalTokens } = parseTaskMeta(record.current_task)
+
+    if (isDev) {
+      console.debug('[ClawPulse RT] Agent update:', { id, status: newStatus, lastActivity, sessionCount, totalTokens })
+    }
 
     setAgents(prev => {
       const agent = prev.find(a => a.id === id || a.dir === id)
-      if (agent && agent.status !== newStatus) {
-        // Determine pulse type
+      if (!agent) {
+        if (isDev) console.warn('[ClawPulse RT] Unknown agent id in realtime event:', id)
+        return prev
+      }
+
+      if (agent.status !== newStatus) {
         const isComingOnline = newStatus === 'working' || newStatus === 'idle'
         const isGoingOffline = newStatus === 'offline'
         if (isComingOnline) triggerPulse(agent.id, 'online')
         else if (isGoingOffline) triggerPulse(agent.id, 'offline')
       }
+
       return prev.map(a =>
         (a.id === id || a.dir === id)
-          ? { ...a, status: newStatus || a.status }
+          ? {
+              ...a,
+              status: newStatus || a.status,
+              ...(lastActivity != null ? { lastActive: new Date(lastActivity).getTime() } : {}),
+              ...(record.current_task !== undefined ? { sessionCount, totalTokens } : {}),
+            }
           : a
       )
     })
