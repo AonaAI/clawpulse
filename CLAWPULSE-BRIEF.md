@@ -10,7 +10,7 @@ A web dashboard to manage and monitor a multi-agent AI system running on OpenCla
 - **UI**: Dark theme, Aona brand colors (dark purple #11021d, #1a0533, #2d1054, accent #6412A6)
 
 ## Credentials (in .env.local)
-- Supabase URL: https://naxbzqsecohogbkbhgti.supabase.co
+- Supabase URL: https://YOUR_PROJECT_REF.supabase.co
 - Supabase anon key: in .env.local
 - Supabase service role key: in .env.local
 - Firebase project: clawpulse

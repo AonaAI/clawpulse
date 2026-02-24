@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+// NOTE: Admin user management (invite/delete/list) requires a server-side API.
+// These operations previously used the service-role key client-side which is insecure.
+// TODO: Implement /api/admin/* endpoints or Supabase Edge Functions for these operations.
 import { supabase, createProject, updateProject, deleteProject } from '@/lib/supabase-client'
 import { useAuth } from '@/components/AuthProvider'
 import { useProject, Project } from '@/components/ProjectProvider'
@@ -81,7 +83,7 @@ function InviteModal({
     setError(null)
 
     // Invite user via admin API
-    const { data, error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email.trim())
+    const { data, error: inviteErr } = await Promise.reject(new Error("Admin API not available client-side — needs server endpoint"))
     if (inviteErr) {
       setError(inviteErr.message)
       setLoading(false)
@@ -231,7 +233,7 @@ function DeleteModal({
   const handleDelete = async () => {
     setLoading(true)
     setError(null)
-    const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+    const { error: delErr } = await Promise.reject(new Error("Admin API not available client-side — needs server endpoint"))
     if (delErr) {
       setError(delErr.message)
       setLoading(false)
@@ -328,7 +330,7 @@ function UsersTab() {
   const loadUsers = useCallback(async () => {
     setLoading(true)
     const [{ data: authData }, { data: rolesData }] = await Promise.all([
-      supabaseAdmin.auth.admin.listUsers(),
+      Promise.resolve({ data: { users: [] }, error: null }),
       supabase.from('user_roles').select('*'),
     ])
 

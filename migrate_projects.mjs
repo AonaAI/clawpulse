@@ -1,10 +1,16 @@
 import pg from './node_modules/pg/lib/index.js'
 const { Client } = pg
 
+const dbPassword = process.env.SUPABASE_DB_PASSWORD
+const dbRef = process.env.SUPABASE_PROJECT_REF
+if (!dbPassword || !dbRef) {
+  console.error('Set SUPABASE_DB_PASSWORD and SUPABASE_PROJECT_REF env vars')
+  process.exit(1)
+}
 const configs = [
-  { host: 'aws-0-us-east-1.pooler.supabase.com', port: 5432, database: 'postgres', user: 'postgres.naxbzqsecohogbkbhgti', password: 'FZN48IAYTaFh1fmk', ssl: { rejectUnauthorized: false } },
-  { host: 'aws-0-us-east-1.pooler.supabase.com', port: 6543, database: 'postgres', user: 'postgres.naxbzqsecohogbkbhgti', password: 'FZN48IAYTaFh1fmk', ssl: { rejectUnauthorized: false } },
-  { host: 'db.naxbzqsecohogbkbhgti.supabase.co', port: 5432, database: 'postgres', user: 'postgres', password: 'FZN48IAYTaFh1fmk', ssl: { rejectUnauthorized: false } },
+  { host: `aws-0-us-east-1.pooler.supabase.com`, port: 5432, database: 'postgres', user: `postgres.${dbRef}`, password: dbPassword, ssl: { rejectUnauthorized: false } },
+  { host: `aws-0-us-east-1.pooler.supabase.com`, port: 6543, database: 'postgres', user: `postgres.${dbRef}`, password: dbPassword, ssl: { rejectUnauthorized: false } },
+  { host: `db.${dbRef}.supabase.co`, port: 5432, database: 'postgres', user: 'postgres', password: dbPassword, ssl: { rejectUnauthorized: false } },
 ]
 
 let client = null

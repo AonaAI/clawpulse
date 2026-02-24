@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import 'dotenv/config'
 
 const supabase = createClient(
-  'https://naxbzqsecohogbkbhgti.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5heGJ6cXNlY29ob2dia2JoZ3RpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTU2MDkzMCwiZXhwIjoyMDg3MTM2OTMwfQ.aK4oaPn_lFBMnreoGDX-5Kp5CAB4wCJVvkb3kl4CXCE'
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
 const knowledge = [

@@ -44,7 +44,7 @@
 
 **You must run the SQL migration manually in Supabase Dashboard:**
 
-1. Go to: https://supabase.com/dashboard/project/naxbzqsecohogbkbhgti/sql/new
+1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT_REF/sql/new
 2. Copy the entire contents of `supabase/migrations/001_create_tables.sql`
 3. Paste into the SQL editor
 4. Click "Run"
