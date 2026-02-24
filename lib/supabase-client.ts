@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { calculateCost } from './pricing'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -522,6 +523,8 @@ export async function fetchAllSessions(opts: {
       ? new Date(r.last_active).getTime() - new Date(r.started_at).getTime()
       : null
     const agentRow = r.agent as unknown as { name: string } | null
+    const tokenCount = r.token_count ?? 0
+    const costUsd = calculateCost(tokenCount, r.model || null)
     return {
       id: r.id,
       agent_id: r.agent_id,
@@ -532,9 +535,9 @@ export async function fetchAllSessions(opts: {
       started_at: r.started_at,
       last_active: r.last_active,
       model: r.model,
-      token_count: r.token_count ?? 0,
+      token_count: tokenCount,
       duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
-      cost_usd: 0,
+      cost_usd: costUsd,
     }
   })
   return { items, total: count ?? 0 }
@@ -567,6 +570,8 @@ export async function fetchSessionWithMetadata(sessionId: string): Promise<{
     ? new Date(data.last_active).getTime() - new Date(data.started_at).getTime()
     : null
   const agentRow = data.agent as unknown as { name: string } | null
+  const tokenCount = data.token_count ?? 0
+  const costUsd = calculateCost(tokenCount, data.model || null)
   return {
     id: data.id,
     agent_id: data.agent_id,
@@ -577,9 +582,9 @@ export async function fetchSessionWithMetadata(sessionId: string): Promise<{
     started_at: data.started_at,
     last_active: data.last_active,
     model: data.model,
-    token_count: data.token_count ?? 0,
+    token_count: tokenCount,
     duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
-    cost_usd: 0,
+    cost_usd: costUsd,
     metadata: (data.metadata as Record<string, unknown>) ?? null,
   }
 }
@@ -610,6 +615,8 @@ export async function fetchSessionById(sessionId: string): Promise<{
     ? new Date(data.last_active).getTime() - new Date(data.started_at).getTime()
     : null
   const agentRow = data.agent as unknown as { name: string } | null
+  const tokenCount = data.token_count ?? 0
+  const costUsd = calculateCost(tokenCount, data.model || null)
   return {
     id: data.id,
     agent_id: data.agent_id,
@@ -620,9 +627,9 @@ export async function fetchSessionById(sessionId: string): Promise<{
     started_at: data.started_at,
     last_active: data.last_active,
     model: data.model,
-    token_count: data.token_count ?? 0,
+    token_count: tokenCount,
     duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
-    cost_usd: 0,
+    cost_usd: costUsd,
   }
 }
 
@@ -671,11 +678,13 @@ export async function fetchSessions(agentId: string, limit = 20) {
     const durationMs = r.last_active && r.started_at
       ? new Date(r.last_active).getTime() - new Date(r.started_at).getTime()
       : null
+    const tokenCount = r.token_count ?? 0
+    const costUsd = calculateCost(tokenCount, r.model || null)
     return {
       ...r,
-      tokens_used: r.token_count ?? 0,
+      tokens_used: tokenCount,
       duration_minutes: durationMs !== null ? Math.round(durationMs / 60000) : null,
-      cost_usd: 0,
+      cost_usd: costUsd,
       summary: null,
     }
   })

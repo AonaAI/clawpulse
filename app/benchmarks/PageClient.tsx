@@ -52,12 +52,20 @@ function computeMetrics(sessions: SessionRow[], periodStart: Date, periodEnd: Da
     const total = rows.length
     const completed = rows.filter(r => r.status === 'completed' || r.status === 'success')
     const errored = rows.filter(r => r.status === 'error' || r.status === 'errored' || r.status === 'failed')
-    const successRate = total > 0 ? (completed.length / (completed.length + errored.length || 1)) * 100 : 0
+    
+    // Fix: Calculate success rate based on total sessions, not just completed + errored
+    // Sessions might have other statuses like 'running', 'pending', etc.
+    const successRate = total > 0 ? (completed.length / total) * 100 : 0
+    
     const durations = rows.map(r => r.duration_minutes).filter((d): d is number => d !== null && d > 0)
     const avgDuration = durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0
     const avgTokens = total > 0 ? rows.reduce((a, b) => a + b.token_count, 0) / total : 0
-    const totalCost = rows.reduce((a, b) => a + b.cost_usd, 0)
-    const costEfficiency = completed.length > 0 ? totalCost / completed.length : 0
+    const totalCost = rows.reduce((a, b) => a + (b.cost_usd || 0), 0)
+    
+    // Fix: Handle cost efficiency calculation better - avoid division by zero
+    const costEfficiency = completed.length > 0 ? totalCost / completed.length : (total > 0 ? totalCost / total : 0)
+    
+    // Fix: Handle completion speed calculation better
     const completionSpeed = avgDuration > 0 && avgTokens > 0 ? avgTokens / avgDuration : 0
 
     result.set(agentId, {
@@ -75,8 +83,17 @@ function computeMetrics(sessions: SessionRow[], periodStart: Date, periodEnd: Da
 }
 
 const TrendArrow = memo(function TrendArrow({ current, previous }: { current: number; previous: number }) {
-  if (previous === 0 && current === 0) return <span className="text-xs opacity-40">—</span>
-  const better = current >= previous
+  // Handle null/undefined/NaN cases
+  const curr = Number.isFinite(current) ? current : 0
+  const prev = Number.isFinite(previous) ? previous : 0
+  
+  // If both are zero or equal, show neutral indicator
+  if ((prev === 0 && curr === 0) || curr === prev) return <span className="text-xs opacity-40">—</span>
+  
+  // If previous was zero but current isn't, it's an improvement
+  if (prev === 0 && curr > 0) return <span className="text-xs font-bold text-emerald-400">▲</span>
+  
+  const better = curr >= prev
   return (
     <span className={`text-xs font-bold ${better ? 'text-emerald-400' : 'text-rose-400'}`}>
       {better ? '▲' : '▼'}
@@ -86,13 +103,19 @@ const TrendArrow = memo(function TrendArrow({ current, previous }: { current: nu
 
 // ── CSS Radar Chart ──────────────────────────────────────────────────────
 const RadarChart = memo(function RadarChart({ metrics, color, label }: { metrics: AgentMetrics; color: string; label: string }) {
-  // Normalize each dimension to 0-100 scale
+  // Normalize each dimension to 0-100 scale with null/undefined guards
+  const completionSpeed = Number.isFinite(metrics.completionSpeed) ? metrics.completionSpeed : 0
+  const successRate = Number.isFinite(metrics.successRate) ? metrics.successRate : 0
+  const costEfficiency = Number.isFinite(metrics.costEfficiency) ? metrics.costEfficiency : 0
+  const avgTokens = Number.isFinite(metrics.avgTokens) ? metrics.avgTokens : 0
+  const totalSessions = Number.isFinite(metrics.totalSessions) ? metrics.totalSessions : 0
+  
   const dims = [
-    { name: 'Speed', value: Math.min(metrics.completionSpeed / 50, 1) * 100 },
-    { name: 'Success', value: metrics.successRate },
-    { name: 'Efficiency', value: Math.max(0, 100 - metrics.costEfficiency * 1000) },
-    { name: 'Throughput', value: Math.min(metrics.avgTokens / 5000, 1) * 100 },
-    { name: 'Volume', value: Math.min(metrics.totalSessions / 20, 1) * 100 },
+    { name: 'Speed', value: Math.min(completionSpeed / 50, 1) * 100 },
+    { name: 'Success', value: successRate },
+    { name: 'Efficiency', value: Math.max(0, 100 - costEfficiency * 1000) },
+    { name: 'Throughput', value: Math.min(avgTokens / 5000, 1) * 100 },
+    { name: 'Volume', value: Math.min(totalSessions / 20, 1) * 100 },
   ]
 
   const n = dims.length
@@ -261,6 +284,26 @@ export default function BenchmarksPage() {
     )
   }
 
+  // Show empty state if no data
+  if (!loading && agentMetrics.length === 0) {
+    return (
+      <div className="p-6 space-y-4">
+        <h1 style={{ color: 'var(--cp-text-primary)' }} className="text-2xl font-bold">Agent Benchmarks</h1>
+        <Card title="No Data Available">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="text-6xl mb-4">📊</div>
+            <p style={{ color: 'var(--cp-text-primary)' }} className="text-lg font-semibold mb-2">
+              No session data found
+            </p>
+            <p style={{ color: 'var(--cp-text-secondary)' }} className="text-sm max-w-md">
+              Agent sessions will appear here once agents start running tasks. Check back soon or verify that your agents are properly configured and active.
+            </p>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-[1400px]">
       <div>
@@ -274,25 +317,32 @@ export default function BenchmarksPage() {
       {ranked.length > 0 && (
         <Card title="Rankings">
           <div className="flex flex-wrap gap-4">
-            {ranked.map((a, i) => (
-              <div
-                key={a.agentId}
-                className="flex items-center gap-3 rounded-lg px-4 py-3"
-                style={{
-                  background: i < 3 ? `${PALETTE[AGENTS.findIndex(ag => ag.id === a.agentId) % PALETTE.length]}10` : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${i < 3 ? PALETTE[AGENTS.findIndex(ag => ag.id === a.agentId) % PALETTE.length] + '40' : 'var(--cp-border)'}`,
-                }}
-              >
-                <span className="text-xl">{i < 3 ? MEDALS[i] : <span className="text-sm opacity-40 font-mono">#{i + 1}</span>}</span>
-                <div>
-                  <div className="text-sm font-semibold" style={{ color: 'var(--cp-text-primary)' }}>{a.agentName}</div>
-                  <div className="text-xs" style={{ color: 'var(--cp-text-secondary)' }}>
-                    {a.successRate}% success • {a.totalSessions} sessions
+            {ranked.map((a, i) => {
+              const agentIndex = AGENTS.findIndex(ag => ag.id === a.agentId)
+              const colorIndex = agentIndex >= 0 ? agentIndex : i
+              const color = PALETTE[colorIndex % PALETTE.length]
+              return (
+                <div
+                  key={a.agentId}
+                  className="flex items-center gap-3 rounded-lg px-4 py-3"
+                  style={{
+                    background: i < 3 ? `${color}10` : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${i < 3 ? color + '40' : 'var(--cp-border)'}`,
+                  }}
+                >
+                  <span className="text-xl">{i < 3 ? MEDALS[i] : <span className="text-sm opacity-40 font-mono">#{i + 1}</span>}</span>
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: 'var(--cp-text-primary)' }}>
+                      {a.agentName || 'Unknown Agent'}
+                    </div>
+                    <div className="text-xs" style={{ color: 'var(--cp-text-secondary)' }}>
+                      {Math.round(a.successRate || 0)}% success • {a.totalSessions || 0} sessions
+                    </div>
                   </div>
+                  <span className="text-xs font-mono opacity-50 ml-2">{Math.round(a.score || 0)}pts</span>
                 </div>
-                <span className="text-xs font-mono opacity-50 ml-2">{Math.round(a.score)}pts</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </Card>
       )}
@@ -316,33 +366,34 @@ export default function BenchmarksPage() {
             <tbody>
               {sorted.map((a, i) => {
                 const rankIdx = ranked.findIndex(r => r.agentId === a.agentId)
-                const color = PALETTE[AGENTS.findIndex(ag => ag.id === a.agentId) % PALETTE.length]
+                const agentIndex = AGENTS.findIndex(ag => ag.id === a.agentId)
+                const color = agentIndex >= 0 ? PALETTE[agentIndex % PALETTE.length] : PALETTE[i % PALETTE.length]
                 return (
                   <tr key={a.agentId} style={{ borderBottom: '1px solid var(--cp-border)' }} className="hover:bg-white/[0.02]">
                     <td className="px-3 py-2 text-center">
                       {rankIdx < 3 ? MEDALS[rankIdx] : <span className="text-xs opacity-40">#{rankIdx + 1}</span>}
                     </td>
                     <td className="px-3 py-2 font-semibold" style={{ color }}>
-                      {a.agentName}
+                      {a.agentName || 'Unknown'}
                     </td>
-                    <td className="px-3 py-2" style={{ color: 'var(--cp-text-primary)' }}>{a.totalSessions}</td>
+                    <td className="px-3 py-2" style={{ color: 'var(--cp-text-primary)' }}>{a.totalSessions || 0}</td>
                     <td className="px-3 py-2" style={{ color: 'var(--cp-text-primary)' }}>
-                      {a.avgDuration} <TrendArrow current={a.avgDuration} previous={a.prevAvgDuration} />
+                      {a.avgDuration || 0} <TrendArrow current={a.avgDuration || 0} previous={a.prevAvgDuration || 0} />
                     </td>
                     <td className="px-3 py-2" style={{ color: 'var(--cp-text-primary)' }}>
-                      {a.avgTokens.toLocaleString()} <TrendArrow current={a.avgTokens} previous={a.prevAvgTokens} />
+                      {(a.avgTokens || 0).toLocaleString()} <TrendArrow current={a.avgTokens || 0} previous={a.prevAvgTokens || 0} />
                     </td>
                     <td className="px-3 py-2">
                       <span className={a.successRate >= 80 ? 'text-emerald-400' : a.successRate >= 50 ? 'text-amber-400' : 'text-rose-400'}>
-                        {a.successRate}%
+                        {Math.round(a.successRate || 0)}%
                       </span>
-                      {' '}<TrendArrow current={a.successRate} previous={a.prevSuccessRate} />
+                      {' '}<TrendArrow current={a.successRate || 0} previous={a.prevSuccessRate || 0} />
                     </td>
                     <td className="px-3 py-2" style={{ color: 'var(--cp-text-primary)' }}>
-                      {a.completionSpeed.toLocaleString()} <TrendArrow current={a.completionSpeed} previous={a.prevCompletionSpeed} />
+                      {(a.completionSpeed || 0).toLocaleString()} <TrendArrow current={a.completionSpeed || 0} previous={a.prevCompletionSpeed || 0} />
                     </td>
                     <td className="px-3 py-2" style={{ color: 'var(--cp-text-primary)' }}>
-                      ${a.costEfficiency.toFixed(4)} <TrendArrow current={a.prevCostEfficiency} previous={a.costEfficiency} />
+                      ${(a.costEfficiency || 0).toFixed(4)} <TrendArrow current={a.prevCostEfficiency || 0} previous={a.costEfficiency || 0} />
                     </td>
                   </tr>
                 )
@@ -359,14 +410,15 @@ export default function BenchmarksPage() {
       {agentMetrics.length > 0 && (
         <Card title="Performance Radar">
           <div className="flex flex-wrap gap-6 justify-center">
-            {ranked.slice(0, 6).map((a) => {
-              const idx = AGENTS.findIndex(ag => ag.id === a.agentId)
+            {ranked.slice(0, 6).map((a, i) => {
+              const agentIndex = AGENTS.findIndex(ag => ag.id === a.agentId)
+              const colorIndex = agentIndex >= 0 ? agentIndex : i
               return (
                 <RadarChart
                   key={a.agentId}
                   metrics={a}
-                  color={PALETTE[idx % PALETTE.length]}
-                  label={a.agentName}
+                  color={PALETTE[colorIndex % PALETTE.length]}
+                  label={a.agentName || 'Unknown'}
                 />
               )
             })}
@@ -375,45 +427,49 @@ export default function BenchmarksPage() {
       )}
 
       {/* Scorecard per agent */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {ranked.map((a) => {
-          const idx = AGENTS.findIndex(ag => ag.id === a.agentId)
-          const color = PALETTE[idx % PALETTE.length]
-          const rankIdx = ranked.findIndex(r => r.agentId === a.agentId)
-          return (
-            <div
-              key={a.agentId}
-              className="rounded-xl p-4"
-              style={{ background: 'var(--cp-card-bg)', border: `1px solid ${color}30` }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  {rankIdx < 3 && <span className="text-lg">{MEDALS[rankIdx]}</span>}
-                  <span className="font-semibold text-sm" style={{ color }}>{a.agentName}</span>
-                </div>
-                <span className="text-xs font-mono" style={{ color: 'var(--cp-text-secondary)' }}>{a.totalSessions} sessions</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                {[
-                  { label: 'Avg Duration', value: `${a.avgDuration} min`, trend: <TrendArrow current={a.avgDuration} previous={a.prevAvgDuration} /> },
-                  { label: 'Avg Tokens', value: a.avgTokens.toLocaleString(), trend: <TrendArrow current={a.avgTokens} previous={a.prevAvgTokens} /> },
-                  { label: 'Success Rate', value: `${a.successRate}%`, trend: <TrendArrow current={a.successRate} previous={a.prevSuccessRate} /> },
-                  { label: 'Speed', value: `${a.completionSpeed} tok/min`, trend: <TrendArrow current={a.completionSpeed} previous={a.prevCompletionSpeed} /> },
-                  { label: 'Cost/Task', value: `$${a.costEfficiency.toFixed(4)}`, trend: <TrendArrow current={a.prevCostEfficiency} previous={a.costEfficiency} /> },
-                ].map(item => (
-                  <div key={item.label} className="rounded-lg px-2 py-1.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <div style={{ color: 'var(--cp-text-secondary)' }}>{item.label}</div>
-                    <div className="flex items-center gap-1 mt-0.5" style={{ color: 'var(--cp-text-primary)' }}>
-                      <span className="font-semibold">{item.value}</span>
-                      {item.trend}
-                    </div>
+      {ranked.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {ranked.map((a) => {
+            const idx = AGENTS.findIndex(ag => ag.id === a.agentId)
+            const color = idx >= 0 ? PALETTE[idx % PALETTE.length] : PALETTE[0]
+            const rankIdx = ranked.findIndex(r => r.agentId === a.agentId)
+            return (
+              <div
+                key={a.agentId}
+                className="rounded-xl p-4"
+                style={{ background: 'var(--cp-card-bg)', border: `1px solid ${color}30` }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {rankIdx < 3 && <span className="text-lg">{MEDALS[rankIdx]}</span>}
+                    <span className="font-semibold text-sm" style={{ color }}>{a.agentName || 'Unknown'}</span>
                   </div>
-                ))}
+                  <span className="text-xs font-mono" style={{ color: 'var(--cp-text-secondary)' }}>
+                    {a.totalSessions || 0} sessions
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {[
+                    { label: 'Avg Duration', value: `${a.avgDuration || 0} min`, trend: <TrendArrow current={a.avgDuration || 0} previous={a.prevAvgDuration || 0} /> },
+                    { label: 'Avg Tokens', value: (a.avgTokens || 0).toLocaleString(), trend: <TrendArrow current={a.avgTokens || 0} previous={a.prevAvgTokens || 0} /> },
+                    { label: 'Success Rate', value: `${a.successRate || 0}%`, trend: <TrendArrow current={a.successRate || 0} previous={a.prevSuccessRate || 0} /> },
+                    { label: 'Speed', value: `${a.completionSpeed || 0} tok/min`, trend: <TrendArrow current={a.completionSpeed || 0} previous={a.prevCompletionSpeed || 0} /> },
+                    { label: 'Cost/Task', value: `$${(a.costEfficiency || 0).toFixed(4)}`, trend: <TrendArrow current={a.prevCostEfficiency || 0} previous={a.costEfficiency || 0} /> },
+                  ].map(item => (
+                    <div key={item.label} className="rounded-lg px-2 py-1.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                      <div style={{ color: 'var(--cp-text-secondary)' }}>{item.label}</div>
+                      <div className="flex items-center gap-1 mt-0.5" style={{ color: 'var(--cp-text-primary)' }}>
+                        <span className="font-semibold">{item.value}</span>
+                        {item.trend}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
