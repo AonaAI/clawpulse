@@ -32,15 +32,30 @@ ClawPulse is a comprehensive operations dashboard for AI agent systems. Track se
 
 ## 📸 Screenshots
 
-> Screenshots coming soon
+### Dashboard Overview
+Real-time agent monitoring, metrics, and activity feed.
 
-<!--
-![Dashboard](docs/screenshots/dashboard.png)
-![Sessions](docs/screenshots/sessions.png)
-![Agents](docs/screenshots/agents.png)
-![Metrics](docs/screenshots/metrics.png)
-![Workflows](docs/screenshots/workflows.png)
--->
+<img src="docs/screenshots/dashboard.png" alt="Dashboard Overview" width="800">
+
+### Agent Registry
+Browse and manage all agents in your network.
+
+<img src="docs/screenshots/agents-list.png" alt="Agent Registry" width="800">
+
+### Agent Detail
+View comprehensive stats, configuration, and history for individual agents.
+
+<img src="docs/screenshots/agent-detail.png" alt="Agent Detail" width="800">
+
+### Command Palette
+Quick navigation and search with keyboard shortcuts (⌘K).
+
+<img src="docs/screenshots/command-palette.png" alt="Command Palette" width="800">
+
+### Agent Configuration
+Detailed configuration view for agent settings and permissions.
+
+<img src="docs/screenshots/config.png" alt="Agent Configuration" width="800">
 
 ## 🚀 Quick Start
 
