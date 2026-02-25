@@ -214,21 +214,27 @@ function computeUptimePct(sessions: Session[]): number {
 }
 
 function HealthBadge({ sessions, loading }: { sessions: Session[]; loading: boolean }) {
-  if (loading || sessions.length === 0) return null
+  if (loading) return null
 
-  const pct = computeUptimePct(sessions)
-  const { emoji, label, color, bg, border } =
-    pct >= 95
-      ? { emoji: '🟢', label: 'Healthy', color: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)' }
-      : pct >= 80
-      ? { emoji: '🟡', label: 'Degraded', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)', border: 'rgba(251,191,36,0.25)' }
-      : { emoji: '🔴', label: 'Unhealthy', color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)' }
+  const now = Date.now()
+  const DAY = 24 * 60 * 60 * 1000
+  const WEEK = 7 * DAY
+
+  const lastSessionTime = sessions.length > 0
+    ? Math.max(...sessions.map(s => new Date(s.last_active || s.started_at).getTime()))
+    : null
+
+  const { emoji, label, color, bg, border } = !lastSessionTime || (now - lastSessionTime) > WEEK
+    ? { emoji: "🔴", label: "Inactive", color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)" }
+    : (now - lastSessionTime) > DAY
+    ? { emoji: "🟡", label: "Degraded", color: "#fbbf24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.25)" }
+    : { emoji: "🟢", label: "Healthy", color: "#34d399", bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.25)" }
 
   return (
     <span
       style={{ background: bg, color, border: `1px solid ${border}` }}
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-      title={`${pct.toFixed(1)}% uptime (last 7 days)`}
+      title={lastSessionTime ? `Last session: ${new Date(lastSessionTime).toLocaleString()}` : "No sessions recorded"}
     >
       <span style={{ fontSize: 10 }}>{emoji}</span>
       {label}

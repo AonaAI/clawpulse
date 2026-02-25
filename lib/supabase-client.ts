@@ -3,10 +3,12 @@ import { calculateCost } from './pricing'
 import type { AgentStatus } from './types'
 
 export function deriveAgentStatus(dbStatus: string | null, lastActivityMs: number | null): AgentStatus {
-  const FIVE_MINUTES = 5 * 60 * 1000
-  if (!lastActivityMs || (Date.now() - lastActivityMs) > FIVE_MINUTES) return "offline"
-  if (dbStatus === "working") return "working"
-  if (dbStatus === "idle") return "idle"
+  if (!lastActivityMs) return "offline"
+  const age = Date.now() - lastActivityMs
+  const FIVE_MIN = 5 * 60 * 1000
+  const THIRTY_MIN = 30 * 60 * 1000
+  if (age <= FIVE_MIN && dbStatus === "working") return "working"
+  if (age <= THIRTY_MIN && (dbStatus === "working" || dbStatus === "idle")) return "idle"
   return "offline"
 }
 
