@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, memo, useRef } from 'react'
 import Link from 'next/link'
 import { AGENTS } from '@/lib/data'
 import { APP_NAME } from '@/lib/config'
-import { fetchTokenStatsByAgent, fetchAgentLiveStatus } from '@/lib/supabase-client'
+import { fetchTokenStatsByAgent, fetchAgentLiveStatus, deriveAgentStatus } from '@/lib/supabase-client'
 import { supabase } from '@/lib/supabase-client'
 import { useRealtimeSubscription } from '@/lib/useRealtimeSubscription'
 import ExportButton, { exportToCSV } from '@/components/ExportButton'
@@ -303,7 +303,7 @@ function LiveBadge({ connectionStatus }: { connectionStatus: ConnectionStatus })
   const cfg = {
     connected: { badge: 'realtime-live-badge', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)', color: '#34d399', dot: 'bg-emerald-400', ping: true, label: 'Live' },
     reconnecting: { badge: '', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)', color: '#fbbf24', dot: 'bg-amber-400', ping: false, label: 'Reconnecting' },
-    disconnected: { badge: '', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)', color: '#f87171', dot: 'bg-red-400', ping: false, label: 'Offline' },
+    disconnected: { badge: '', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)', color: '#f87171', dot: 'bg-red-400', ping: false, label: 'Disconnected' },
   }[connectionStatus]
   return (
     <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full ${cfg.badge}`} style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
@@ -353,7 +353,10 @@ export default function AgentsPage() {
 
   const handleAgentUpdate = useCallback((record: Record<string, unknown>) => {
     const id = record.id as string
-    const newStatus = record.status as AgentStatus
+    const newStatus = deriveAgentStatus(
+      record.status as string,
+      record.last_activity ? new Date(record.last_activity as string).getTime() : null
+    )
     setAgents(prev => {
       const agent = prev.find(a => a.id === id || a.dir === id)
       if (agent && newStatus && agent.status !== newStatus) {

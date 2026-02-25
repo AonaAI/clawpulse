@@ -1,5 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import { calculateCost } from './pricing'
+import type { AgentStatus } from './types'
+
+export function deriveAgentStatus(dbStatus: string | null, lastActivityMs: number | null): AgentStatus {
+  const FIVE_MINUTES = 5 * 60 * 1000
+  if (!lastActivityMs || (Date.now() - lastActivityMs) > FIVE_MINUTES) return "offline"
+  if (dbStatus === "working") return "working"
+  if (dbStatus === "idle") return "idle"
+  return "offline"
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -715,7 +724,7 @@ export async function fetchAgentLiveStatus() {
 
     return {
       dir: a.id,
-      status: a.status || 'offline',
+      status: deriveAgentStatus(a.status, a.last_activity ? new Date(a.last_activity).getTime() : null),
       sessionCount,
       lastActive: a.last_activity ? new Date(a.last_activity).getTime() : null,
       totalTokens,
