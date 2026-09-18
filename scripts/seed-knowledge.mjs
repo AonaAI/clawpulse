@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  'https://naxbzqsecohogbkbhgti.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5heGJ6cXNlY29ob2dia2JoZ3RpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTU2MDkzMCwiZXhwIjoyMDg3MTM2OTMwfQ.aK4oaPn_lFBMnreoGDX-5Kp5CAB4wCJVvkb3kl4CXCE'
-)
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error(
+    'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.\n' +
+      'This script needs the service role key, which bypasses row level security.\n' +
+      'Never commit it. Export it for the run instead:\n' +
+      '  SUPABASE_URL=https://<project>.supabase.co \\\n' +
+      '  SUPABASE_SERVICE_ROLE_KEY=<key> \\\n' +
+      '  node scripts/seed-knowledge.mjs',
+  )
+  process.exit(1)
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 const knowledge = [
   { id: 'b1111111-1111-1111-1111-111111111111', title: 'Agent Spawn Protocol', content: 'When spawning a sub-agent, always pass three things: (1) context — what has happened so far, (2) expected output format — exact structure of the deliverable, (3) success criteria — how the orchestrator will verify the result. Without these, sub-agents produce inconsistent outputs.', category: 'protocol', tags: ['spawning', 'coordination', 'best-practice'], source_agent: 'main', created_at: '2025-02-01T10:00:00Z', updated_at: '2025-02-01T10:00:00Z' },
